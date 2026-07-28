@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <title>Sign Up</title>
+
+</head>
+
+<body>
+
+    <h1>Create an Account</h1>
+
+    <!-- Display any validation or success messages returned by the application -->
+    {% with messages = get_flashed_messages() %}
+
+        {% if messages %}
+
+            {% for message in messages %}
+
+                <p class="error-message">{{ message }}</p>
+
+            {% endfor %}
+
+        {% endif %}
+
+    {% endwith %}
+
+    <!-- Collect the information required to register a new user account -->
+    <form method="POST">
+
+        <label for="first_name">First Name</label><br>
+        <input type="text" id="first_name" name="first_name"><br><br>
+
+        <label for="last_name">Last Name</label><br>
+        <input type="text" id="last_name" name="last_name"><br><br>
+
+        <label for="username">Username</label><br>
+        <input type="text" id="username" name="username"><br><br>
+
+        <label for="email">Email</label><br>
+        <input type="email" id="email" name="email"><br><br>
+
+        <label for="password">Password</label><br>
+        <input type="password" id="password" name="password"><br><br>
+
+        <label for="confirm_password">Confirm Password</label><br>
+        <input type="password" id="confirm_password" name="confirm_password"><br><br>
+
+        <button type="submit">Create Account</button>
+
+    </form>
+
+</body>
+
+</html>

@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <title>Login</title>
+
+</head>
+
+<body>
+
+    <h1>Login</h1>
+
+    <!-- Display any validation or login messages returned by the application -->
+    {% with messages = get_flashed_messages() %}
+
+        {% if messages %}
+
+            {% for message in messages %}
+
+                <p class="error-message">{{ message }}</p>
+
+            {% endfor %}
+
+        {% endif %}
+
+    {% endwith %}
+
+    <!-- Collect the user's login credentials -->
+    <form method="POST">
+
+        <label for="username">Username</label><br>
+        <input type="text" id="username" name="username"><br><br>
+
+        <label for="password">Password</label><br>
+        <input type="password" id="password" name="password"><br><br>
+
+        <button type="submit">Login</button>
+
+    </form>
+
+</body>
+
+</html>
