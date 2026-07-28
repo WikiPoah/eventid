@@ -1,9 +1,10 @@
 from flask import Flask, render_template, session, g
+from flask_migrate import Migrate
 
 from app.database.db import db
 from app.routes.auth import auth
 from app.routes.events import events
-from app.models.user import User
+from app.models import User
 
 app = Flask(
     __name__,
@@ -18,6 +19,8 @@ app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 # Connect the database to the Flask application
 db.init_app(app)
+
+migrate = Migrate(app, db)
 
 # Register the application's route blueprints
 app.register_blueprint(auth)

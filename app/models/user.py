@@ -33,6 +33,18 @@ class User(db.Model):
     is_organiser = db.Column(db.Boolean, default=False, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
 
+    # Link each user to the events they organise and attend
+    events = db.relationship(
+        "Event",
+        back_populates="organiser"
+    )
+
+    attendances = db.relationship(
+        "Attendance",
+        back_populates="user",
+        cascade="all, delete-orphan"
+    )
+
     def __repr__(self):
 
         # Return a readable representation of the user object
