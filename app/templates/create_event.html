@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Event</title>
+</head>
+
+<body>
+
+    <h1>Create Event</h1>
+
+    <!-- Display any validation or success messages returned by the application -->
+    {% with messages = get_flashed_messages() %}
+
+        {% if messages %}
+
+            <ul>
+
+                {% for message in messages %}
+
+                    <li>{{ message }}</li>
+
+                {% endfor %}
+
+            </ul>
+
+        {% endif %}
+
+    {% endwith %}
+
+    <!-- Collect the information required to create a new event -->
+    <form method="POST">
+
+        <!-- Include hidden fields required for form validation -->
+        {{ form.hidden_tag() }}
+
+        <h2>Event Details</h2>
+
+        <p>
+
+            {{ form.title.label }}<br>
+            {{ form.title() }}
+
+            <!-- Display any validation errors for the event title -->
+            {% for error in form.title.errors %}
+                <br><span class="error">{{ error }}</span>
+            {% endfor %}
+
+        </p>
+
+        <p>
+
+            {{ form.description.label }}<br>
+            {{ form.description() }}<br>
+
+            <small>
+                Provide any additional information attendees should know (optional).
+            </small>
+
+            <!-- Display any validation errors for the event description -->
+            {% for error in form.description.errors %}
+                <br><span class="error">{{ error }}</span>
+            {% endfor %}
+
+        </p>
+
+        <h2>Location Information</h2>
+
+        <p>
+
+            {{ form.venue_name.label }}<br>
+            {{ form.venue_name() }}
+
+            <!-- Display any validation errors for the venue name -->
+            {% for error in form.venue_name.errors %}
+                <br><span class="error">{{ error }}</span>
+            {% endfor %}
+
+        </p>
+
+        <p>
+
+            {{ form.address.label }}<br>
+            {{ form.address() }}
+
+            <!-- Display any validation errors for the address -->
+            {% for error in form.address.errors %}
+                <br><span class="error">{{ error }}</span>
+            {% endfor %}
+
+        </p>
+
+        <p>
+
+            {{ form.city.label }}<br>
+            {{ form.city() }}
+
+            <!-- Display any validation errors for the city -->
+            {% for error in form.city.errors %}
+                <br><span class="error">{{ error }}</span>
+            {% endfor %}
+
+        </p>
+
+        <p>
+
+            {{ form.country.label }}<br>
+            {{ form.country() }}
+
+            <!-- Display any validation errors for the country -->
+            {% for error in form.country.errors %}
+                <br><span class="error">{{ error }}</span>
+            {% endfor %}
+
+        </p>
+
+        <p>
+
+            {{ form.location_notes.label }}<br>
+            {{ form.location_notes() }}
+
+            <!-- Display any validation errors for the location notes -->
+            {% for error in form.location_notes.errors %}
+                <br><span class="error">{{ error }}</span>
+            {% endfor %}
+
+        </p>
+
+        <h2>Event Timing</h2>
+
+        <p>
+
+            {{ form.start_datetime.label }}<br>
+            {{ form.start_datetime() }}
+
+            <!-- Display any validation errors for the start date and time -->
+            {% for error in form.start_datetime.errors %}
+                <br><span class="error">{{ error }}</span>
+            {% endfor %}
+
+        </p>
+
+        <p>
+
+            {{ form.end_datetime.label }}<br>
+            {{ form.end_datetime() }}
+
+            <!-- Display any validation errors for the end date and time -->
+            {% for error in form.end_datetime.errors %}
+                <br><span class="error">{{ error }}</span>
+            {% endfor %}
+
+        </p>
+
+        <h2>Capacity</h2>
+
+        <p>
+
+            {{ form.capacity.label }}<br>
+            {{ form.capacity() }}
+
+            <!-- Display any validation errors for the maximum capacity -->
+            {% for error in form.capacity.errors %}
+                <br><span class="error">{{ error }}</span>
+            {% endfor %}
+
+        </p>
+
+        <p>
+
+            <!-- Submit the completed event creation form -->
+            {{ form.submit() }}
+
+        </p>
+
+    </form>
+
+</body>
+
+</html>

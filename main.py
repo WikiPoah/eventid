@@ -13,7 +13,7 @@ app = Flask(
 )
 
 # Configure the application's security and database settings
-app.config["SECRET_KEY"] = "change-this-to-a-random-secret-key"
+app.config["SECRET_KEY"] = "REMOVED_COMPROMISED_FLASK_SECRET"
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///eventid.db"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
