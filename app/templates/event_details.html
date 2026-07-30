@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ event.title }}</title>
+</head>
+
+<body>
+
+    <h1>{{ event.title }}</h1>
+
+    <!-- Display the organiser responsible for the event -->
+    <p>
+        <strong>Organiser:</strong>
+        {{ event.organiser.first_name }} {{ event.organiser.last_name }}
+    </p>
+
+    <!-- Display the event description -->
+    <p>
+        <strong>Description:</strong>
+        {{ event.description }}
+    </p>
+
+    <!-- Display the event location -->
+    <p>
+        <strong>Venue:</strong>
+        {{ event.venue_name }}
+    </p>
+
+    <p>
+        <strong>Address:</strong>
+        {{ event.address }}
+    </p>
+
+    <p>
+        <strong>City:</strong>
+        {{ event.city }}
+    </p>
+
+    <p>
+        <strong>Country:</strong>
+        {{ event.country }}
+    </p>
+
+    <!-- Display the event's visibility and current status -->
+    <p>
+        <strong>Privacy:</strong>
+        {{ event.privacy }}
+    </p>
+
+    <p>
+        <strong>Status:</strong>
+        {{ event.status }}
+    </p>
+
+    <!-- Display when the event begins and ends -->
+    <p>
+        <strong>Start:</strong>
+        {{ event.start_datetime.strftime("%d %B %Y, %H:%M") }}
+    </p>
+
+    <p>
+        <strong>End:</strong>
+        {{ event.end_datetime.strftime("%d %B %Y, %H:%M") }}
+    </p>
+
+    <!-- Display the attendance limit if one has been set -->
+    <p>
+        <strong>Capacity:</strong>
+
+        {% if event.capacity %}
+
+        {{ event.capacity }}
+
+        {% else %}
+
+        Unlimited
+
+        {% endif %}
+
+    </p>
+
+    <!-- Return to the user's events page -->
+    <p>
+        <a href="{{ url_for('events.my_events') }}">
+            ← Back to My Events
+        </a>
+    </p>
+
+</body>
+
+</html>

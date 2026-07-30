@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Events</title>
+</head>
+
+<body>
+
+    <h1>My Events</h1>
+
+    <!-- Display the organiser's events if any have been created -->
+    {% if events %}
+
+        {% for event in events %}
+
+            {% include "event_card.html" %}
+
+        {% endfor %}
+
+    {% else %}
+
+        <!-- Inform the user when they have not created any events -->
+        <p>You haven't created any events yet.</p>
+
+    {% endif %}
+
+</body>
+
+</html>

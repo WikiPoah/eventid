@@ -1,0 +1,30 @@
+<div>
+
+    <!-- Display the event title with a link to its details page -->
+    <h2>
+        <a href="{{ url_for('events.event_details', event_id=event.event_id) }}">
+            {{ event.title }}
+        </a>
+    </h2>
+
+    <!-- Display the event's scheduled start date and time -->
+    <p>
+        <strong>Start:</strong>
+        {{ event.start_datetime.strftime("%d %B %Y, %H:%M") }}
+    </p>
+
+    <!-- Display the event venue -->
+    <p>
+        <strong>Venue:</strong>
+        {{ event.venue_name }}
+    </p>
+
+    <!-- Display the city where the event takes place -->
+    <p>
+        <strong>City:</strong>
+        {{ event.city }}
+    </p>
+
+</div>
+
+<hr>

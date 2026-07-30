@@ -4,7 +4,8 @@ from flask import (
     g,
     flash,
     redirect,
-    url_for
+    url_for,
+    abort
 )
 
 from app.decorators import login_required
@@ -23,8 +24,55 @@ def my_events():
     # Retrieve the currently logged in user's information
     user = g.user
 
-    # Display the user's personal events page
-    return f"<h1>{user.first_name}'s Events</h1>"
+    # Retrieve all events organised by the current user
+    organiser_events = user.events
+
+    # Display the organiser's events page
+    return render_template(
+        "my_events.html",
+        events=organiser_events
+    )
+
+
+@events.route("/events")
+@login_required
+def browse_events():
+
+    # Retrieve all public events ordered by their start date
+    public_events = (
+        Event.query
+        .filter_by(privacy="Public")
+        .order_by(Event.start_datetime)
+        .all()
+    )
+
+    # Display the public events page
+    return render_template(
+        "browse_events.html",
+        events=public_events
+    )
+
+
+@events.route("/events/<int:event_id>")
+@login_required
+def event_details(event_id):
+
+    # Retrieve the selected event or return a 404 error if it does not exist
+    event = Event.query.get_or_404(event_id)
+
+    # Prevent users from viewing private events they do not organise
+    if (
+        event.organiser_id != g.user.user_id
+        and event.privacy != "Public"
+    ):
+
+        abort(403)
+
+    # Display the selected event's details
+    return render_template(
+        "event_details.html",
+        event=event
+    )
 
 
 @events.route("/events/create", methods=["GET", "POST"])
