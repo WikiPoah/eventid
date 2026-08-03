@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, UTC
 
 from app.database.db import db
 
@@ -24,7 +24,7 @@ class Attendance(db.Model):
     # Record when the user registered and their attendance status
     registered_at = db.Column(
         db.DateTime,
-        default=datetime.utcnow,
+        default=lambda: datetime.now(UTC),
         nullable=False
     )
 

@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, UTC
 
 from app.database.db import db
 
@@ -31,7 +31,11 @@ class User(db.Model):
 
     # Track organiser permissions and account creation date
     is_organiser = db.Column(db.Boolean, default=False, nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    created_at = db.Column(
+        db.DateTime,
+        default=lambda: datetime.now(UTC),
+        nullable=False,
+    )
 
     # Link each user to the events they organise and attend
     events = db.relationship(
@@ -43,6 +47,13 @@ class User(db.Model):
         "Attendance",
         back_populates="user",
         cascade="all, delete-orphan"
+    )
+
+    # Provide read-only event access while retaining attendance records
+    attending_events = db.relationship(
+        "Event",
+        secondary="attendance",
+        viewonly=True
     )
 
     def __repr__(self):

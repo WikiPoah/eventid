@@ -2,3 +2,11 @@ __pycache__/
 *.pyc
 
 instance/
+*.db
+
+.env
+.env.*
+!.env.example
+
+# Temporary input used only while removing leaked values from Git history.
+secret-replacements.txt

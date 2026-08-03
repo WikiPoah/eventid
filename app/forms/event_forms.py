@@ -5,6 +5,7 @@ from wtforms import (
     TextAreaField,
     IntegerField,
     FloatField,
+    SelectField,
     SubmitField
 )
 
@@ -120,6 +121,19 @@ class CreateEventForm(FlaskForm):
         "Longitude",
         validators=[
             Optional()
+        ]
+    )
+
+
+    # Allow organisers to choose who can view the event
+    privacy = SelectField(
+        "Privacy",
+        choices=[
+            ("Public", "Public"),
+            ("Private", "Private")
+        ],
+        validators=[
+            DataRequired()
         ]
     )
 

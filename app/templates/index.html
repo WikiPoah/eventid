@@ -55,9 +55,11 @@
 
                 <div class="nav-links">
 
-                    <a href="">Browse Events</a>
+                    <a href="{{ url_for('events.browse_events') }}">Browse Events</a>
 
-                    <a href="">My Events</a>
+                    <a href="{{ url_for('events.my_events') }}">My Events</a>
+
+                    <a href="{{ url_for('events.my_attending_events') }}">Attending</a>
 
                     <a href="">Manage Events</a>
 
@@ -231,11 +233,10 @@
 
                 </a>
 
-                <a href="{{ url_for('auth.logout') }}">
-
-                    Log Out
-
-                </a>
+                <form method="POST" action="{{ url_for('auth.logout') }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit">Log Out</button>
+                </form>
 
                 {% else %}
 

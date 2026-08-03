@@ -32,6 +32,8 @@
     <!-- Collect the user's login credentials -->
     <form method="POST">
 
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
         <label for="username">Username</label><br>
         <input type="text" id="username" name="username"><br><br>
 
