@@ -9,6 +9,7 @@ load_dotenv()
 
 from app.config import Config
 from app.database.db import csrf, db
+from app.rate_limit import limiter
 from app.routes.auth import auth
 from app.routes.events import events
 from app.models import User
@@ -35,6 +36,18 @@ def create_app(test_config=None):
             "DATABASE_URL",
             Config.SQLALCHEMY_DATABASE_URI,
         ),
+        LOGIN_RATE_LIMIT=os.environ.get(
+            "LOGIN_RATE_LIMIT",
+            Config.LOGIN_RATE_LIMIT,
+        ),
+        RATELIMIT_STORAGE_URI=os.environ.get(
+            "RATELIMIT_STORAGE_URI",
+            Config.RATELIMIT_STORAGE_URI,
+        ),
+        SESSION_COOKIE_SECURE=os.environ.get(
+            "SESSION_COOKIE_SECURE",
+            "false",
+        ).lower() in {"1", "true", "yes", "on"},
     )
 
     if test_config:
@@ -56,6 +69,7 @@ def create_app(test_config=None):
     # Connect extensions and route blueprints to this application instance
     db.init_app(application)
     csrf.init_app(application)
+    limiter.init_app(application)
     migrate.init_app(application, db)
     application.register_blueprint(auth)
     application.register_blueprint(events)
@@ -63,7 +77,8 @@ def create_app(test_config=None):
     @application.before_request
     def load_logged_in_user():
         # Load the current user once for authorization throughout the request
-        g.user = db.session.get(User, session.get("user_id"))
+        user_id = session.get("user_id")
+        g.user = db.session.get(User, user_id) if user_id is not None else None
 
     @application.route("/")
     def home():

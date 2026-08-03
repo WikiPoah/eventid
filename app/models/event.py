@@ -7,6 +7,19 @@ from app.database.db import db
 class Event(db.Model):
 
     __tablename__ = "events"
+    __table_args__ = (
+        db.Index(
+            "ix_events_privacy_start_datetime",
+            "privacy",
+            "start_datetime",
+        ),
+        db.Index("ix_events_privacy_city", "privacy", "city"),
+        db.Index(
+            "ix_events_organiser_start_datetime",
+            "organiser_id",
+            "start_datetime",
+        ),
+    )
 
     # Uniquely identify each event
     event_id = db.Column(db.Integer, primary_key=True)

@@ -1,5 +1,8 @@
+from datetime import datetime
+
 from flask import (
     Blueprint,
+    current_app,
     render_template,
     g,
     flash,
@@ -23,22 +26,101 @@ from app.models.attendance import Attendance
 
 events = Blueprint("events", __name__)
 
+NEARLY_FULL_THRESHOLD = 0.8
 
-@events.route("/my-events")
+
+@events.route("/manage-events")
 @login_required
-def my_events():
-    # Retrieve organised events and their categories without repeated queries
-    organiser_events = db.session.scalars(
-        select(Event)
+def manage_events():
+    # Count registrations once and join the totals to every organised event
+    attendance_counts = (
+        select(
+            Attendance.event_id,
+            func.count(Attendance.user_id).label("attendee_count"),
+        )
+        .group_by(Attendance.event_id)
+        .subquery()
+    )
+    event_rows = db.session.execute(
+        select(
+            Event,
+            func.coalesce(attendance_counts.c.attendee_count, 0),
+        )
+        .outerjoin(
+            attendance_counts,
+            attendance_counts.c.event_id == Event.event_id,
+        )
         .where(Event.organiser_id == g.user.user_id)
         .options(selectinload(Event.categories))
         .order_by(Event.start_datetime)
     ).all()
 
-    # Display the organiser's events page
+    organiser_events = [row[0] for row in event_rows]
+    attendee_counts = {
+        event.event_id: attendee_count
+        for event, attendee_count in event_rows
+    }
+
+    # Separate upcoming and past events using the current local application time
+    current_time = datetime.now()
+    upcoming_events = [
+        event for event in organiser_events
+        if event.start_datetime >= current_time
+    ]
+    past_events = [
+        event for event in organiser_events
+        if event.start_datetime < current_time
+    ]
+
+    # Summarize capacity without treating unlimited events as nearly full
+    full_events = [
+        event for event in organiser_events
+        if event.capacity is not None
+        and attendee_counts[event.event_id] >= event.capacity
+    ]
+    nearly_full_events = [
+        event for event in organiser_events
+        if event.capacity is not None
+        and event.capacity > 0
+        and attendee_counts[event.event_id] < event.capacity
+        and attendee_counts[event.event_id] / event.capacity
+        >= NEARLY_FULL_THRESHOLD
+    ]
+    summary = {
+        "total_events": len(organiser_events),
+        "upcoming_events": len(upcoming_events),
+        "past_events": len(past_events),
+        "total_registrations": sum(attendee_counts.values()),
+        "full_events": len(full_events),
+        "nearly_full_events": len(nearly_full_events),
+    }
+
+    # Display the organiser dashboard using the aggregated event information
+    return render_template(
+        "manage_events.html",
+        upcoming_events=upcoming_events,
+        past_events=past_events,
+        attendee_counts=attendee_counts,
+        summary=summary,
+        nearly_full_threshold=int(NEARLY_FULL_THRESHOLD * 100),
+    )
+
+
+@events.route("/my-events")
+@login_required
+def my_events():
+    # Retrieve attended events and their card categories for the current user
+    attending_events = db.session.scalars(
+        select(Event)
+        .join(Attendance)
+        .where(Attendance.user_id == g.user.user_id)
+        .options(selectinload(Event.categories))
+        .order_by(Event.start_datetime)
+    ).all()
+
     return render_template(
         "my_events.html",
-        events=organiser_events
+        events=attending_events,
     )
 
 
@@ -63,53 +145,53 @@ def browse_events():
     )
 
     # Retrieve all unique cities that have public events
-    cities = (
-        db.session.query(Event.city)
-        .filter_by(privacy="Public")
+    cities = db.session.scalars(
+        select(Event.city)
+        .where(Event.privacy == "Public")
         .distinct()
         .order_by(Event.city)
-        .all()
-    )
+    ).all()
 
     # Start with all public events
-    query = (
-        Event.query
-        .filter_by(privacy="Public")
+    statement = (
+        select(Event)
+        .where(Event.privacy == "Public")
         .options(selectinload(Event.categories))
     )
 
     # Filter events whose titles contain the search term
     if search:
 
-        query = query.filter(
+        statement = statement.where(
             Event.title.ilike(f"%{search}%")
         )
 
     # Filter events by category
     if category_id:
 
-        query = query.join(EventCategory).filter(
+        statement = statement.join(EventCategory).where(
             EventCategory.category_id == category_id
         )
 
     # Filter events by city
     if selected_city:
 
-        query = query.filter(
+        statement = statement.where(
             Event.city == selected_city
         )
 
-    # Retrieve the matching events ordered by their start date
-    public_events = (
-        query
-        .order_by(Event.start_datetime)
-        .all()
+    # Retrieve only the requested page while retaining chronological ordering
+    pagination = db.paginate(
+        statement.order_by(Event.start_datetime),
+        per_page=current_app.config["EVENTS_PER_PAGE"],
+        max_per_page=50,
     )
 
     # Display the public events page
     return render_template(
         "browse_events.html",
-        events=public_events,
+        events=pagination.items,
+        pagination=pagination,
         categories=categories,
         cities=cities,
         search=search,
@@ -272,19 +354,8 @@ def leave_event(event_id):
 @events.route("/my-attending-events")
 @login_required
 def my_attending_events():
-    # Retrieve the current user's registrations and card categories efficiently
-    attending_events = db.session.scalars(
-        select(Event)
-        .join(Attendance)
-        .where(Attendance.user_id == g.user.user_id)
-        .options(selectinload(Event.categories))
-        .order_by(Event.start_datetime)
-    ).all()
-
-    return render_template(
-        "my_attending_events.html",
-        events=attending_events,
-    )
+    # Preserve existing bookmarks while keeping one attendance-page query
+    return redirect(url_for("events.my_events"))
 
 
 @events.route("/events/create", methods=["GET", "POST"])
@@ -389,7 +460,7 @@ def create_event():
         flash("Event created successfully!")
 
         return redirect(
-            url_for("events.my_events")
+            url_for("events.manage_events")
         )
 
     # Display the event creation form

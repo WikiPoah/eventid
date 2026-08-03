@@ -29,6 +29,7 @@ def test_event_creation_preserves_categories_and_privacy(app, client, users):
         },
     )
     assert response.status_code == 302
+    assert response.headers["Location"].endswith("/manage-events")
 
     with app.app_context():
         event = Event.query.filter_by(title="Created Event").one()

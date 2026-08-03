@@ -1,9 +1,20 @@
-from flask import Blueprint, render_template, request, flash, redirect, url_for, session
+from flask import (
+    Blueprint,
+    current_app,
+    flash,
+    redirect,
+    render_template,
+    request,
+    session,
+    url_for,
+)
+from sqlalchemy import or_, select
 from sqlalchemy.exc import IntegrityError
 from werkzeug.security import generate_password_hash, check_password_hash
 
 from app.database.db import db
 from app.models.user import User
+from app.rate_limit import limiter
 
 # Create a blueprint to handle user authentication routes
 auth = Blueprint("auth", __name__)
@@ -43,19 +54,25 @@ def signup():
 
             return render_template("signup.html")
 
-        # Check that the chosen username is not already in use
-        existing_user = User.query.filter_by(username=username).first()
+        # Keep usernames within the length supported by the database model
+        if not 3 <= len(username) <= 20:
+            flash("Your username must be between 3 and 20 characters.")
+            return render_template("signup.html")
 
-        if existing_user:
+        # Retrieve matching usernames and emails with one indexed query
+        existing_credentials = db.session.execute(
+            select(User.username, User.email).where(
+                or_(User.username == username, User.email == email)
+            )
+        ).all()
+
+        if any(row.username == username for row in existing_credentials):
 
             flash("That username is already taken.")
 
             return render_template("signup.html")
 
-        # Ensure each email address can only be registered once
-        existing_email = User.query.filter_by(email=email).first()
-
-        if existing_email:
+        if any(row.email == email for row in existing_credentials):
 
             flash("An account with this email already exists.")
 
@@ -91,6 +108,11 @@ def signup():
 
 
 @auth.route("/login", methods=["GET", "POST"])
+@limiter.limit(
+    lambda: current_app.config["LOGIN_RATE_LIMIT"],
+    methods=["POST"],
+    deduct_when=lambda response: response.status_code == 200,
+)
 def login():
 
     if request.method == "POST":
@@ -130,6 +152,14 @@ def login():
         return redirect(url_for("home"))
 
     return render_template("login.html")
+
+
+@auth.errorhandler(429)
+def login_rate_limit_exceeded(_error):
+    """Display a helpful response when login attempts exceed the limit."""
+
+    flash("Too many login attempts. Please wait before trying again.", "error")
+    return render_template("login.html"), 429
 
 
 @auth.route("/logout", methods=["POST"])

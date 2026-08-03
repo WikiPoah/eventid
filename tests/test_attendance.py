@@ -114,7 +114,7 @@ def test_capacity_below_existing_count_remains_closed(app, users, event_factory)
     assert attendance_count(app, event_id) == 2
 
 
-def test_my_attending_events_only_shows_current_users_events(app, client, users, event_factory):
+def test_my_events_only_shows_current_users_attendance(app, client, users, event_factory):
     mine = event_factory(title="My Registration")
     theirs = event_factory(title="Someone Else Registration")
     with app.app_context():
@@ -126,9 +126,16 @@ def test_my_attending_events_only_shows_current_users_events(app, client, users,
         )
         db.session.commit()
     login(client, users[1])
-    response = client.get("/my-attending-events")
+    response = client.get("/my-events")
     assert b"My Registration" in response.data
     assert b"Someone Else Registration" not in response.data
+
+
+def test_old_attending_events_url_redirects_to_my_events(client, users):
+    login(client, users[1])
+    response = client.get("/my-attending-events")
+    assert response.status_code == 302
+    assert response.headers["Location"].endswith("/my-events")
 
 
 def test_attendee_names_are_only_shown_to_organiser(app, users, event_factory):

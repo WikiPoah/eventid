@@ -59,11 +59,7 @@
 
                     <a href="{{ url_for('events.my_events') }}">My Events</a>
 
-                    <a href="{{ url_for('events.my_attending_events') }}">Attending</a>
-
-                    <a href="">Manage Events</a>
-
-                    <a href="">Calendar</a>
+                    <a href="{{ url_for('events.manage_events') }}">Manage Events</a>
 
                 </div>
 
@@ -1423,10 +1419,9 @@
 
                 <h4>Explore</h4>
 
-                <a href="#">Browse Events</a>
-                <a href="#">My Events</a>
-                <a href="#">Manage Events</a>
-                <a href="#">Calendar</a>
+                <a href="{{ url_for('events.browse_events') }}">Browse Events</a>
+                <a href="{{ url_for('events.my_events') }}">My Events</a>
+                <a href="{{ url_for('events.manage_events') }}">Manage Events</a>
 
             </div>
 
