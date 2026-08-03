@@ -25,6 +25,27 @@
         {{ event.city }}
     </p>
 
+    <!-- Display the categories assigned to the event -->
+    <p>
+
+        <strong>Categories:</strong>
+
+        {% if event.categories %}
+
+            {% for category in event.categories %}
+
+                {{ category.name }}{% if not loop.last %}, {% endif %}
+
+            {% endfor %}
+
+        {% else %}
+
+            None
+
+        {% endif %}
+
+    </p>
+
 </div>
 
 <hr>

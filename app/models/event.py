@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, UTC
 
 from app.database.db import db
 
@@ -56,10 +56,17 @@ class Event(db.Model):
     )
 
     # Link events to their assigned categories
-    categories = db.relationship(
+    event_categories = db.relationship(
         "EventCategory",
         back_populates="event",
         cascade="all, delete-orphan"
+    )
+
+    # Provide read-only category access while retaining association records
+    categories = db.relationship(
+        "Category",
+        secondary="event_categories",
+        viewonly=True
     )
 
     # Track users who have registered for the event
@@ -69,17 +76,24 @@ class Event(db.Model):
         cascade="all, delete-orphan"
     )
 
+    # Provide read-only user access without treating organisers as attendees
+    attending_users = db.relationship(
+        "User",
+        secondary="attendance",
+        viewonly=True
+    )
+
     # Record when the event was created and last updated
     created_at = db.Column(
         db.DateTime,
-        default=datetime.utcnow,
+        default=lambda: datetime.now(UTC),
         nullable=False
     )
 
     updated_at = db.Column(
         db.DateTime,
-        default=datetime.utcnow,
-        onupdate=datetime.utcnow,
+        default=lambda: datetime.now(UTC),
+        onupdate=lambda: datetime.now(UTC),
         nullable=False
     )
 

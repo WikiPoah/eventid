@@ -66,6 +66,42 @@
 
         </p>
 
+        <!-- Allow organisers to assign categories to the event -->
+        <fieldset>
+
+            <legend>Categories</legend>
+
+            <p>
+
+                <small>
+                    Select one or more categories that best describe your event.
+                </small>
+
+            </p>
+
+            <!-- Display all available event categories -->
+            {% for category in categories %}
+
+                <p>
+
+                    <label>
+
+                        <input
+                            type="checkbox"
+                            name="categories"
+                            value="{{ category.category_id }}"
+                        >
+
+                        {{ category.name }}
+
+                    </label>
+
+                </p>
+
+            {% endfor %}
+
+        </fieldset>
+
         <h2>Location Information</h2>
 
         <p>
@@ -123,6 +159,20 @@
 
             <!-- Display any validation errors for the location notes -->
             {% for error in form.location_notes.errors %}
+                <br><span class="error">{{ error }}</span>
+            {% endfor %}
+
+        </p>
+
+        <h2>Visibility</h2>
+
+        <p>
+
+            {{ form.privacy.label }}<br>
+            {{ form.privacy() }}
+
+            <!-- Display any validation errors for the privacy setting -->
+            {% for error in form.privacy.errors %}
                 <br><span class="error">{{ error }}</span>
             {% endfor %}
 

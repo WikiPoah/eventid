@@ -1,4 +1,5 @@
 from flask import Blueprint, render_template, request, flash, redirect, url_for, session
+from sqlalchemy.exc import IntegrityError
 from werkzeug.security import generate_password_hash, check_password_hash
 
 from app.database.db import db
@@ -74,7 +75,13 @@ def signup():
 
         # Save the new user to the database
         db.session.add(new_user)
-        db.session.commit()
+        try:
+            db.session.commit()
+        except IntegrityError:
+            # Roll back conflicts caused by concurrent username or email signups
+            db.session.rollback()
+            flash("That username or email address is already in use.", "error")
+            return render_template("signup.html")
 
         flash("Account created successfully!")
 
@@ -125,7 +132,7 @@ def login():
     return render_template("login.html")
 
 
-@auth.route("/logout")
+@auth.route("/logout", methods=["POST"])
 def logout():
 
     # Remove the current user's session information

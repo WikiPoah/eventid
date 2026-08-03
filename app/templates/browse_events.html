@@ -11,7 +11,155 @@
 
     <h1>Browse Events</h1>
 
-    <!-- Display all public events that are available to browse -->
+    <!-- Allow users to search and filter public events -->
+    <fieldset>
+
+        <legend>Search & Filters</legend>
+
+        <form method="GET">
+
+            <p>
+
+                <label for="search">
+                    Search by Event Title
+                </label><br>
+
+                <input
+                    type="text"
+                    id="search"
+                    name="search"
+                    value="{{ search }}"
+                    placeholder="Enter an event title"
+                >
+
+            </p>
+
+            <p>
+
+                <label for="category">
+                    Category
+                </label><br>
+
+                <select
+                    id="category"
+                    name="category"
+                >
+
+                    <option value="">
+                        All Categories
+                    </option>
+
+                    <!-- Display all available event categories -->
+                    {% for category in categories %}
+
+                        <option
+                            value="{{ category.category_id }}"
+                            {% if selected_category == category.category_id %}selected{% endif %}
+                        >
+                            {{ category.name }}
+                        </option>
+
+                    {% endfor %}
+
+                </select>
+
+            </p>
+
+            <p>
+
+                <label for="city">
+                    City
+                </label><br>
+
+                <select
+                    id="city"
+                    name="city"
+                >
+
+                    <option value="">
+                        All Cities
+                    </option>
+
+                    <!-- Display all available event cities -->
+                    {% for city in cities %}
+
+                        <option
+                            value="{{ city[0] }}"
+                            {% if selected_city == city[0] %}selected{% endif %}
+                        >
+                            {{ city[0] }}
+                        </option>
+
+                    {% endfor %}
+
+                </select>
+
+            </p>
+
+            <p>
+
+                <!-- Submit or reset the current search filters -->
+                <button type="submit">
+                    Search
+                </button>
+
+                <a href="{{ url_for('events.browse_events') }}">
+                    Clear
+                </a>
+
+            </p>
+
+        </form>
+
+    </fieldset>
+
+    <!-- Display the currently active search filters -->
+    {% if search or selected_category or selected_city %}
+
+        <h2>Current Filters</h2>
+
+        <ul>
+
+            {% if search %}
+
+                <li>
+                    <strong>Search:</strong> "{{ search }}"
+                </li>
+
+            {% endif %}
+
+            {% if selected_category %}
+
+                <!-- Display the name of the selected category -->
+                {% for category in categories %}
+
+                    {% if category.category_id == selected_category %}
+
+                        <li>
+                            <strong>Category:</strong>
+                            {{ category.name }}
+                        </li>
+
+                    {% endif %}
+
+                {% endfor %}
+
+            {% endif %}
+
+            {% if selected_city %}
+
+                <li>
+                    <strong>City:</strong>
+                    {{ selected_city }}
+                </li>
+
+            {% endif %}
+
+        </ul>
+
+    {% endif %}
+
+    <!-- Display all public events that match the search and filters -->
     {% if events %}
 
         {% for event in events %}
@@ -22,8 +170,28 @@
 
     {% else %}
 
-        <!-- Inform the user when no public events are available -->
-        <p>There are currently no public events.</p>
+        <!-- Inform the user when no events match the selected filters -->
+        <h2>No Matching Events</h2>
+
+        <p>
+            No public events matched your search criteria.
+        </p>
+
+        <p>
+            Try one of the following:
+        </p>
+
+        <ul>
+
+            <li>Clear the current filters.</li>
+
+            <li>Search for a different event title.</li>
+
+            <li>Select a different category.</li>
+
+            <li>Select a different city.</li>
+
+        </ul>
 
     {% endif %}
 

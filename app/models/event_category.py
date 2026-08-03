@@ -22,12 +22,12 @@ class EventCategory(db.Model):
     # Allow navigation between events and their categories
     event = db.relationship(
         "Event",
-        back_populates="categories"
+        back_populates="event_categories"
     )
 
     category = db.relationship(
         "Category",
-        back_populates="events"
+        back_populates="event_categories"
     )
 
     def __repr__(self):

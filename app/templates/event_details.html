@@ -8,87 +8,76 @@
 </head>
 
 <body>
-
     <h1>{{ event.title }}</h1>
 
-    <!-- Display the organiser responsible for the event -->
-    <p>
-        <strong>Organiser:</strong>
-        {{ event.organiser.first_name }} {{ event.organiser.last_name }}
-    </p>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for category, message in messages %}
+            <p class="{{ category }}-message">{{ message }}</p>
+        {% endfor %}
+    {% endwith %}
 
-    <!-- Display the event description -->
-    <p>
-        <strong>Description:</strong>
-        {{ event.description }}
-    </p>
-
-    <!-- Display the event location -->
-    <p>
-        <strong>Venue:</strong>
-        {{ event.venue_name }}
-    </p>
-
-    <p>
-        <strong>Address:</strong>
-        {{ event.address }}
-    </p>
+    <p><strong>Organiser:</strong> {{ event.organiser.first_name }} {{ event.organiser.last_name }}</p>
+    <p><strong>Description:</strong> {{ event.description }}</p>
+    <p><strong>Venue:</strong> {{ event.venue_name }}</p>
+    <p><strong>Address:</strong> {{ event.address }}</p>
+    <p><strong>City:</strong> {{ event.city }}</p>
+    <p><strong>Country:</strong> {{ event.country }}</p>
+    <p><strong>Privacy:</strong> {{ event.privacy }}</p>
+    <p><strong>Status:</strong> {{ event.status }}</p>
+    <p><strong>Start:</strong> {{ event.start_datetime.strftime("%d %B %Y, %H:%M") }}</p>
+    <p><strong>End:</strong> {{ event.end_datetime.strftime("%d %B %Y, %H:%M") }}</p>
 
     <p>
-        <strong>City:</strong>
-        {{ event.city }}
-    </p>
-
-    <p>
-        <strong>Country:</strong>
-        {{ event.country }}
-    </p>
-
-    <!-- Display the event's visibility and current status -->
-    <p>
-        <strong>Privacy:</strong>
-        {{ event.privacy }}
-    </p>
-
-    <p>
-        <strong>Status:</strong>
-        {{ event.status }}
-    </p>
-
-    <!-- Display when the event begins and ends -->
-    <p>
-        <strong>Start:</strong>
-        {{ event.start_datetime.strftime("%d %B %Y, %H:%M") }}
-    </p>
-
-    <p>
-        <strong>End:</strong>
-        {{ event.end_datetime.strftime("%d %B %Y, %H:%M") }}
-    </p>
-
-    <!-- Display the attendance limit if one has been set -->
-    <p>
-        <strong>Capacity:</strong>
-
-        {% if event.capacity %}
-
-        {{ event.capacity }}
-
+        <strong>Attending:</strong>
+        {% if event.capacity is none %}
+            {{ attendee_count }} attending (unlimited capacity)
         {% else %}
-
-        Unlimited
-
+            {{ attendee_count }} / {{ event.capacity }} attending
         {% endif %}
-
     </p>
 
-    <!-- Return to the user's events page -->
+    {% if is_full %}
+        <p><strong>This event is full.</strong></p>
+    {% endif %}
+
     <p>
-        <a href="{{ url_for('events.my_events') }}">
-            ← Back to My Events
-        </a>
+        <strong>Categories:</strong>
+        {% if event.categories %}
+            {% for category in event.categories %}
+                {{ category.name }}{% if not loop.last %}, {% endif %}
+            {% endfor %}
+        {% else %}
+            None
+        {% endif %}
     </p>
 
+    {% if event.organiser_id == g.user.user_id %}
+        <section>
+            <h2>Registered attendees</h2>
+            {% if event.attendees %}
+                <ul>
+                    {% for attendance in event.attendees %}
+                        <li>{{ attendance.user.first_name }} {{ attendance.user.last_name }}</li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p>Nobody has registered for this event yet.</p>
+            {% endif %}
+        </section>
+    {% elif is_attending %}
+        <p><strong>You are attending this event.</strong></p>
+        <form method="POST" action="{{ url_for('events.leave_event', event_id=event.event_id) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit">Leave Event</button>
+        </form>
+    {% elif not is_full %}
+        <form method="POST" action="{{ url_for('events.attend_event', event_id=event.event_id) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit">Attend Event</button>
+        </form>
+    {% endif %}
+
+    <p><a href="{{ url_for('events.browse_events') }}">Back to Browse Events</a></p>
 </body>
 
 </html>

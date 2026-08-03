@@ -32,6 +32,8 @@
     <!-- Collect the information required to register a new user account -->
     <form method="POST">
 
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
         <label for="first_name">First Name</label><br>
         <input type="text" id="first_name" name="first_name"><br><br>
 
