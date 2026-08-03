@@ -8,6 +8,7 @@ os.environ.setdefault("SECRET_KEY", "test-only-secret-key")
 from app.database.db import db
 from app.models.event import Event
 from app.models.user import User
+from app.rate_limit import limiter
 from main import create_app
 
 
@@ -20,12 +21,15 @@ def app(tmp_path):
             "SECRET_KEY": "test-only-secret-key",
             "SQLALCHEMY_DATABASE_URI": f"sqlite:///{database_path}",
             "WTF_CSRF_ENABLED": False,
+            "LOGIN_RATE_LIMIT": "3 per minute",
         }
     )
 
     with application.app_context():
+        limiter.storage.reset()
         db.create_all()
         yield application
+        limiter.storage.reset()
         db.session.remove()
         db.drop_all()
 

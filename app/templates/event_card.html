@@ -46,6 +46,20 @@
 
     </p>
 
+    {% if show_organiser_details %}
+        <!-- Display dashboard-only event state and registration totals -->
+        <p><strong>Privacy:</strong> {{ event.privacy }}</p>
+        <p><strong>Status:</strong> {{ event.status }}</p>
+        <p>
+            <strong>Attending:</strong>
+            {% if event.capacity is none %}
+                {{ attendee_count }} attending (unlimited capacity)
+            {% else %}
+                {{ attendee_count }} / {{ event.capacity }} attending
+            {% endif %}
+        </p>
+    {% endif %}
+
 </div>
 
 <hr>

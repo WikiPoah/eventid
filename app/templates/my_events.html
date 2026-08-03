@@ -8,25 +8,17 @@
 </head>
 
 <body>
-
     <h1>My Events</h1>
 
-    <!-- Display the organiser's events if any have been created -->
+    <!-- Display only events the current user is registered to attend -->
     {% if events %}
-
         {% for event in events %}
-
             {% include "event_card.html" %}
-
         {% endfor %}
-
     {% else %}
-
-        <!-- Inform the user when they have not created any events -->
-        <p>You haven't created any events yet.</p>
-
+        <p>You are not registered to attend any events yet.</p>
+        <p><a href="{{ url_for('events.browse_events') }}">Browse public events</a></p>
     {% endif %}
-
 </body>
 
 </html>
