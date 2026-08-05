@@ -4,6 +4,9 @@ __pycache__/
 instance/
 *.db
 
+# User-provided event images are runtime data
+app/uploads/
+
 .env
 .env.*
 !.env.example

@@ -1,58 +1,40 @@
-<!DOCTYPE html>
-<html lang="en">
+{% extends "base.html" %}
+{% block title %}Manage Events · EventID{% endblock %}
+{% block content %}
+<div class="page-heading">
+    <div><h1>Manage Events</h1><p>Create, publish, monitor, and update your events.</p></div>
+    <a class="button button-primary" href="{{ url_for('events.create_event') }}">Create Event</a>
+</div>
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Manage Events</title>
-</head>
+<section class="stats-grid" aria-label="Organiser summary">
+    <div class="stat-card"><span><strong>Total events:</strong> {{ summary.total_events }}</span></div>
+    <div class="stat-card"><span><strong>Published:</strong> {{ summary.published_events }}</span></div>
+    <div class="stat-card"><span><strong>Drafts:</strong> {{ summary.draft_events }}</span></div>
+    <div class="stat-card"><span><strong>Cancelled:</strong> {{ summary.cancelled_events }}</span></div>
+    <div class="stat-card"><span><strong>Upcoming events:</strong> {{ summary.upcoming_events }}</span></div>
+    <div class="stat-card"><span><strong>Past events:</strong> {{ summary.past_events }}</span></div>
+    <div class="stat-card"><span><strong>Total registrations:</strong> {{ summary.total_registrations }}</span></div>
+    <div class="stat-card"><span><strong>Full events:</strong> {{ summary.full_events }}</span></div>
+    <div class="stat-card"><span><strong>Nearly full events:</strong> {{ summary.nearly_full_events }} <small>({{ nearly_full_threshold }}% capacity or higher)</small></span></div>
+</section>
 
-<body>
-    <h1>Manage Events</h1>
-
-    <!-- Summarize the current user's organised events and registrations -->
-    <section>
-        <h2>Summary</h2>
-        <ul>
-            <li><strong>Total events:</strong> {{ summary.total_events }}</li>
-            <li><strong>Upcoming events:</strong> {{ summary.upcoming_events }}</li>
-            <li><strong>Past events:</strong> {{ summary.past_events }}</li>
-            <li><strong>Total registrations:</strong> {{ summary.total_registrations }}</li>
-            <li><strong>Full events:</strong> {{ summary.full_events }}</li>
-            <li>
-                <strong>Nearly full events:</strong> {{ summary.nearly_full_events }}
-                <small>({{ nearly_full_threshold }}% capacity or higher)</small>
-            </li>
-        </ul>
-    </section>
-
-    <!-- Display upcoming events with organiser-specific attendance details -->
-    <section>
-        <h2>Upcoming Events</h2>
-        {% if upcoming_events %}
-            {% for event in upcoming_events %}
-                {% set show_organiser_details = true %}
-                {% set attendee_count = attendee_counts[event.event_id] %}
-                {% include "event_card.html" %}
-            {% endfor %}
-        {% else %}
-            <p>You have no upcoming events to manage.</p>
-        {% endif %}
-    </section>
-
-    <!-- Keep completed events available for historical organiser review -->
-    <section>
-        <h2>Past Events</h2>
-        {% if past_events %}
-            {% for event in past_events %}
-                {% set show_organiser_details = true %}
-                {% set attendee_count = attendee_counts[event.event_id] %}
-                {% include "event_card.html" %}
-            {% endfor %}
-        {% else %}
-            <p>You have no past events to manage.</p>
-        {% endif %}
-    </section>
-</body>
-
-</html>
+{% for heading, event_list, empty_message in [
+    ('Upcoming Events', upcoming_events, 'You have no upcoming events to manage.'),
+    ('Past Events', past_events, 'You have no past events to manage.')
+] %}
+<section class="content-section">
+    <h2>{{ heading }}</h2>
+    {% if event_list %}
+        <div class="management-grid">
+        {% for event in event_list %}
+            {% set attendee_count = attendee_counts[event.event_id] %}
+            {% set show_organiser_details = true %}
+            {% include "event_card.html" %}
+        {% endfor %}
+        </div>
+    {% else %}
+        <div class="empty-state"><p>{{ empty_message }}</p></div>
+    {% endif %}
+</section>
+{% endfor %}
+{% endblock %}

@@ -1,4 +1,5 @@
 from flask_wtf import FlaskForm
+from flask_wtf.file import FileField
 
 from wtforms import (
     StringField,
@@ -6,7 +7,8 @@ from wtforms import (
     IntegerField,
     FloatField,
     SelectField,
-    SubmitField
+    SubmitField,
+    BooleanField,
 )
 
 from wtforms.fields.datetime import DateTimeLocalField
@@ -21,7 +23,7 @@ from wtforms.validators import (
 
 
 # Collect and validate the information required to create a new event
-class CreateEventForm(FlaskForm):
+class EventForm(FlaskForm):
 
     """Form for creating a new event."""
 
@@ -137,9 +139,24 @@ class CreateEventForm(FlaskForm):
         ]
     )
 
+    # Keep lifecycle values explicit and validated by WTForms
+    status = SelectField(
+        "Status",
+        choices=[
+            ("Draft", "Draft"),
+            ("Published", "Published"),
+            ("Cancelled", "Cancelled"),
+        ],
+        default="Draft",
+        validators=[DataRequired()],
+    )
+
+    image = FileField("Event Image")
+    remove_image = BooleanField("Remove the current image")
+
     # Submit the completed event creation form
     submit = SubmitField(
-        "Create Event"
+        "Save Event"
     )
 
     # Validate relationships between multiple form fields
@@ -154,3 +171,7 @@ class CreateEventForm(FlaskForm):
             raise ValidationError(
                 "The event end date and time must be after the start date and time."
             )
+
+
+# Preserve the existing import used by callers and tests
+CreateEventForm = EventForm

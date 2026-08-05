@@ -1,4 +1,6 @@
+import csv
 from datetime import datetime
+from io import StringIO
 
 from flask import (
     Blueprint,
@@ -9,7 +11,9 @@ from flask import (
     redirect,
     url_for,
     abort,
-    request
+    request,
+    Response,
+    send_from_directory,
 )
 from sqlalchemy import func, select, text
 from sqlalchemy.exc import IntegrityError, OperationalError, SQLAlchemyError
@@ -17,8 +21,13 @@ from sqlalchemy.orm import selectinload
 
 from app.decorators import login_required
 
-from app.forms.event_forms import CreateEventForm
+from app.forms.event_forms import EventForm
 from app.database.db import db
+from app.event_images import (
+    delete_event_image,
+    save_event_image,
+    validate_event_image,
+)
 from app.models.event import Event
 from app.models.category import Category
 from app.models.event_category import EventCategory
@@ -27,6 +36,56 @@ from app.models.attendance import Attendance
 events = Blueprint("events", __name__)
 
 NEARLY_FULL_THRESHOLD = 0.8
+EVENT_STATUSES = {"Draft", "Published", "Cancelled"}
+
+
+def _safe_csv_value(value):
+    """Prevent attendee-controlled text from becoming a spreadsheet formula."""
+
+    text_value = str(value)
+    if text_value.startswith(("=", "+", "-", "@")):
+        return f"'{text_value}"
+    return text_value
+
+
+def _owned_event_or_404(event_id):
+    """Return an event owned by the current user or reject access."""
+
+    event = db.get_or_404(Event, event_id)
+    # Enforce organiser ownership independently of displayed actions
+    if event.organiser_id != g.user.user_id:
+        abort(403)
+    return event
+
+
+def _category_ids(categories):
+    """Validate submitted category identifiers against database records."""
+
+    try:
+        selected_ids = {
+            int(category_id)
+            for category_id in request.form.getlist("categories")
+        }
+    except ValueError:
+        return None
+    available_ids = {category.category_id for category in categories}
+    return selected_ids if selected_ids <= available_ids else None
+
+
+def _can_view_event(event):
+    """Apply event lifecycle and privacy rules to detail and image access."""
+
+    if event.organiser_id == g.user.user_id:
+        return True
+    attendance = db.session.get(
+        Attendance,
+        (g.user.user_id, event.event_id),
+    )
+    if event.status == "Cancelled":
+        return attendance is not None
+    if event.status != "Published":
+        return False
+    return event.privacy == "Public" or attendance is not None
 
 
 @events.route("/manage-events")
@@ -75,12 +134,14 @@ def manage_events():
     # Summarize capacity without treating unlimited events as nearly full
     full_events = [
         event for event in organiser_events
-        if event.capacity is not None
+        if event.status == "Published"
+        and event.capacity is not None
         and attendee_counts[event.event_id] >= event.capacity
     ]
     nearly_full_events = [
         event for event in organiser_events
-        if event.capacity is not None
+        if event.status == "Published"
+        and event.capacity is not None
         and event.capacity > 0
         and attendee_counts[event.event_id] < event.capacity
         and attendee_counts[event.event_id] / event.capacity
@@ -88,6 +149,15 @@ def manage_events():
     ]
     summary = {
         "total_events": len(organiser_events),
+        "published_events": sum(
+            event.status == "Published" for event in organiser_events
+        ),
+        "draft_events": sum(
+            event.status == "Draft" for event in organiser_events
+        ),
+        "cancelled_events": sum(
+            event.status == "Cancelled" for event in organiser_events
+        ),
         "upcoming_events": len(upcoming_events),
         "past_events": len(past_events),
         "total_registrations": sum(attendee_counts.values()),
@@ -109,11 +179,14 @@ def manage_events():
 @events.route("/my-events")
 @login_required
 def my_events():
-    # Retrieve attended events and their card categories for the current user
+    # Keep cancelled registrations visible while excluding organiser-only drafts
     attending_events = db.session.scalars(
         select(Event)
         .join(Attendance)
-        .where(Attendance.user_id == g.user.user_id)
+        .where(
+            Attendance.user_id == g.user.user_id,
+            Event.status.in_(("Published", "Cancelled")),
+        )
         .options(selectinload(Event.categories))
         .order_by(Event.start_datetime)
     ).all()
@@ -147,15 +220,23 @@ def browse_events():
     # Retrieve all unique cities that have public events
     cities = db.session.scalars(
         select(Event.city)
-        .where(Event.privacy == "Public")
+        .where(
+            Event.privacy == "Public",
+            Event.status == "Published",
+            Event.end_datetime >= datetime.now(),
+        )
         .distinct()
         .order_by(Event.city)
     ).all()
 
-    # Start with all public events
+    # Public discovery includes only published public events
     statement = (
         select(Event)
-        .where(Event.privacy == "Public")
+        .where(
+            Event.privacy == "Public",
+            Event.status == "Published",
+            Event.end_datetime >= datetime.now(),
+        )
         .options(selectinload(Event.categories))
     )
 
@@ -213,12 +294,8 @@ def event_details(event_id):
         )
     )
 
-    # Prevent users from viewing private events they do not organise
-    if (
-        event.organiser_id != g.user.user_id
-        and event.privacy != "Public"
-    ):
-
+    # Apply status and privacy authorization before rendering event data
+    if not _can_view_event(event):
         abort(403)
 
     # Derive attendance controls from the eagerly loaded attendance records
@@ -236,6 +313,27 @@ def event_details(event_id):
         is_attending=is_attending,
         is_full=is_full,
     )
+
+
+@events.route("/event-images/<path:filename>")
+@login_required
+def event_image(filename):
+    # Resolve image access through its owning event instead of trusting a path
+    if filename != filename.rsplit("/", 1)[-1]:
+        abort(404)
+    event = db.session.scalar(
+        select(Event).where(Event.image_path == filename)
+    )
+    if event is None:
+        abort(404)
+    if not _can_view_event(event):
+        abort(403)
+    response = send_from_directory(
+        current_app.config["EVENT_IMAGE_UPLOAD_FOLDER"],
+        filename,
+    )
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    return response
 
 
 def _locked_event(event_id):
@@ -274,6 +372,15 @@ def attend_event(event_id):
         if event.privacy != "Public" and event.organiser_id != user_id:
             db.session.rollback()
             abort(403)
+
+        # Only published events can accept new attendance registrations
+        if event.status != "Published":
+            db.session.rollback()
+            flash(
+                "This event is not accepting new registrations.",
+                "warning",
+            )
+            return redirect(destination)
 
         # Keep the organiser separate from ordinary attendance records
         if event.organiser_id == user_id:
@@ -329,8 +436,8 @@ def leave_event(event_id):
     event = db.get_or_404(Event, event_id)
     destination = url_for("events.event_details", event_id=event_id)
 
-    # Preserve private-event authorization for state-changing requests
-    if event.privacy != "Public" and event.organiser_id != g.user.user_id:
+    # Allow authorised existing attendees to leave cancelled private events
+    if not _can_view_event(event):
         abort(403)
 
     attendance = db.session.get(Attendance, (g.user.user_id, event_id))
@@ -361,111 +468,252 @@ def my_attending_events():
 @events.route("/events/create", methods=["GET", "POST"])
 @login_required
 def create_event():
+    form = EventForm()
+    categories = Category.query.order_by(Category.name).all()
 
-    # Create the event creation form
-    form = CreateEventForm()
-
-    # Retrieve all available event categories
-    categories = (
-        Category.query
-        .order_by(Category.name)
-        .all()
-    )
-
-    # Create a new event when the submitted information is valid
     if form.validate_on_submit():
-
-        # Normalize category identifiers before using them in database records
-        try:
-            selected_category_ids = {
-                int(category_id)
-                for category_id in request.form.getlist("categories")
-            }
-        except ValueError:
+        selected_category_ids = _category_ids(categories)
+        if selected_category_ids is None:
             flash("One or more selected categories are invalid.", "error")
             return render_template(
-                "create_event.html",
+                "event_form.html",
                 form=form,
                 categories=categories,
+                selected_category_ids=set(),
+                page_title="Create Event",
             )
 
-        # Reject submitted identifiers that are not present in the database
-        valid_category_ids = {
-            category.category_id
-            for category in categories
-            if category.category_id in selected_category_ids
-        }
-        if valid_category_ids != selected_category_ids:
-            flash("One or more selected categories are invalid.", "error")
-            return render_template(
-                "create_event.html",
-                form=form,
-                categories=categories,
-            )
-
-        event = Event(
-
-            # Store the event's basic details
-            title=form.title.data,
-            description=form.description.data,
-
-            # Store the event's location information
-            venue_name=form.venue_name.data,
-            address=form.address.data,
-            city=form.city.data,
-            country=form.country.data,
-            location_notes=form.location_notes.data,
-
-            # Store when the event will take place
-            start_datetime=form.start_datetime.data,
-            end_datetime=form.end_datetime.data,
-
-            # Store additional event information if provided
-            capacity=form.capacity.data,
-            latitude=form.latitude.data,
-            longitude=form.longitude.data,
-
-            # Store the event visibility
-            privacy=form.privacy.data,
-
-            # Associate the event with the logged in organiser
-            organiser_id=g.user.user_id
-
-        )
-
-        try:
-            # Save the event and category associations in one transaction
-            db.session.add(event)
-            db.session.flush()
-
-            for category_id in valid_category_ids:
-                db.session.add(
-                    EventCategory(
+        image_extension, image_error = validate_event_image(form.image.data)
+        if image_error:
+            form.image.errors.append(image_error)
+        else:
+            saved_image = None
+            try:
+                if image_extension:
+                    # Save under a generated filename before the transaction
+                    saved_image = save_event_image(
+                        form.image.data,
+                        image_extension,
+                    )
+                event = Event(
+                    title=form.title.data,
+                    description=form.description.data or "",
+                    venue_name=form.venue_name.data,
+                    address=form.address.data,
+                    city=form.city.data,
+                    country=form.country.data,
+                    location_notes=form.location_notes.data,
+                    start_datetime=form.start_datetime.data,
+                    end_datetime=form.end_datetime.data,
+                    capacity=form.capacity.data,
+                    latitude=form.latitude.data,
+                    longitude=form.longitude.data,
+                    privacy=form.privacy.data,
+                    status=form.status.data,
+                    image_path=saved_image,
+                    organiser_id=g.user.user_id,
+                )
+                db.session.add(event)
+                db.session.flush()
+                for category_id in selected_category_ids:
+                    db.session.add(EventCategory(
                         event_id=event.event_id,
                         category_id=category_id,
-                    )
-                )
+                    ))
+                db.session.commit()
+            except (OSError, SQLAlchemyError):
+                # Roll back data and remove a newly saved orphan image
+                db.session.rollback()
+                delete_event_image(saved_image)
+                flash("The event could not be created. Please try again.", "error")
+            else:
+                flash("Event created successfully.", "success")
+                return redirect(url_for("events.manage_events"))
 
-            db.session.commit()
-        except SQLAlchemyError:
-            # Restore the session after a failed event-creation transaction
-            db.session.rollback()
-            flash("The event could not be created. Please try again.", "error")
-            return render_template(
-                "create_event.html",
-                form=form,
-                categories=categories,
-            )
-
-        flash("Event created successfully!")
-
-        return redirect(
-            url_for("events.manage_events")
-        )
-
-    # Display the event creation form
     return render_template(
-        "create_event.html",
+        "event_form.html",
         form=form,
-        categories=categories
+        categories=categories,
+        selected_category_ids=set(request.form.getlist("categories")),
+        page_title="Create Event",
+    )
+
+
+@events.route("/events/<int:event_id>/edit", methods=["GET", "POST"])
+@login_required
+def edit_event(event_id):
+    event = _owned_event_or_404(event_id)
+    form = EventForm(obj=event)
+    categories = Category.query.order_by(Category.name).all()
+    selected_category_ids = {
+        link.category_id for link in event.event_categories
+    }
+
+    if form.validate_on_submit():
+        submitted_category_ids = _category_ids(categories)
+        if submitted_category_ids is None:
+            flash("One or more selected categories are invalid.", "error")
+        else:
+            attendee_count = db.session.scalar(
+                select(func.count()).select_from(Attendance).where(
+                    Attendance.event_id == event.event_id
+                )
+            )
+            # Prevent organisers from reducing capacity below attendance
+            if (
+                form.capacity.data is not None
+                and form.capacity.data < attendee_count
+            ):
+                form.capacity.errors.append(
+                    f"Capacity cannot be lower than the {attendee_count} "
+                    "existing attendees."
+                )
+            else:
+                image_extension, image_error = validate_event_image(
+                    form.image.data
+                )
+                if image_error:
+                    form.image.errors.append(image_error)
+                else:
+                    old_image = event.image_path
+                    new_image = None
+                    try:
+                        if image_extension:
+                            new_image = save_event_image(
+                                form.image.data,
+                                image_extension,
+                            )
+                        event.title = form.title.data
+                        event.description = form.description.data or ""
+                        event.venue_name = form.venue_name.data
+                        event.address = form.address.data
+                        event.city = form.city.data
+                        event.country = form.country.data
+                        event.location_notes = form.location_notes.data
+                        event.latitude = form.latitude.data
+                        event.longitude = form.longitude.data
+                        event.start_datetime = form.start_datetime.data
+                        event.end_datetime = form.end_datetime.data
+                        event.capacity = form.capacity.data
+                        event.privacy = form.privacy.data
+                        event.status = form.status.data
+                        if new_image:
+                            event.image_path = new_image
+                        elif form.remove_image.data:
+                            event.image_path = None
+
+                        # Replace category associations in the same transaction
+                        event.event_categories.clear()
+                        event.event_categories.extend(
+                            EventCategory(category_id=category_id)
+                            for category_id in submitted_category_ids
+                        )
+                        db.session.commit()
+                    except (OSError, SQLAlchemyError):
+                        db.session.rollback()
+                        delete_event_image(new_image)
+                        flash(
+                            "The event could not be updated. Please try again.",
+                            "error",
+                        )
+                    else:
+                        if old_image and (
+                            new_image or form.remove_image.data
+                        ):
+                            delete_event_image(old_image)
+                        flash("Event updated successfully.", "success")
+                        return redirect(url_for("events.manage_events"))
+        selected_category_ids = set(request.form.getlist("categories"))
+
+    return render_template(
+        "event_form.html",
+        form=form,
+        categories=categories,
+        selected_category_ids=selected_category_ids,
+        event=event,
+        page_title="Edit Event",
+    )
+
+
+@events.route("/events/<int:event_id>/status", methods=["POST"])
+@login_required
+def change_event_status(event_id):
+    event = _owned_event_or_404(event_id)
+    new_status = request.form.get("status")
+    if new_status not in EVENT_STATUSES:
+        abort(400)
+    try:
+        event.status = new_status
+        db.session.commit()
+    except SQLAlchemyError:
+        db.session.rollback()
+        flash("The event status could not be changed.", "error")
+    else:
+        flash(f"Event status changed to {new_status}.", "success")
+    return redirect(url_for("events.manage_events"))
+
+
+@events.route("/events/<int:event_id>/delete-confirmation")
+@login_required
+def confirm_delete_event(event_id):
+    event = _owned_event_or_404(event_id)
+    return render_template("delete_event.html", event=event)
+
+
+@events.route("/events/<int:event_id>/delete", methods=["POST"])
+@login_required
+def delete_event(event_id):
+    event = _owned_event_or_404(event_id)
+    image_path = event.image_path
+    title = event.title
+    try:
+        # ORM cascades remove attendance and category associations atomically
+        db.session.delete(event)
+        db.session.commit()
+    except SQLAlchemyError:
+        db.session.rollback()
+        flash("The event could not be deleted. Please try again.", "error")
+    else:
+        delete_event_image(image_path)
+        flash(f'Event "{title}" was deleted.', "success")
+    return redirect(url_for("events.manage_events"))
+
+
+@events.route("/events/<int:event_id>/attendees/export")
+@login_required
+def export_attendees(event_id):
+    event = _owned_event_or_404(event_id)
+    attendances = db.session.scalars(
+        select(Attendance)
+        .where(Attendance.event_id == event.event_id)
+        .options(selectinload(Attendance.user))
+        .order_by(Attendance.registered_at, Attendance.user_id)
+    ).all()
+
+    # Generate CSV with the standard writer to quote untrusted values safely
+    output = StringIO(newline="")
+    writer = csv.writer(output)
+    writer.writerow([
+        "First name",
+        "Last name",
+        "Username",
+        "Registration date",
+        "Attendance status",
+    ])
+    for attendance in attendances:
+        writer.writerow([
+            _safe_csv_value(attendance.user.first_name),
+            _safe_csv_value(attendance.user.last_name),
+            _safe_csv_value(attendance.user.username),
+            attendance.registered_at.isoformat(),
+            attendance.status,
+        ])
+
+    filename = f"event-{event.event_id}-attendees.csv"
+    return Response(
+        output.getvalue(),
+        mimetype="text/csv",
+        headers={
+            "Content-Disposition": f'attachment; filename="{filename}"'
+        },
     )

@@ -22,6 +22,7 @@ def app(tmp_path):
             "SQLALCHEMY_DATABASE_URI": f"sqlite:///{database_path}",
             "WTF_CSRF_ENABLED": False,
             "LOGIN_RATE_LIMIT": "3 per minute",
+            "EVENT_IMAGE_UPLOAD_FOLDER": str(tmp_path / "event-images"),
         }
     )
 

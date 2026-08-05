@@ -13,7 +13,7 @@ from app.rate_limit import limiter
 from app.routes.auth import auth
 from app.routes.events import events
 from app.models import User
-from app.database.seed import seed_categories
+from app.database.seed import seed_categories, seed_demo_data, DEMO_PASSWORD
 
 migrate = Migrate()
 
@@ -48,6 +48,14 @@ def create_app(test_config=None):
             "SESSION_COOKIE_SECURE",
             "false",
         ).lower() in {"1", "true", "yes", "on"},
+        MAX_CONTENT_LENGTH=int(os.environ.get(
+            "MAX_CONTENT_LENGTH",
+            Config.MAX_CONTENT_LENGTH,
+        )),
+    )
+    application.config.setdefault(
+        "EVENT_IMAGE_UPLOAD_FOLDER",
+        os.path.join(application.instance_path, "event_images"),
     )
 
     if test_config:
@@ -84,12 +92,46 @@ def create_app(test_config=None):
     def home():
         return render_template("index.html", user=g.user)
 
+    # Render safe, consistent pages for expected HTTP failures
+    @application.errorhandler(403)
+    def forbidden(_error):
+        return render_template("errors/403.html"), 403
+
+    @application.errorhandler(404)
+    def not_found(_error):
+        return render_template("errors/404.html"), 404
+
+    @application.errorhandler(429)
+    def too_many_requests(_error):
+        return render_template("errors/429.html"), 429
+
+    @application.errorhandler(500)
+    def internal_server_error(_error):
+        db.session.rollback()
+        return render_template("errors/500.html"), 500
+
     @application.cli.command("seed-categories")
     def seed_categories_command():
         """Populate the database with the default event categories."""
 
         seed_categories()
         click.echo("Default event categories have been seeded.")
+
+    @application.cli.command("seed-demo-data")
+    def seed_demo_data_command():
+        """Populate development-only users, events, and attendance."""
+
+        result = seed_demo_data()
+        click.echo(
+            "Development demo data is ready "
+            f"({result['users_created']} users, "
+            f"{result['events_created']} events, and "
+            f"{result['attendances_created']} registrations created)."
+        )
+        click.echo(
+            "Demo logins: demo_organiser or demo_attendee; "
+            f"development-only password: {DEMO_PASSWORD}"
+        )
 
     return application
 

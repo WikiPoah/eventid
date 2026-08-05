@@ -8,6 +8,10 @@ class Event(db.Model):
 
     __tablename__ = "events"
     __table_args__ = (
+        db.CheckConstraint(
+            "status IN ('Draft', 'Published', 'Cancelled')",
+            name="ck_events_status",
+        ),
         db.Index(
             "ix_events_privacy_start_datetime",
             "privacy",
@@ -49,12 +53,20 @@ class Event(db.Model):
 
     end_datetime = db.Column(db.DateTime, nullable=False)
 
-    status = db.Column(db.String(20), nullable=False, default="Draft")
+    status = db.Column(
+        db.String(20),
+        nullable=False,
+        default="Draft",
+        server_default="Draft",
+    )
 
     privacy = db.Column(db.String(20), nullable=False, default="Private")
 
     # Store the maximum number of attendees if a limit is set
     capacity = db.Column(db.Integer)
+
+    # Store only the safe relative filename for an optional event image
+    image_path = db.Column(db.String(255))
 
     # Link each event to its organiser
     organiser_id = db.Column(
