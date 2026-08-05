@@ -1,49 +1,15 @@
-<!DOCTYPE html>
-
-<html lang="en">
-
-<head>
-
-    <meta charset="UTF-8">
-
-    <title>Login</title>
-
-</head>
-
-<body>
-
-    <h1>Login</h1>
-
-    <!-- Display any validation or login messages returned by the application -->
-    {% with messages = get_flashed_messages() %}
-
-        {% if messages %}
-
-            {% for message in messages %}
-
-                <p class="error-message">{{ message }}</p>
-
-            {% endfor %}
-
-        {% endif %}
-
-    {% endwith %}
-
-    <!-- Collect the user's login credentials -->
-    <form method="POST">
-
+{% extends "base.html" %}
+{% block title %}Log in · EventID{% endblock %}
+{% block content %}
+<section class="panel auth-panel">
+    <h1>Log in</h1>
+    <p>Access your events and registrations.</p>
+    <form method="POST" class="form-layout">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-
-        <label for="username">Username</label><br>
-        <input type="text" id="username" name="username"><br><br>
-
-        <label for="password">Password</label><br>
-        <input type="password" id="password" name="password"><br><br>
-
-        <button type="submit">Login</button>
-
+        <div class="form-field"><label for="username">Username</label><input type="text" id="username" name="username" autocomplete="username" required></div>
+        <div class="form-field"><label for="password">Password</label><input type="password" id="password" name="password" autocomplete="current-password" required></div>
+        <button class="button button-primary" type="submit">Log in</button>
     </form>
-
-</body>
-
-</html>
+    <p>New to EventID? <a href="{{ url_for('auth.signup') }}">Create an account</a>.</p>
+</section>
+{% endblock %}

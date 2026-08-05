@@ -18,3 +18,8 @@ class Config:
     LOGIN_RATE_LIMIT = "5 per minute"
     RATELIMIT_STORAGE_URI = "memory://"
     RATELIMIT_HEADERS_ENABLED = True
+
+    # Keep event uploads small and outside the tracked application tree
+    MAX_CONTENT_LENGTH = 5 * 1024 * 1024
+    EVENT_IMAGE_MAX_BYTES = 4 * 1024 * 1024
+    EVENT_IMAGE_EXTENSIONS = {"jpg", "jpeg", "png", "webp"}

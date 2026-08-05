@@ -1,0 +1,3 @@
+{% extends "base.html" %}
+{% block title %}404 Not Found · EventID{% endblock %}
+{% block content %}<section class="error-page"><p class="error-code">404</p><h1>Page not found</h1><p>The page or event you requested does not exist.</p><a class="button button-primary" href="{{ url_for('events.browse_events') if g.user else url_for('home') }}">Return to EventID</a></section>{% endblock %}

@@ -1,83 +1,48 @@
-<!DOCTYPE html>
-<html lang="en">
+{% extends "base.html" %}
+{% block title %}{{ event.title }} · EventID{% endblock %}
+{% block content %}
+<div class="page-heading">
+    <div>
+        <div class="badge-row"><span class="badge badge-status-{{ event.status|lower }}">{{ event.status }}</span><span class="badge">{{ event.privacy }}</span></div>
+        <h1>{{ event.title }}</h1>
+        <p>Organised by {{ event.organiser.first_name }} {{ event.organiser.last_name }}</p>
+    </div>
+    {% if event.organiser_id == g.user.user_id %}<a class="button button-primary" href="{{ url_for('events.edit_event', event_id=event.event_id) }}">Edit Event</a>{% endif %}
+</div>
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ event.title }}</title>
-</head>
+{% if event.image_path %}<img class="event-hero-image" src="{{ url_for('events.event_image', filename=event.image_path) }}" alt="Banner for {{ event.title }}">{% else %}<div class="event-hero-image event-image-fallback" role="img" aria-label="No event image available">EventID</div>{% endif %}
 
-<body>
-    <h1>{{ event.title }}</h1>
+{% if event.status == 'Cancelled' %}<p class="notice notice-warning"><strong>This event has been cancelled.</strong> New registrations are closed.</p>{% elif event.status == 'Draft' %}<p class="notice"><strong>Draft preview.</strong> Only you can view this event.</p>{% endif %}
 
-    {% with messages = get_flashed_messages(with_categories=true) %}
-        {% for category, message in messages %}
-            <p class="{{ category }}-message">{{ message }}</p>
-        {% endfor %}
-    {% endwith %}
-
-    <p><strong>Organiser:</strong> {{ event.organiser.first_name }} {{ event.organiser.last_name }}</p>
-    <p><strong>Description:</strong> {{ event.description }}</p>
-    <p><strong>Venue:</strong> {{ event.venue_name }}</p>
-    <p><strong>Address:</strong> {{ event.address }}</p>
-    <p><strong>City:</strong> {{ event.city }}</p>
-    <p><strong>Country:</strong> {{ event.country }}</p>
-    <p><strong>Privacy:</strong> {{ event.privacy }}</p>
-    <p><strong>Status:</strong> {{ event.status }}</p>
-    <p><strong>Start:</strong> {{ event.start_datetime.strftime("%d %B %Y, %H:%M") }}</p>
-    <p><strong>End:</strong> {{ event.end_datetime.strftime("%d %B %Y, %H:%M") }}</p>
-
-    <p>
-        <strong>Attending:</strong>
-        {% if event.capacity is none %}
-            {{ attendee_count }} attending (unlimited capacity)
-        {% else %}
-            {{ attendee_count }} / {{ event.capacity }} attending
+<div class="details-grid">
+    <section class="panel">
+        <h2>About this event</h2>
+        <p>{{ event.description }}</p>
+        <dl class="details-list">
+            <dt>Date</dt><dd>{{ event.start_datetime.strftime("%d %B %Y") }}</dd>
+            <dt>Time</dt><dd>{{ event.start_datetime.strftime("%H:%M") }}–{{ event.end_datetime.strftime("%H:%M") }}</dd>
+            <dt>Location</dt><dd>{{ event.venue_name }}<br>{{ event.address }}, {{ event.city }}, {{ event.country }}</dd>
+            {% if event.location_notes %}<dt>Location notes</dt><dd>{{ event.location_notes }}</dd>{% endif %}
+            <dt>Categories</dt><dd>{% if event.categories %}{{ event.categories|map(attribute='name')|join(', ') }}{% else %}None{% endif %}</dd>
+            <dt>Status</dt><dd>{{ event.status }}</dd>
+            <dt>Privacy</dt><dd>{{ event.privacy }}</dd>
+        </dl>
+    </section>
+    <aside class="panel attendance-panel" id="attendees">
+        <h2>Attendance</h2>
+        <p>{% if event.capacity is none %}{{ attendee_count }} attending (unlimited capacity){% else %}{{ attendee_count }} / {{ event.capacity }} attending{% endif %}</p>
+        {% if is_full %}<p><strong>This event is full.</strong></p>{% endif %}
+        {% if event.organiser_id == g.user.user_id %}
+            <h3>Registered attendees</h3>
+            {% if event.attendees %}<ul>{% for attendance in event.attendees %}<li>{{ attendance.user.first_name }} {{ attendance.user.last_name }} — {{ attendance.status }}</li>{% endfor %}</ul>{% else %}<p>Nobody has registered for this event yet.</p>{% endif %}
+            <a class="button button-secondary" href="{{ url_for('events.export_attendees', event_id=event.event_id) }}">Export CSV</a>
+        {% elif is_attending %}
+            <p><strong>You are attending this event.</strong></p>
+            <form method="POST" action="{{ url_for('events.leave_event', event_id=event.event_id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="button button-secondary" type="submit">Leave Event</button></form>
+        {% elif event.status == 'Published' and not is_full %}
+            <form method="POST" action="{{ url_for('events.attend_event', event_id=event.event_id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="button button-primary" type="submit">Attend Event</button></form>
         {% endif %}
-    </p>
-
-    {% if is_full %}
-        <p><strong>This event is full.</strong></p>
-    {% endif %}
-
-    <p>
-        <strong>Categories:</strong>
-        {% if event.categories %}
-            {% for category in event.categories %}
-                {{ category.name }}{% if not loop.last %}, {% endif %}
-            {% endfor %}
-        {% else %}
-            None
-        {% endif %}
-    </p>
-
-    {% if event.organiser_id == g.user.user_id %}
-        <section>
-            <h2>Registered attendees</h2>
-            {% if event.attendees %}
-                <ul>
-                    {% for attendance in event.attendees %}
-                        <li>{{ attendance.user.first_name }} {{ attendance.user.last_name }}</li>
-                    {% endfor %}
-                </ul>
-            {% else %}
-                <p>Nobody has registered for this event yet.</p>
-            {% endif %}
-        </section>
-    {% elif is_attending %}
-        <p><strong>You are attending this event.</strong></p>
-        <form method="POST" action="{{ url_for('events.leave_event', event_id=event.event_id) }}">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-            <button type="submit">Leave Event</button>
-        </form>
-    {% elif not is_full %}
-        <form method="POST" action="{{ url_for('events.attend_event', event_id=event.event_id) }}">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-            <button type="submit">Attend Event</button>
-        </form>
-    {% endif %}
-
-    <p><a href="{{ url_for('events.browse_events') }}">Back to Browse Events</a></p>
-</body>
-
-</html>
+    </aside>
+</div>
+<p><a href="{{ url_for('events.browse_events') }}">Back to Browse Events</a></p>
+{% endblock %}

@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}Delete {{ event.title }} · EventID{% endblock %}
+{% block content %}
+<section class="panel narrow-panel">
+    <h1>Delete event?</h1>
+    <p>You are about to permanently delete <strong>{{ event.title }}</strong>.</p>
+    <p>All attendance registrations and category associations will also be removed. This action cannot be undone.</p>
+    <div class="form-actions">
+        <form method="POST" action="{{ url_for('events.delete_event', event_id=event.event_id) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button class="button button-danger" type="submit">Delete Event</button>
+        </form>
+        <a class="button button-secondary" href="{{ url_for('events.manage_events') }}">Keep Event</a>
+    </div>
+</section>
+{% endblock %}

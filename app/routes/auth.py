@@ -159,7 +159,7 @@ def login_rate_limit_exceeded(_error):
     """Display a helpful response when login attempts exceed the limit."""
 
     flash("Too many login attempts. Please wait before trying again.", "error")
-    return render_template("login.html"), 429
+    return render_template("errors/429.html"), 429
 
 
 @auth.route("/logout", methods=["POST"])

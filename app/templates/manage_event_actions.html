@@ -1,0 +1,43 @@
+<section class="management-actions" aria-label="Manage {{ event.title }}">
+    <h4>Manage event</h4>
+    <div class="management-primary-actions">
+        <a class="button button-secondary" href="{{ url_for('events.event_details', event_id=event.event_id) }}">View Details</a>
+        <a class="button button-primary" href="{{ url_for('events.edit_event', event_id=event.event_id) }}">Edit Event</a>
+        <a class="button button-secondary" href="{{ url_for('events.event_details', event_id=event.event_id) }}#attendees">View Attendees</a>
+        <a class="button button-secondary" href="{{ url_for('events.export_attendees', event_id=event.event_id) }}">Export CSV</a>
+    </div>
+
+    <!-- Show only lifecycle actions that apply to the current state -->
+    <div class="management-status-actions">
+        {% if event.status == "Draft" %}
+            <form method="POST" action="{{ url_for('events.change_event_status', event_id=event.event_id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="status" value="Published">
+                <button class="button button-success" type="submit">Publish</button>
+            </form>
+            <form method="POST" action="{{ url_for('events.change_event_status', event_id=event.event_id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="status" value="Cancelled">
+                <button class="button button-warning" type="submit">Cancel Event</button>
+            </form>
+        {% elif event.status == "Published" %}
+            <form method="POST" action="{{ url_for('events.change_event_status', event_id=event.event_id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="status" value="Draft">
+                <button class="button button-secondary" type="submit">Move to Draft</button>
+            </form>
+            <form method="POST" action="{{ url_for('events.change_event_status', event_id=event.event_id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="status" value="Cancelled">
+                <button class="button button-warning" type="submit">Cancel Event</button>
+            </form>
+        {% else %}
+            <form method="POST" action="{{ url_for('events.change_event_status', event_id=event.event_id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="status" value="Draft">
+                <button class="button button-secondary" type="submit">Move to Draft</button>
+            </form>
+        {% endif %}
+        <a class="button button-danger" href="{{ url_for('events.confirm_delete_event', event_id=event.event_id) }}">Delete Event</a>
+    </div>
+</section>
