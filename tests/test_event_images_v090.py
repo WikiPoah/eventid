@@ -5,7 +5,6 @@ from app.database.db import db
 from app.models.event import Event
 from tests.conftest import login
 
-
 PNG_IMAGE = b"\x89PNG\r\n\x1a\n" + b"\x00" * 24
 
 
@@ -27,9 +26,7 @@ def event_data(**overrides):
     return values
 
 
-def test_valid_image_upload_uses_safe_generated_filename(
-    app, client, users
-):
+def test_valid_image_upload_uses_safe_generated_filename(app, client, users):
     login(client, users[0])
     data = event_data(image=(BytesIO(PNG_IMAGE), "../../unsafe-name.png"))
     response = client.post(
@@ -47,9 +44,7 @@ def test_valid_image_upload_uses_safe_generated_filename(
         assert saved_path.read_bytes() == PNG_IMAGE
 
 
-def test_invalid_image_extension_and_signature_are_rejected(
-    app, client, users
-):
+def test_invalid_image_extension_and_signature_are_rejected(app, client, users):
     login(client, users[0])
     response = client.post(
         "/events/create",
@@ -100,9 +95,7 @@ def test_organiser_can_replace_image_and_old_file_is_removed(
     assert (upload_directory / new_name).exists()
 
 
-def test_unauthorised_user_cannot_replace_image(
-    app, client, users, event_factory
-):
+def test_unauthorised_user_cannot_replace_image(app, client, users, event_factory):
     event_id = event_factory()
     login(client, users[1])
     response = client.post(
@@ -115,11 +108,9 @@ def test_unauthorised_user_cannot_replace_image(
         assert db.session.get(Event, event_id).image_path is None
 
 
-def test_image_fallback_and_image_access_rules(
-    app, client, users, event_factory
-):
+def test_image_fallback_and_image_access_rules(app, client, users, event_factory):
     public_id = event_factory(image_path=None)
-    private_id = event_factory(status="Draft", image_path="private.png")
+    event_factory(status="Draft", image_path="private.png")
     upload_directory = Path(app.config["EVENT_IMAGE_UPLOAD_FOLDER"])
     upload_directory.mkdir(parents=True)
     (upload_directory / "private.png").write_bytes(PNG_IMAGE)

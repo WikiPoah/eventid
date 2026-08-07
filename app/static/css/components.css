@@ -1,0 +1,210 @@
+/* Style shared page headings and action groups */
+
+.page-heading,
+.form-actions,
+.card-actions,
+.badge-row {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+
+    gap: 12px;
+}
+
+.page-heading {
+    justify-content: space-between;
+
+    margin-bottom: 28px;
+}
+
+
+/* Style shared content containers */
+
+.panel,
+.empty-state,
+.stat-card {
+    padding: 24px;
+
+    border: 1px solid #dde3ee;
+    border-radius: 18px;
+
+    background-color: white;
+
+    box-shadow: 0 12px 30px rgba(22, 47, 103, 0.07);
+}
+
+
+/* Style shared buttons */
+
+.button {
+    min-height: 44px;
+
+    padding: 10px 16px;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    border: 1px solid transparent;
+    border-radius: 11px;
+
+    font: inherit;
+    font-weight: 600;
+
+    text-decoration: none;
+
+    cursor: pointer;
+}
+
+.button-primary {
+    background-color: var(--navy);
+
+    color: white;
+}
+
+.button-secondary {
+    border-color: #b9c5db;
+
+    background-color: white;
+
+    color: var(--navy);
+}
+
+.button-danger {
+    background-color: #a32135;
+
+    color: white;
+}
+
+.button-success {
+    background-color: #187044;
+
+    color: white;
+}
+
+.button-warning {
+    border-color: #d6a91b;
+
+    background-color: #fff1c7;
+
+    color: #664d00;
+}
+
+.button:hover {
+    transform: translateY(-1px);
+
+    box-shadow: 0 4px 10px rgba(15, 33, 77, 0.12);
+}
+
+.button-primary:hover {
+    background-color: var(--navy-light);
+
+    color: white;
+}
+
+
+/* Style badges */
+
+.badge {
+    padding: 4px 9px;
+
+    border-radius: 999px;
+
+    background-color: #e7edf7;
+
+    font-size: 0.78rem;
+    font-weight: 600;
+}
+
+.badge-status-published {
+    background-color: #dff4e7;
+
+    color: #17603a;
+}
+
+.badge-status-draft {
+    background-color: #fff1c7;
+
+    color: #745700;
+}
+
+.badge-status-cancelled,
+.badge-warning {
+    background-color: #fde1e5;
+
+    color: #8d1e30;
+}
+
+
+/* Style flash messages and notices */
+
+.flash,
+.notice {
+    margin-bottom: 18px;
+
+    padding: 14px 18px;
+
+    border-radius: 9px;
+
+    background-color: #e7eefb;
+}
+
+.flash-error,
+.notice-warning {
+    background-color: #fde8eb;
+
+    color: #7e1727;
+}
+
+.flash-success {
+    background-color: #e5f6ec;
+
+    color: #185c36;
+}
+
+
+/* Style shared validation and supporting text */
+
+.field-error,
+.warning-text {
+    color: #a32135;
+
+    font-weight: 600;
+}
+
+.help-text {
+    color: #66738b;
+
+    font-size: 0.9rem;
+}
+
+.muted-copy {
+    color: var(--muted);
+}
+
+
+/* Style pagination */
+
+.pagination {
+    justify-content: center;
+
+    margin-top: 30px;
+}
+
+
+/* Style common error-page elements */
+
+.error-page {
+    max-width: 620px;
+
+    margin: 60px auto;
+
+    text-align: center;
+}
+
+.error-code {
+    color: #35579a;
+
+    font-size: 4rem;
+    font-weight: 700;
+}

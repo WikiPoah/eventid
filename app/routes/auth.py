@@ -1,3 +1,5 @@
+from urllib.parse import urlsplit
+
 from flask import (
     Blueprint,
     current_app,
@@ -10,7 +12,7 @@ from flask import (
 )
 from sqlalchemy import or_, select
 from sqlalchemy.exc import IntegrityError
-from werkzeug.security import generate_password_hash, check_password_hash
+from werkzeug.security import check_password_hash, generate_password_hash
 
 from app.database.db import db
 from app.models.user import User
@@ -18,6 +20,19 @@ from app.rate_limit import limiter
 
 # Create a blueprint to handle user authentication routes
 auth = Blueprint("auth", __name__)
+
+
+def _safe_next_url(candidate):
+    """Return a local application path or reject an external redirect."""
+
+    if not candidate:
+        return None
+    parsed = urlsplit(candidate)
+    if parsed.scheme or parsed.netloc or not parsed.path.startswith("/"):
+        return None
+    if parsed.path.startswith("//") or "\\" in parsed.path:
+        return None
+    return parsed.path + (f"?{parsed.query}" if parsed.query else "")
 
 
 @auth.route("/signup", methods=["GET", "POST"])
@@ -87,7 +102,7 @@ def signup():
             last_name=last_name,
             username=username,
             email=email,
-            password_hash=password_hash
+            password_hash=password_hash,
         )
 
         # Save the new user to the database
@@ -115,6 +130,8 @@ def signup():
 )
 def login():
 
+    next_url = _safe_next_url(request.values.get("next"))
+
     if request.method == "POST":
 
         # Retrieve the login credentials entered by the user
@@ -126,7 +143,7 @@ def login():
 
             flash("Please fill in all fields.")
 
-            return render_template("login.html")
+            return render_template("login.html", next_url=next_url)
 
         # Look up the account associated with the entered username
         user = User.query.filter_by(username=username).first()
@@ -135,23 +152,23 @@ def login():
 
             flash("Invalid username or password.")
 
-            return render_template("login.html")
+            return render_template("login.html", next_url=next_url)
 
         # Verify that the entered password matches the stored password hash
         if not check_password_hash(user.password_hash, password):
 
             flash("Invalid username or password.")
 
-            return render_template("login.html")
+            return render_template("login.html", next_url=next_url)
 
         # Store the user's ID to keep them logged in
         session["user_id"] = user.user_id
 
         flash("Logged in successfully!")
 
-        return redirect(url_for("home"))
+        return redirect(next_url or url_for("home"))
 
-    return render_template("login.html")
+    return render_template("login.html", next_url=next_url)
 
 
 @auth.errorhandler(429)

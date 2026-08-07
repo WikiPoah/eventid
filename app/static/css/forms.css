@@ -1,0 +1,116 @@
+/* Style shared form and content layouts */
+
+.form-layout,
+.form-field,
+.content-section {
+    display: flex;
+    flex-direction: column;
+
+    gap: 10px;
+}
+
+.form-layout {
+    gap: 30px;
+}
+
+
+/* Style form grids */
+
+.form-grid,
+.filter-grid {
+    display: grid;
+
+    gap: 18px;
+}
+
+.form-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.filter-grid {
+    grid-template-columns: repeat(3, 1fr);
+
+    margin-bottom: 30px;
+}
+
+.form-field-wide {
+    grid-column: 1 / -1;
+}
+
+
+/* Style form controls */
+
+.form-field input,
+.form-field textarea,
+.form-field select,
+.card-actions select {
+    width: 100%;
+
+    padding: 10px 12px;
+
+    border: 1px solid #cbd5e5;
+    border-radius: 8px;
+
+    font: inherit;
+}
+
+.form-field input:focus,
+.form-field textarea:focus,
+.form-field select:focus {
+    border-color: var(--navy-light);
+
+    box-shadow: 0 0 0 3px rgba(36, 71, 137, 0.14);
+}
+
+
+/* Style checkbox layouts */
+
+.checkbox-grid {
+    display: grid;
+
+    grid-template-columns: repeat(
+        auto-fit,
+        minmax(180px, 1fr)
+    );
+
+    gap: 10px;
+}
+
+.checkbox-grid label,
+.checkbox-row {
+    display: flex;
+    align-items: center;
+
+    gap: 8px;
+}
+
+.checkbox-grid input,
+.checkbox-row input {
+    width: auto;
+
+    flex: 0 0 auto;
+}
+
+
+/* Style authentication and narrow form panels */
+
+.narrow-panel,
+.auth-panel {
+    max-width: 620px;
+
+    margin: 60px auto;
+}
+
+
+/* Style filter action controls */
+
+.filter-actions {
+    align-items: stretch;
+    justify-content: flex-end;
+}
+
+.search-submit {
+    min-width: 112px;
+
+    white-space: nowrap;
+}

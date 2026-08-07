@@ -2,12 +2,12 @@
 {% block title %}Browse Events · EventID{% endblock %}
 {% block content %}
 <div class="page-heading"><div><h1>Browse Events</h1><p>Find published public events that match your interests.</p></div></div>
-<form class="panel filter-grid" method="GET">
+<form class="panel filter-grid" method="GET" role="search">
     <div class="form-field"><label for="search">Search by event title</label><input id="search" name="search" value="{{ search }}"></div>
     <div class="form-field"><label for="category">Category</label><select id="category" name="category"><option value="">All Categories</option>{% for category in categories %}<option value="{{ category.category_id }}" {% if selected_category == category.category_id %}selected{% endif %}>{{ category.name }}</option>{% endfor %}</select></div>
     <div class="form-field"><label for="city">City</label><select id="city" name="city"><option value="">All Cities</option>{% for city in cities %}<option value="{{ city }}" {% if selected_city == city %}selected{% endif %}>{{ city }}</option>{% endfor %}</select></div>
-    <div class="form-actions"><button class="button button-primary" type="submit">Search</button><a class="button button-secondary" href="{{ url_for('events.browse_events') }}">Clear</a></div>
+    <div class="form-actions filter-actions"><button class="button button-primary search-submit" type="submit">Search</button><a class="button button-secondary" href="{{ url_for('events.browse_events') }}">Clear Filters</a></div>
 </form>
-{% if events %}<div class="event-grid content-section">{% for event in events %}{% include "event_card.html" %}{% endfor %}</div>{% else %}<div class="empty-state"><h2>No Matching Events</h2><p>No published public events matched your search criteria. Try clearing or changing the filters.</p></div>{% endif %}
+{% if events %}<div class="event-grid content-section stagger-grid">{% for event in events %}{% include "event_card.html" %}{% endfor %}</div>{% else %}<div class="empty-state"><h2>No Matching Events</h2><p>No published public events matched your search criteria. Try clearing or changing the filters.</p></div>{% endif %}
 {% if pagination.pages > 1 %}<nav class="pagination" aria-label="Event result pages">{% if pagination.has_prev %}<a href="{{ url_for('events.browse_events', page=pagination.prev_num, search=search or None, category=selected_category or None, city=selected_city or None) }}">Previous</a>{% endif %}{% for page_number in pagination.iter_pages() %}{% if page_number %}{% if page_number == pagination.page %}<strong aria-current="page">{{ page_number }}</strong>{% else %}<a href="{{ url_for('events.browse_events', page=page_number, search=search or None, category=selected_category or None, city=selected_city or None) }}">{{ page_number }}</a>{% endif %}{% else %}<span>…</span>{% endif %}{% endfor %}{% if pagination.has_next %}<a href="{{ url_for('events.browse_events', page=pagination.next_num, search=search or None, category=selected_category or None, city=selected_city or None) }}">Next</a>{% endif %}</nav>{% endif %}
 {% endblock %}

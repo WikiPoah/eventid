@@ -6,6 +6,7 @@
     <p>Access your events and registrations.</p>
     <form method="POST" class="form-layout">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        {% if next_url %}<input type="hidden" name="next" value="{{ next_url }}">{% endif %}
         <div class="form-field"><label for="username">Username</label><input type="text" id="username" name="username" autocomplete="username" required></div>
         <div class="form-field"><label for="password">Password</label><input type="password" id="password" name="password" autocomplete="current-password" required></div>
         <button class="button button-primary" type="submit">Log in</button>

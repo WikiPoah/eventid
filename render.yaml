@@ -1,0 +1,38 @@
+services:
+  - type: web
+    name: eventid-web
+    runtime: python
+    plan: starter
+    branch: main
+    autoDeployTrigger: checksPass
+    buildCommand: pip install -r requirements.txt
+    preDeployCommand: flask --app main:app db upgrade
+    startCommand: waitress-serve --host=0.0.0.0 --port=$PORT main:app
+    healthCheckPath: /health
+    disk:
+      name: eventid-uploads
+      mountPath: /var/data/eventid
+      sizeGB: 1
+    envVars:
+      - key: FLASK_ENV
+        value: production
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DATABASE_URL
+        fromDatabase:
+          name: eventid-db
+          property: connectionString
+      - key: UPLOAD_DIRECTORY
+        value: /var/data/eventid/event_images
+      - key: SESSION_COOKIE_SECURE
+        value: "true"
+      - key: RATELIMIT_STORAGE_URI
+        value: memory://
+      - key: LOG_LEVEL
+        value: INFO
+
+databases:
+  - name: eventid-db
+    plan: basic-256mb
+    databaseName: eventid
+    user: eventid

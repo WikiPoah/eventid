@@ -38,7 +38,9 @@ def test_organiser_cannot_attend_own_event(app, client, users, event_factory):
     assert attendance_count(app, event_id) == 0
 
 
-def test_unauthorized_user_cannot_attend_private_event(app, client, users, event_factory):
+def test_unauthorized_user_cannot_attend_private_event(
+    app, client, users, event_factory
+):
     event_id = event_factory(privacy="Private")
     login(client, users[1])
     response = client.post(f"/events/{event_id}/attend")
@@ -101,8 +103,11 @@ def test_capacity_below_existing_count_remains_closed(app, users, event_factory)
         db.session.commit()
 
         extra = User(
-            first_name="Extra", last_name="User", username="extra",
-            email="extra@example.test", password_hash="unused",
+            first_name="Extra",
+            last_name="User",
+            username="extra",
+            email="extra@example.test",
+            password_hash="unused",
         )
         db.session.add(extra)
         db.session.commit()
@@ -114,7 +119,9 @@ def test_capacity_below_existing_count_remains_closed(app, users, event_factory)
     assert attendance_count(app, event_id) == 2
 
 
-def test_my_events_only_shows_current_users_attendance(app, client, users, event_factory):
+def test_my_events_only_shows_current_users_attendance(
+    app, client, users, event_factory
+):
     mine = event_factory(title="My Registration")
     theirs = event_factory(title="Someone Else Registration")
     with app.app_context():

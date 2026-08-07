@@ -1,27 +1,105 @@
-<article class="event-card {% if event.status == 'Cancelled' %}event-card-cancelled{% endif %}">
+<article class="event-card stagger-item {% if event.status == 'Cancelled' %}event-card-cancelled{% endif %}">
+
     {% if event.image_path %}
-        <img class="event-card-image" src="{{ url_for('events.event_image', filename=event.image_path) }}" alt="Banner for {{ event.title }}">
+        <img
+            class="event-card-image"
+            src="{{ url_for('events.event_image', filename=event.image_path) }}"
+            alt="Banner for {{ event.title }}"
+        >
     {% else %}
-        <div class="event-card-image event-image-fallback" role="img" aria-label="No event image available">EventID</div>
-    {% endif %}
-    <div class="event-information">
-        <div class="badge-row">
-            <span class="badge badge-status-{{ event.status|lower }}">{{ event.status }}</span>
-            <span class="badge">{{ event.privacy }}</span>
-            {% if event.capacity is not none and attendee_count is defined and attendee_count >= event.capacity %}<span class="badge badge-warning">Full</span>{% endif %}
+        <div
+            class="event-card-image event-image-fallback"
+            aria-hidden="true"
+        >
+            EventID
         </div>
-        <h3><a href="{{ url_for('events.event_details', event_id=event.event_id) }}">{{ event.title }}</a></h3>
-        <p class="card-metadata"><strong>Date:</strong> {{ event.start_datetime.strftime("%d %B %Y") }}</p>
-        <p class="card-metadata"><strong>Time:</strong> {{ event.start_datetime.strftime("%H:%M") }}–{{ event.end_datetime.strftime("%H:%M") }}</p>
-        <p class="card-metadata"><strong>Venue:</strong> {{ event.venue_name }}</p>
-        <p class="card-metadata"><strong>City:</strong> {{ event.city }}</p>
-        <p><strong>Categories:</strong> {% if event.categories %}{{ event.categories|map(attribute='name')|join(', ') }}{% else %}None{% endif %}</p>
+    {% endif %}
+
+    <div class="event-information">
+
+        <div class="badge-row">
+            <span class="badge badge-status-{{ event.status|lower }}">
+                {{ event.status }}
+            </span>
+
+            <span class="badge">
+                {{ event.privacy }}
+            </span>
+
+            {% if event.capacity is not none and attendee_count is defined and attendee_count >= event.capacity %}
+                <span class="badge badge-warning">
+                    Full
+                </span>
+            {% endif %}
+        </div>
+
+        <h3>
+            <a href="{{ url_for('events.event_details', event_id=event.event_id) }}">
+                {{ event.title }}
+            </a>
+        </h3>
+
+        <p class="card-metadata">
+            <strong>Date:</strong>
+            {{ event.start_datetime.strftime("%d %B %Y") }}
+        </p>
+
+        <p class="card-metadata">
+            <strong>Time:</strong>
+            {{ event.start_datetime.strftime("%H:%M") }}–{{ event.end_datetime.strftime("%H:%M") }}
+        </p>
+
+        <p class="card-metadata">
+            <strong>Venue:</strong>
+            {{ event.venue_name }}
+        </p>
+
+        <p class="card-metadata">
+            <strong>City:</strong>
+            {{ event.city }}
+        </p>
+
+        <p>
+            <strong>Categories:</strong>
+
+            {% if event.categories %}
+                {{ event.categories | map(attribute="name") | join(", ") }}
+            {% else %}
+                None
+            {% endif %}
+        </p>
+
         {% if show_organiser_details %}
-            <p><strong>Attending:</strong> {% if event.capacity is none %}{{ attendee_count }} attending (unlimited capacity){% else %}{{ attendee_count }} / {{ event.capacity }} attending{% endif %}</p>
-            {% if event.capacity and attendee_count < event.capacity and attendee_count / event.capacity >= 0.8 %}<p class="warning-text">Nearly full</p>{% endif %}
+
+            <p>
+                <strong>Attending:</strong>
+
+                {% if event.capacity is none %}
+                    {{ attendee_count }} attending (unlimited capacity)
+                {% else %}
+                    {{ attendee_count }} / {{ event.capacity }} attending
+                {% endif %}
+            </p>
+
+            {% if event.capacity and attendee_count < event.capacity and attendee_count / event.capacity >= 0.8 %}
+                <p class="warning-text">
+                    Nearly full
+                </p>
+            {% endif %}
+
             {% include "manage_event_actions.html" %}
+
         {% else %}
-            <a class="button button-primary card-details-action" href="{{ url_for('events.event_details', event_id=event.event_id) }}">View Details</a>
+
+            <a
+                class="button button-primary card-details-action"
+                href="{{ url_for('events.event_details', event_id=event.event_id) }}"
+            >
+                View Details
+            </a>
+
         {% endif %}
+
     </div>
+
 </article>

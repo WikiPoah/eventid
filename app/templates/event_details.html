@@ -7,7 +7,7 @@
         <h1>{{ event.title }}</h1>
         <p>Organised by {{ event.organiser.first_name }} {{ event.organiser.last_name }}</p>
     </div>
-    {% if event.organiser_id == g.user.user_id %}<a class="button button-primary" href="{{ url_for('events.edit_event', event_id=event.event_id) }}">Edit Event</a>{% endif %}
+    {% if g.user and event.organiser_id == g.user.user_id %}<a class="button button-primary" href="{{ url_for('events.edit_event', event_id=event.event_id) }}">Edit Event</a>{% endif %}
 </div>
 
 {% if event.image_path %}<img class="event-hero-image" src="{{ url_for('events.event_image', filename=event.image_path) }}" alt="Banner for {{ event.title }}">{% else %}<div class="event-hero-image event-image-fallback" role="img" aria-label="No event image available">EventID</div>{% endif %}
@@ -32,14 +32,18 @@
         <h2>Attendance</h2>
         <p>{% if event.capacity is none %}{{ attendee_count }} attending (unlimited capacity){% else %}{{ attendee_count }} / {{ event.capacity }} attending{% endif %}</p>
         {% if is_full %}<p><strong>This event is full.</strong></p>{% endif %}
-        {% if event.organiser_id == g.user.user_id %}
+        {% if g.user and event.organiser_id == g.user.user_id %}
             <h3>Registered attendees</h3>
             {% if event.attendees %}<ul>{% for attendance in event.attendees %}<li>{{ attendance.user.first_name }} {{ attendance.user.last_name }} — {{ attendance.status }}</li>{% endfor %}</ul>{% else %}<p>Nobody has registered for this event yet.</p>{% endif %}
             <a class="button button-secondary" href="{{ url_for('events.export_attendees', event_id=event.event_id) }}">Export CSV</a>
-        {% elif is_attending %}
+        {% elif g.user and is_attending %}
             <p><strong>You are attending this event.</strong></p>
             <form method="POST" action="{{ url_for('events.leave_event', event_id=event.event_id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="button button-secondary" type="submit">Leave Event</button></form>
-        {% elif event.status == 'Published' and not is_full %}
+        {% elif not g.user and event.status == 'Published' and not is_full %}
+            <p>Log in or create an account to reserve your place.</p>
+            <a class="button button-primary" href="{{ url_for('auth.login', next=url_for('events.event_details', event_id=event.event_id)) }}">Log in to attend</a>
+            <a class="button button-secondary" href="{{ url_for('auth.signup') }}">Create an account</a>
+        {% elif g.user and event.status == 'Published' and not is_full %}
             <form method="POST" action="{{ url_for('events.attend_event', event_id=event.event_id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="button button-primary" type="submit">Attend Event</button></form>
         {% endif %}
     </aside>

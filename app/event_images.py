@@ -68,9 +68,7 @@ def delete_event_image(filename):
 
     if not filename or Path(filename).name != filename:
         return
-    upload_directory = Path(
-        current_app.config["EVENT_IMAGE_UPLOAD_FOLDER"]
-    ).resolve()
+    upload_directory = Path(current_app.config["EVENT_IMAGE_UPLOAD_FOLDER"]).resolve()
     target = (upload_directory / filename).resolve()
     if target.parent == upload_directory and target.is_file():
         try:

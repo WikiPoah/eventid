@@ -1,4 +1,5 @@
-from sqlalchemy import event as sqlalchemy_event, inspect
+from sqlalchemy import event as sqlalchemy_event
+from sqlalchemy import inspect
 
 from app.database.db import db
 from main import create_app
@@ -81,8 +82,7 @@ def test_signup_checks_username_and_email_with_one_query(app, client):
 def test_event_query_indexes_exist(app):
     with app.app_context():
         index_names = {
-            index["name"]
-            for index in inspect(db.engine).get_indexes("events")
+            index["name"] for index in inspect(db.engine).get_indexes("events")
         }
 
     assert index_names == {

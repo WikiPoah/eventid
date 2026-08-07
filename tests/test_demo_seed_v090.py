@@ -65,9 +65,11 @@ def test_seeded_users_use_hashed_development_password(app):
 def test_seeded_statuses_and_relative_dates_are_correct(app):
     with app.app_context():
         seed_demo_data()
-        status_counts = dict(db.session.execute(
-            select(Event.status, func.count()).group_by(Event.status)
-        ).all())
+        status_counts = dict(
+            db.session.execute(
+                select(Event.status, func.count()).group_by(Event.status)
+            ).all()
+        )
         now = datetime.now()
         upcoming_count = Event.query.filter(Event.start_datetime >= now).count()
         past_count = Event.query.filter(Event.start_datetime < now).count()
@@ -80,9 +82,7 @@ def test_seeded_statuses_and_relative_dates_are_correct(app):
 def test_seeded_capacity_and_attendance_scenarios(app):
     with app.app_context():
         seed_demo_data()
-        nearly_full = Event.query.filter_by(
-            title="Hamburg Community Workshop"
-        ).one()
+        nearly_full = Event.query.filter_by(title="Hamburg Community Workshop").one()
         full = Event.query.filter_by(title="Berlin Indie Music Night").one()
         unlimited = Event.query.filter_by(title="London Open Data Forum").one()
 
@@ -92,15 +92,18 @@ def test_seeded_capacity_and_attendance_scenarios(app):
         assert len(full.attendees) == 3
         assert unlimited.capacity is None
         assert len(unlimited.attendees) == 1
-        assert len({
-            (attendance.user_id, attendance.event_id)
-            for attendance in Attendance.query.all()
-        }) == Attendance.query.count()
+        assert (
+            len(
+                {
+                    (attendance.user_id, attendance.event_id)
+                    for attendance in Attendance.query.all()
+                }
+            )
+            == Attendance.query.count()
+        )
 
 
-def test_city_filter_uses_only_unique_published_public_cities(
-    app, client
-):
+def test_city_filter_uses_only_unique_published_public_cities(app, client):
     with app.app_context():
         seed_demo_data()
         attendee_id = User.query.filter_by(username="demo_attendee").one().user_id

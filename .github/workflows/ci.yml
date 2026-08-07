@@ -1,0 +1,51 @@
+name: EventID quality gates
+
+on:
+  push:
+    branches: [develop, main]
+  pull_request:
+    branches: [develop, main]
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    name: Python 3.12 quality and application checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      SECRET_KEY: ci-only-fake-secret-never-use-in-production
+      FLASK_ENV: testing
+      DATABASE_URL: sqlite:///ci-eventid.db
+      SESSION_COOKIE_SECURE: "false"
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements-dev.txt
+      - name: Install dependencies
+        run: python -m pip install --disable-pip-version-check -r requirements-dev.txt
+      - name: Verify formatting
+        run: python -m black --check .
+      - name: Run lint checks
+        run: python -m ruff check .
+      - name: Run tests with coverage
+        run: python -m pytest --cov=app --cov-report=term-missing --cov-fail-under=85
+      - name: Verify application and routes
+        run: |
+          python -c "from main import create_app; create_app()"
+          python -m flask --app main:app routes
+      - name: Verify migrations
+        run: |
+          python -m flask --app main:app db upgrade
+          python -m flask --app main:app db current
+          python -m flask --app main:app db check
+      - name: Reject tracked local or secret files
+        shell: bash
+        run: |
+          test -z "$(git ls-files -- '.env' 'instance/**' '*.db' '**/__pycache__/**' '*.pyc' 'app/uploads/**')"

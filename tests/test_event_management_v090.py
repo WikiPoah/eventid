@@ -1,5 +1,3 @@
-from datetime import datetime, timedelta
-
 from sqlalchemy.exc import SQLAlchemyError
 
 from app.database.db import db
@@ -69,9 +67,7 @@ def test_edit_is_owner_only_and_missing_event_is_not_found(
     assert client.get("/events/999999/edit").status_code == 404
 
 
-def test_edit_rejects_invalid_dates_and_categories(
-    app, client, users, event_factory
-):
+def test_edit_rejects_invalid_dates_and_categories(app, client, users, event_factory):
     event_id = event_factory(title="Original")
     login(client, users[0])
     response = client.post(
@@ -91,15 +87,15 @@ def test_edit_rejects_invalid_dates_and_categories(
         assert db.session.get(Event, event_id).title == "Original"
 
 
-def test_capacity_cannot_be_reduced_below_attendance(
-    app, client, users, event_factory
-):
+def test_capacity_cannot_be_reduced_below_attendance(app, client, users, event_factory):
     event_id = event_factory(capacity=10)
     with app.app_context():
-        db.session.add_all([
-            Attendance(user_id=users[1], event_id=event_id),
-            Attendance(user_id=users[2], event_id=event_id),
-        ])
+        db.session.add_all(
+            [
+                Attendance(user_id=users[1], event_id=event_id),
+                Attendance(user_id=users[2], event_id=event_id),
+            ]
+        )
         db.session.commit()
     login(client, users[0])
     response = client.post(
@@ -128,18 +124,18 @@ def test_edit_database_failure_rolls_back(
         assert db.session.get(Event, event_id).title == "Before Failure"
 
 
-def test_delete_is_owner_only_post_only_and_cascades(
-    app, users, event_factory
-):
+def test_delete_is_owner_only_post_only_and_cascades(app, users, event_factory):
     event_id = event_factory()
     with app.app_context():
         category = Category(name="Delete Category")
         db.session.add(category)
         db.session.flush()
-        db.session.add_all([
-            Attendance(user_id=users[1], event_id=event_id),
-            EventCategory(event_id=event_id, category_id=category.category_id),
-        ])
+        db.session.add_all(
+            [
+                Attendance(user_id=users[1], event_id=event_id),
+                EventCategory(event_id=event_id, category_id=category.category_id),
+            ]
+        )
         db.session.commit()
 
     other_client = app.test_client()
@@ -160,9 +156,7 @@ def test_delete_is_owner_only_post_only_and_cascades(
         assert EventCategory.query.filter_by(event_id=event_id).count() == 0
 
 
-def test_delete_missing_event_and_csrf_requirement(
-    app, client, users, event_factory
-):
+def test_delete_missing_event_and_csrf_requirement(app, client, users, event_factory):
     login(client, users[0])
     assert client.post("/events/999999/delete").status_code == 404
     event_id = event_factory()
@@ -176,9 +170,12 @@ def test_delete_missing_event_and_csrf_requirement(
 def test_status_change_is_owner_only(client, users, event_factory):
     event_id = event_factory()
     login(client, users[1])
-    assert client.post(
-        f"/events/{event_id}/status", data={"status": "Cancelled"}
-    ).status_code == 403
+    assert (
+        client.post(
+            f"/events/{event_id}/status", data={"status": "Cancelled"}
+        ).status_code
+        == 403
+    )
     login(client, users[0])
     response = client.post(
         f"/events/{event_id}/status",

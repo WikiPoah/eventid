@@ -7,34 +7,20 @@ class EventCategory(db.Model):
     __tablename__ = "event_categories"
 
     # Link each record to an event and a category
-    event_id = db.Column(
-        db.Integer,
-        db.ForeignKey("events.event_id"),
-        primary_key=True
-    )
+    event_id = db.Column(db.Integer, db.ForeignKey("events.event_id"), primary_key=True)
 
     category_id = db.Column(
-        db.Integer,
-        db.ForeignKey("categories.category_id"),
-        primary_key=True
+        db.Integer, db.ForeignKey("categories.category_id"), primary_key=True
     )
 
     # Allow navigation between events and their categories
-    event = db.relationship(
-        "Event",
-        back_populates="event_categories"
-    )
+    event = db.relationship("Event", back_populates="event_categories")
 
-    category = db.relationship(
-        "Category",
-        back_populates="event_categories"
-    )
+    category = db.relationship("Category", back_populates="event_categories")
 
     def __repr__(self):
 
         # Return a readable representation of the event-category relationship
         return (
-            f"<EventCategory "
-            f"Event {self.event_id} "
-            f"Category {self.category_id}>"
+            f"<EventCategory " f"Event {self.event_id} " f"Category {self.category_id}>"
         )

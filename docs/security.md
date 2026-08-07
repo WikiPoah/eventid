@@ -9,6 +9,31 @@ development, copy `.env.example` to `.env` and generate a new random value. The
 Production must inject `SECRET_KEY` through its secret manager or environment;
 the development `.env` file should not be deployed.
 
+## Response policy
+
+Every response receives `nosniff`, clickjacking protection, a strict-origin
+referrer policy, a restrictive permissions policy, and a self-hosted Content
+Security Policy. Production HTTPS responses also receive HSTS. The CSP allows
+only same-origin scripts, styles, fonts, forms, and images (plus data images),
+so inline scripts and unreviewed third-party assets are not permitted.
+
+Uploaded images are authorized through their owning event, validated by file
+signature and size, stored under generated names, and served with `nosniff` and
+cache metadata. Logs must never include secrets, passwords, sessions, uploaded
+contents, or attendee exports.
+
+## Authentication destinations and recommendations
+
+Public discovery never grants access to private, Draft, or Cancelled events.
+State-changing and personal routes remain authenticated and CSRF-protected.
+Post-login destinations accept only local absolute paths; external URLs,
+protocol-relative paths, schemes, hosts, and backslash variants are discarded.
+
+Recommendations are rendered only for an authenticated user and calculated
+from that user’s existing attendance records at request time. They expose no
+attendee names, private events, raw scores, stored profile, or sensitive
+inference. Popularity is aggregate-only and used as a fallback signal.
+
 ## Compromised-secret history cleanup
 
 Rotating the key is mandatory even if history is rewritten. History rewriting

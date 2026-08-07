@@ -1,0 +1,98 @@
+/* Style the website footer */
+
+footer {
+    margin-top: 80px;
+
+    background: var(--navy);
+
+    color: white;
+}
+
+
+/* Style the footer layout */
+
+.footer-container {
+    max-width: 1450px;
+
+    margin: 0 auto;
+
+    padding: 60px 40px;
+
+    display: grid;
+
+    grid-template-columns: 1.3fr repeat(4, 1fr);
+
+    gap: 35px;
+}
+
+
+/* Style the footer branding */
+
+.footer-brand h3 {
+    margin: 0 0 16px;
+
+    font-size: 1.8rem;
+    font-weight: 700;
+}
+
+.footer-brand p {
+    margin: 0;
+
+    color: rgba(255, 255, 255, 0.75);
+
+    line-height: 1.7;
+}
+
+
+/* Style the footer columns */
+
+.footer-column {
+    display: flex;
+    flex-direction: column;
+}
+
+.footer-column h4 {
+    margin: 0 0 18px;
+
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.footer-column a {
+    margin-bottom: 12px;
+
+    color: rgba(255, 255, 255, 0.72);
+
+    text-decoration: none;
+}
+
+.footer-column a:hover {
+    color: white;
+}
+
+
+/* Style the footer bottom section */
+
+.footer-bottom {
+    max-width: 1450px;
+
+    margin: 0 auto;
+
+    padding: 24px 40px;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 16px;
+
+    border-top: 1px solid rgba(255, 255, 255, 0.12);
+
+    color: rgba(255, 255, 255, 0.65);
+
+    font-size: 0.9rem;
+}
+
+.footer-bottom p {
+    margin: 0;
+}

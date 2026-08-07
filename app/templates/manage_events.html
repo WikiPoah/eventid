@@ -6,16 +6,16 @@
     <a class="button button-primary" href="{{ url_for('events.create_event') }}">Create Event</a>
 </div>
 
-<section class="stats-grid" aria-label="Organiser summary">
-    <div class="stat-card"><span><strong>Total events:</strong> {{ summary.total_events }}</span></div>
-    <div class="stat-card"><span><strong>Published:</strong> {{ summary.published_events }}</span></div>
-    <div class="stat-card"><span><strong>Drafts:</strong> {{ summary.draft_events }}</span></div>
-    <div class="stat-card"><span><strong>Cancelled:</strong> {{ summary.cancelled_events }}</span></div>
-    <div class="stat-card"><span><strong>Upcoming events:</strong> {{ summary.upcoming_events }}</span></div>
-    <div class="stat-card"><span><strong>Past events:</strong> {{ summary.past_events }}</span></div>
-    <div class="stat-card"><span><strong>Total registrations:</strong> {{ summary.total_registrations }}</span></div>
-    <div class="stat-card"><span><strong>Full events:</strong> {{ summary.full_events }}</span></div>
-    <div class="stat-card"><span><strong>Nearly full events:</strong> {{ summary.nearly_full_events }} <small>({{ nearly_full_threshold }}% capacity or higher)</small></span></div>
+<section class="stats-grid stagger-grid" aria-label="Organiser summary">
+    <div class="stat-card stagger-item"><span><strong>Total events:</strong> {{ summary.total_events }}</span></div>
+    <div class="stat-card stagger-item"><span><strong>Published:</strong> {{ summary.published_events }}</span></div>
+    <div class="stat-card stagger-item"><span><strong>Drafts:</strong> {{ summary.draft_events }}</span></div>
+    <div class="stat-card stagger-item"><span><strong>Cancelled:</strong> {{ summary.cancelled_events }}</span></div>
+    <div class="stat-card stagger-item"><span><strong>Upcoming events:</strong> {{ summary.upcoming_events }}</span></div>
+    <div class="stat-card stagger-item"><span><strong>Past events:</strong> {{ summary.past_events }}</span></div>
+    <div class="stat-card stagger-item"><span><strong>Total registrations:</strong> {{ summary.total_registrations }}</span></div>
+    <div class="stat-card stagger-item"><span><strong>Full events:</strong> {{ summary.full_events }}</span></div>
+    <div class="stat-card stagger-item"><span><strong>Nearly full events:</strong> {{ summary.nearly_full_events }} <small>({{ nearly_full_threshold }}% capacity or higher)</small></span></div>
 </section>
 
 {% for heading, event_list, empty_message in [
@@ -25,7 +25,7 @@
 <section class="content-section">
     <h2>{{ heading }}</h2>
     {% if event_list %}
-        <div class="management-grid">
+        <div class="management-grid stagger-grid">
         {% for event in event_list %}
             {% set attendee_count = attendee_counts[event.event_id] %}
             {% set show_organiser_details = true %}

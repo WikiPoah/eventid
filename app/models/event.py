@@ -1,4 +1,4 @@
-from datetime import datetime, UTC
+from datetime import UTC, datetime
 
 from app.database.db import db
 
@@ -69,57 +69,38 @@ class Event(db.Model):
     image_path = db.Column(db.String(255))
 
     # Link each event to its organiser
-    organiser_id = db.Column(
-        db.Integer,
-        db.ForeignKey("users.user_id"),
-        nullable=False
-    )
+    organiser_id = db.Column(db.Integer, db.ForeignKey("users.user_id"), nullable=False)
 
-    organiser = db.relationship(
-        "User",
-        back_populates="events"
-    )
+    organiser = db.relationship("User", back_populates="events")
 
     # Link events to their assigned categories
     event_categories = db.relationship(
-        "EventCategory",
-        back_populates="event",
-        cascade="all, delete-orphan"
+        "EventCategory", back_populates="event", cascade="all, delete-orphan"
     )
 
     # Provide read-only category access while retaining association records
     categories = db.relationship(
-        "Category",
-        secondary="event_categories",
-        viewonly=True
+        "Category", secondary="event_categories", viewonly=True
     )
 
     # Track users who have registered for the event
     attendees = db.relationship(
-        "Attendance",
-        back_populates="event",
-        cascade="all, delete-orphan"
+        "Attendance", back_populates="event", cascade="all, delete-orphan"
     )
 
     # Provide read-only user access without treating organisers as attendees
-    attending_users = db.relationship(
-        "User",
-        secondary="attendance",
-        viewonly=True
-    )
+    attending_users = db.relationship("User", secondary="attendance", viewonly=True)
 
     # Record when the event was created and last updated
     created_at = db.Column(
-        db.DateTime,
-        default=lambda: datetime.now(UTC),
-        nullable=False
+        db.DateTime, default=lambda: datetime.now(UTC), nullable=False
     )
 
     updated_at = db.Column(
         db.DateTime,
         default=lambda: datetime.now(UTC),
         onupdate=lambda: datetime.now(UTC),
-        nullable=False
+        nullable=False,
     )
 
     def __repr__(self):

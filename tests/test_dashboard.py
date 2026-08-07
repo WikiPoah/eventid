@@ -8,9 +8,7 @@ from app.models.user import User
 from tests.conftest import login
 
 
-def test_dashboard_summarizes_only_organisers_events(
-    app, client, users, event_factory
-):
+def test_dashboard_summarizes_only_organisers_events(app, client, users, event_factory):
     upcoming_id = event_factory(
         title="Nearly Full Event",
         capacity=5,
@@ -111,7 +109,7 @@ def test_dashboard_query_count_does_not_grow_per_event(
 def test_dashboard_requires_authentication(client):
     response = client.get("/manage-events")
     assert response.status_code == 302
-    assert response.headers["Location"].endswith("/login")
+    assert response.headers["Location"].endswith("/login?next=/manage-events")
 
 
 def test_my_events_and_manage_events_keep_distinct_responsibilities(
@@ -123,9 +121,7 @@ def test_my_events_and_manage_events_keep_distinct_responsibilities(
         organiser_id=users[2],
     )
     with app.app_context():
-        db.session.add(
-            Attendance(user_id=users[0], event_id=attended_id)
-        )
+        db.session.add(Attendance(user_id=users[0], event_id=attended_id))
         db.session.commit()
 
     login(client, users[0])
@@ -138,10 +134,13 @@ def test_my_events_and_manage_events_keep_distinct_responsibilities(
     assert b"My Attended Event" not in manage_response.data
 
     with app.app_context():
-        assert Attendance.query.filter_by(
-            user_id=users[0],
-            event_id=organised_id,
-        ).first() is None
+        assert (
+            Attendance.query.filter_by(
+                user_id=users[0],
+                event_id=organised_id,
+            ).first()
+            is None
+        )
 
 
 def test_users_cannot_see_another_organisers_dashboard_data(
@@ -169,4 +168,4 @@ def test_navigation_links_to_each_page_responsibility(client, users):
     assert b'href="/manage-events">Manage Events</a>' in response.data
     assert b"/my-attending-events" not in response.data
     assert b">Attending</a>" not in response.data
-    assert b">Calendar</a>" not in response.data
+    assert b">Calendar</a>" in response.data

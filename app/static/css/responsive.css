@@ -1,0 +1,285 @@
+/* Reduce navigation spacing on narrower desktop screens */
+
+@media (max-width: 1300px) {
+
+    .main-navigation {
+        gap: 20px;
+    }
+
+    .nav-centre {
+        gap: 20px;
+    }
+
+    .nav-links {
+        gap: 22px;
+    }
+
+    .nav-search {
+        width: clamp(190px, 20vw, 280px);
+    }
+
+}
+
+
+/* Keep the navigation on one line on laptop screens */
+
+@media (max-width: 1100px) {
+
+    .main-navigation {
+        width: min(1450px, calc(100% - 32px));
+
+        gap: 16px;
+    }
+
+    .nav-logo img {
+        height: 31px;
+    }
+
+    .nav-centre {
+        gap: 16px;
+    }
+
+    .nav-links {
+        gap: 16px;
+    }
+
+    .nav-links a {
+        font-size: 0.9rem;
+    }
+
+    .nav-search {
+        width: 190px;
+    }
+
+}
+
+
+/* Display two carousel cards on medium screens */
+
+@media (max-width: 1000px) {
+
+    .carousel-slide {
+        flex-basis: calc((100% - 20px) / 2);
+    }
+
+}
+
+
+/* Adjust the navigation for tablet screens */
+
+@media (max-width: 900px) {
+
+    .main-navigation {
+        min-height: auto;
+
+        padding: 14px 0;
+
+        flex-wrap: wrap;
+    }
+
+    .nav-logo {
+        order: 1;
+    }
+
+    .account-menu,
+    .account-links {
+        order: 2;
+
+        margin-left: auto;
+    }
+
+    .nav-centre {
+        order: 3;
+
+        width: 100%;
+
+        flex-basis: 100%;
+    }
+
+    .nav-links {
+        flex-wrap: wrap;
+    }
+
+    .nav-search {
+        width: min(320px, 100%);
+    }
+
+}
+
+
+/* Adjust the homepage and footer layouts for smaller screens */
+
+@media (max-width: 800px) {
+
+    .landing-hero {
+        min-height: auto;
+
+        padding: 38px 24px;
+
+        grid-template-columns: 1fr;
+    }
+
+    .hero-mark {
+        display: none;
+    }
+
+    .carousel-heading {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .feature-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .footer-container {
+        grid-template-columns: 1fr;
+    }
+
+    .footer-bottom {
+        padding: 24px 20px;
+
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+}
+
+
+/* Adjust shared layouts for small screens */
+
+@media (max-width: 768px) {
+
+    .main-navigation {
+        width: min(100% - 28px, 1450px);
+    }
+
+    .nav-centre {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .nav-links {
+        justify-content: center;
+
+        gap: 14px;
+    }
+
+    .nav-search {
+        width: 100%;
+    }
+
+    .filters-panel {
+        left: 0;
+        right: 0;
+
+        width: auto;
+    }
+
+    .date-picker-popover {
+        width: 100%;
+    }
+
+    .form-grid,
+    .filter-grid,
+    .details-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .form-field-wide {
+        grid-column: auto;
+    }
+
+    .page-heading {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .card-actions {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .management-primary-actions,
+    .management-status-actions {
+        flex-direction: column;
+    }
+
+    .management-actions form,
+    .management-actions .button {
+        width: 100%;
+    }
+
+    .stats-grid {
+        width: 100%;
+
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .stat-card {
+        min-width: 0;
+
+        padding: 18px;
+
+        overflow-wrap: anywhere;
+    }
+
+    .calendar-entry {
+        grid-template-columns: 64px minmax(0, 1fr);
+
+        gap: 14px;
+    }
+
+    .calendar-entry > .button {
+        grid-column: 2;
+
+        justify-self: start;
+    }
+
+    .calendar-date {
+        min-height: 62px;
+    }
+
+    .calendar-date strong {
+        font-size: 1.55rem;
+    }
+
+}
+
+
+/* Stack the navigation links on narrow mobile screens */
+
+@media (max-width: 600px) {
+
+    .nav-links {
+        align-items: center;
+        flex-direction: column;
+    }
+
+}
+
+
+/* Display one carousel card on mobile screens */
+
+@media (max-width: 650px) {
+
+    .carousel-slide {
+        flex-basis: 100%;
+    }
+
+    .carousel-button {
+        width: 42px;
+        height: 42px;
+
+        font-size: 1.7rem;
+    }
+
+    .carousel-button-previous {
+        left: 8px;
+    }
+
+    .carousel-button-next {
+        right: 8px;
+    }
+
+}

@@ -1,0 +1,79 @@
+/* Style the calendar event list */
+
+.calendar-list {
+    display: grid;
+
+    gap: 16px;
+}
+
+
+/* Style each calendar entry */
+
+.calendar-entry {
+    display: grid;
+
+    grid-template-columns: 82px minmax(0, 1fr) auto;
+
+    align-items: center;
+
+    gap: 22px;
+}
+
+
+/* Style the calendar date block */
+
+.calendar-date {
+    display: grid;
+    place-items: center;
+
+    min-height: 74px;
+
+    border-radius: 14px;
+
+    background-color: #eef3ff;
+
+    color: var(--navy);
+
+    text-align: center;
+}
+
+.calendar-date strong {
+    font-size: 2rem;
+
+    line-height: 1;
+}
+
+.calendar-date span {
+    font-size: 0.82rem;
+    font-weight: 700;
+
+    text-transform: uppercase;
+}
+
+
+/* Style the calendar event information */
+
+.calendar-entry-body {
+    min-width: 0;
+}
+
+.calendar-entry-body h3 {
+    margin: 8px 0 5px;
+
+    color: var(--navy);
+}
+
+.calendar-entry-body h3 a {
+    color: inherit;
+}
+
+.calendar-entry-body p {
+    color: var(--muted);
+}
+
+
+/* Style past events */
+
+.calendar-list-past {
+    opacity: 0.88;
+}
