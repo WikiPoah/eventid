@@ -1,54 +1,50 @@
-/* Reduce navigation spacing on narrower desktop screens */
+/* Adjust navigation spacing on smaller desktop screens */
 
-@media (max-width: 1300px) {
+@media (max-width: 1350px) {
 
     .main-navigation {
-        gap: 20px;
-    }
+        width: min(1500px, calc(100% - 36px));
 
-    .nav-centre {
-        gap: 20px;
+        gap: 30px;
     }
 
     .nav-links {
-        gap: 22px;
+        gap: 34px;
     }
 
     .nav-search {
-        width: clamp(190px, 20vw, 280px);
+        width: 290px;
     }
 
 }
 
 
-/* Keep the navigation on one line on laptop screens */
+/* Keep the navigation balanced on laptop screens */
 
-@media (max-width: 1100px) {
+@media (max-width: 1150px) {
 
     .main-navigation {
-        width: min(1450px, calc(100% - 32px));
-
-        gap: 16px;
+        gap: 22px;
     }
 
     .nav-logo img {
-        height: 31px;
-    }
-
-    .nav-centre {
-        gap: 16px;
+        height: 35px;
     }
 
     .nav-links {
-        gap: 16px;
+        gap: 24px;
     }
 
     .nav-links a {
-        font-size: 0.9rem;
+        font-size: 0.96rem;
+    }
+
+    .nav-actions {
+        gap: 12px;
     }
 
     .nav-search {
-        width: 190px;
+        width: 255px;
     }
 
 }
@@ -65,9 +61,9 @@
 }
 
 
-/* Adjust the navigation for tablet screens */
+/* Adjust navigation for tablet screens */
 
-@media (max-width: 900px) {
+@media (max-width: 920px) {
 
     .main-navigation {
         min-height: auto;
@@ -75,33 +71,45 @@
         padding: 14px 0;
 
         flex-wrap: wrap;
+
+        row-gap: 14px;
     }
 
     .nav-logo {
         order: 1;
     }
 
-    .account-menu,
-    .account-links {
+    .nav-actions {
         order: 2;
 
         margin-left: auto;
     }
 
-    .nav-centre {
+    .nav-links {
         order: 3;
 
         width: 100%;
 
         flex-basis: 100%;
+
+        padding: 4px 0;
+
+        display: flex;
+        align-items: center;
+
+        gap: 26px;
+
+        overflow-x: auto;
+
+        scrollbar-width: none;
     }
 
-    .nav-links {
-        flex-wrap: wrap;
+    .nav-links::-webkit-scrollbar {
+        display: none;
     }
 
     .nav-search {
-        width: min(320px, 100%);
+        width: 270px;
     }
 
 }
@@ -151,33 +159,51 @@
 @media (max-width: 768px) {
 
     .main-navigation {
-        width: min(100% - 28px, 1450px);
+        width: min(100% - 28px, 1500px);
+
+        gap: 14px;
     }
 
-    .nav-centre {
-        align-items: stretch;
-        flex-direction: column;
+    .nav-logo img {
+        height: 34px;
     }
 
     .nav-links {
-        justify-content: center;
+        order: 2;
 
-        gap: 14px;
+        gap: 22px;
+    }
+
+    .nav-actions {
+        width: 100%;
+
+        order: 3;
+
+        display: flex;
+        align-items: center;
+
+        gap: 10px;
+    }
+
+    .nav-search-wrapper {
+        min-width: 0;
+
+        flex: 1;
     }
 
     .nav-search {
         width: 100%;
     }
 
-    .filters-panel {
-        left: 0;
-        right: 0;
-
-        width: auto;
+    .account-menu {
+        flex-shrink: 0;
     }
 
-    .date-picker-popover {
-        width: 100%;
+    .filters-panel {
+        left: auto;
+        right: 0;
+
+        width: min(340px, calc(100vw - 28px));
     }
 
     .form-grid,
@@ -247,13 +273,48 @@
 }
 
 
-/* Stack the navigation links on narrow mobile screens */
+/* Adjust navigation for narrow mobile screens */
 
 @media (max-width: 600px) {
 
+    .main-navigation {
+        gap: 12px;
+    }
+
+    .nav-logo img {
+        height: 32px;
+    }
+
     .nav-links {
-        align-items: center;
+        width: 100%;
+
         flex-direction: column;
+        align-items: flex-start;
+
+        gap: 13px;
+
+        overflow: visible;
+    }
+
+    .nav-actions {
+        align-items: center;
+    }
+
+    .account-links {
+        gap: 10px;
+    }
+
+    .account-menu-toggle {
+        width: 44px;
+        height: 44px;
+    }
+
+    .account-menu-panel {
+        width: min(300px, calc(100vw - 28px));
+    }
+
+    .filters-panel {
+        width: min(340px, calc(100vw - 28px));
     }
 
 }
@@ -280,6 +341,24 @@
 
     .carousel-button-next {
         right: 8px;
+    }
+
+}
+
+
+/* Reduce motion for users who prefer fewer animations */
+
+@media (prefers-reduced-motion: reduce) {
+
+    *,
+    *::before,
+    *::after {
+        scroll-behavior: auto !important;
+
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+
+        transition-duration: 0.01ms !important;
     }
 
 }

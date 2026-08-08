@@ -1,8 +1,50 @@
 {% extends "base.html" %}
+
 {% block title %}Calendar · EventID{% endblock %}
+
 {% block content %}
-<div class="page-heading page-heading-card"><div><span class="eyebrow">Your schedule</span><h1>Calendar</h1><p>Keep your attended and organised events together in one clear timeline.</p></div><a class="button button-primary" href="{{ url_for('events.browse_events') }}">Browse Events</a></div>
-<section class="content-section" aria-labelledby="calendar-upcoming-title"><div class="section-heading"><span class="eyebrow">Next up</span><h2 id="calendar-upcoming-title">Upcoming events</h2></div>
-{% if upcoming_events %}<div class="calendar-list">{% for event in upcoming_events %}<article class="calendar-entry panel"><time class="calendar-date" datetime="{{ event.start_datetime.isoformat() }}"><strong>{{ event.start_datetime.strftime("%d") }}</strong><span>{{ event.start_datetime.strftime("%b %Y") }}</span></time><div class="calendar-entry-body"><div class="badge-row"><span class="badge">{% if event.organiser_id == g.user.user_id %}Organiser{% else %}Attending{% endif %}</span><span class="badge badge-status-{{ event.status|lower }}">{{ event.status }}</span></div><h3><a href="{{ url_for('events.event_details', event_id=event.event_id) }}">{{ event.title }}</a></h3><p>{{ event.start_datetime.strftime("%H:%M") }}–{{ event.end_datetime.strftime("%H:%M") }} · {{ event.venue_name }}, {{ event.city }}</p></div><a class="button button-secondary" href="{{ url_for('events.event_details', event_id=event.event_id) }}">View details</a></article>{% endfor %}</div>{% else %}<div class="empty-state"><h3>Your calendar is clear</h3><p>Attend an event or create one to see it here.</p><a class="button button-primary" href="{{ url_for('events.browse_events') }}">Explore events</a></div>{% endif %}</section>
-<section class="content-section" aria-labelledby="calendar-past-title"><div class="section-heading"><span class="eyebrow">Your history</span><h2 id="calendar-past-title">Past events</h2></div>{% if past_events %}<div class="calendar-list calendar-list-past">{% for event in past_events %}<article class="calendar-entry panel"><time class="calendar-date" datetime="{{ event.start_datetime.isoformat() }}"><strong>{{ event.start_datetime.strftime("%d") }}</strong><span>{{ event.start_datetime.strftime("%b %Y") }}</span></time><div class="calendar-entry-body"><div class="badge-row"><span class="badge">{% if event.organiser_id == g.user.user_id %}Organiser{% else %}Attending{% endif %}</span><span class="badge badge-status-{{ event.status|lower }}">{{ event.status }}</span></div><h3><a href="{{ url_for('events.event_details', event_id=event.event_id) }}">{{ event.title }}</a></h3><p>{{ event.start_datetime.strftime("%H:%M") }} · {{ event.city }}</p></div><a class="button button-secondary" href="{{ url_for('events.event_details', event_id=event.event_id) }}">View details</a></article>{% endfor %}</div>{% else %}<p class="muted-copy">Past events will appear here after they finish.</p>{% endif %}</section>
+
+<!-- Display the calendar page heading -->
+
+<div class="page-heading">
+
+    <div>
+
+        <span class="eyebrow">
+            Coming soon
+        </span>
+
+        <h1>
+            Calendar
+        </h1>
+
+        <p>
+            A clearer way to keep track of the events you organise and attend is on the way.
+        </p>
+
+    </div>
+
+</div>
+
+<!-- Display the unavailable calendar state -->
+
+<div class="empty-state empty-state-stacked">
+
+    <h2>
+        Calendar is coming soon
+    </h2>
+
+    <p>
+        This feature is still being developed and will be available in a future version of EventID.
+    </p>
+
+    <a
+        class="button button-primary"
+        href="{{ url_for('events.my_events') }}"
+    >
+        View My Events
+    </a>
+
+</div>
+
 {% endblock %}

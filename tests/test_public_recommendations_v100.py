@@ -82,7 +82,7 @@ def test_anonymous_navigation_and_attend_return_flow(app, client, users, event_f
     assert b"Sign up" in details.data
     assert b"My Events" not in details.data
     assert b"Manage Events" not in details.data
-    assert b"Log in to attend" in details.data
+    assert b"Log In to Attend" in details.data
 
     response = client.post(f"/events/{event_id}/attend")
     assert response.status_code == 302

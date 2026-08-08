@@ -6,6 +6,12 @@ __pycache__/
 instance/
 *.db
 
+# Local environment and virtual environment
+.venv/
+
+# macOS files
+.DS_Store
+
 # User-provided event images are runtime data
 app/uploads/
 

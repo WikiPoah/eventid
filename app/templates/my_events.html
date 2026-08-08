@@ -1,6 +1,85 @@
 {% extends "base.html" %}
+
 {% block title %}My Events · EventID{% endblock %}
+
 {% block content %}
-<div class="page-heading page-heading-card"><div><span class="eyebrow">Your schedule</span><h1>My Events</h1><p>Events you are registered to attend.</p></div><a class="button button-primary" href="{{ url_for('events.browse_events') }}">Browse Events</a></div>
-{% if events %}<section class="content-section"><h2>Upcoming and attended</h2><div class="event-grid stagger-grid">{% for event in events %}{% set show_organiser_details = false %}{% include "event_card.html" %}{% endfor %}</div></section>{% else %}<div class="empty-state"><h2>No registrations yet</h2><p>You are not registered to attend any events.</p><a class="button button-primary" href="{{ url_for('events.browse_events') }}">Find an event</a></div>{% endif %}
+
+<!-- Display the page heading -->
+
+<div class="page-heading page-heading-card">
+
+    <div>
+
+        <span class="eyebrow">
+            Your schedule
+        </span>
+
+        <h1>
+            My Events
+        </h1>
+
+        <p>
+            Events you are registered to attend.
+        </p>
+
+    </div>
+
+    <a
+        class="button button-primary"
+        href="{{ url_for('events.browse_events') }}"
+    >
+        Browse Events
+    </a>
+
+</div>
+
+{% if events %}
+
+<!-- Display attended events -->
+
+<section class="content-section">
+
+    <h2>
+        Upcoming and Attended
+    </h2>
+
+    <div class="event-grid stagger-grid">
+
+        {% for event in events %}
+
+        {% set show_organiser_details = false %}
+
+        {% include "event_card.html" %}
+
+        {% endfor %}
+
+    </div>
+
+</section>
+
+{% else %}
+
+<!-- Display the empty attendance state -->
+
+<div class="empty-state empty-state-stacked">
+
+    <h2>
+        No registrations yet
+    </h2>
+
+    <p>
+        You are not registered to attend any events.
+    </p>
+
+    <a
+        class="button button-primary"
+        href="{{ url_for('events.browse_events') }}"
+    >
+        Find an Event
+    </a>
+
+</div>
+
+{% endif %}
+
 {% endblock %}

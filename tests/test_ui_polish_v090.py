@@ -35,9 +35,11 @@ def test_draft_and_cancelled_cards_show_relevant_status_actions(
     draft_card = body[body.index("Draft Actions") : body.index("Cancelled Actions")]
     assert "Publish" in draft_card
     assert "Move to Draft" not in draft_card
+
     cancelled_card = body[body.index("Cancelled Actions") :]
     assert "Move to Draft" in cancelled_card
     assert "Cancel Event" not in cancelled_card
+
     assert f"/events/{draft_id}/edit" in body
     assert f"/events/{cancelled_id}/edit" in body
 
@@ -45,6 +47,7 @@ def test_draft_and_cancelled_cards_show_relevant_status_actions(
 def test_shared_navigation_and_key_routes_render(client, users, event_factory):
     event_id = event_factory()
     login(client, users[0])
+
     for path in [
         "/events",
         "/my-events",
@@ -54,12 +57,22 @@ def test_shared_navigation_and_key_routes_render(client, users, event_factory):
         f"/events/{event_id}/edit",
     ]:
         response = client.get(path)
+
         assert response.status_code == 200
-        assert b">Browse Events</a>" in response.data
-        assert b">My Events</a>" in response.data
-        assert b">Manage Events</a>" in response.data
+
+        assert b"Browse Events" in response.data
+        assert b'href="/events"' in response.data
+
+        assert b"My Events" in response.data
+        assert b'href="/my-events"' in response.data
+
+        assert b"Manage Events" in response.data
+        assert b'href="/manage-events"' in response.data
+
         assert b">Attending</a>" not in response.data
-        assert b">Calendar</a>" in response.data
+
+        assert b"Calendar" in response.data
+        assert b"Coming soon" in response.data
 
 
 def test_public_event_card_has_scannable_details_action(client, users, event_factory):

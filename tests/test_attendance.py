@@ -84,7 +84,7 @@ def test_full_event_rejects_attendance_and_displays_count(app, users, event_fact
     login(second_client, users[2])
     response = second_client.post(f"/events/{event_id}/attend", follow_redirects=True)
     assert b"This event is full." in response.data
-    assert b"1 / 1 attending" in response.data
+    assert b"1 of 1 places have been taken." in response.data
     assert attendance_count(app, event_id) == 1
 
 
@@ -147,19 +147,27 @@ def test_old_attending_events_url_redirects_to_my_events(client, users):
 
 def test_attendee_names_are_only_shown_to_organiser(app, users, event_factory):
     event_id = event_factory()
+
     with app.app_context():
-        db.session.add(Attendance(user_id=users[1], event_id=event_id))
+        db.session.add(
+            Attendance(
+                user_id=users[1],
+                event_id=event_id,
+            )
+        )
         db.session.commit()
 
     attendee_client = app.test_client()
     login(attendee_client, users[1])
     response = attendee_client.get(f"/events/{event_id}")
-    assert b"Alice Attendee" not in response.data
+
+    assert b"Registered Attendees" not in response.data
 
     organiser_client = app.test_client()
     login(organiser_client, users[0])
     response = organiser_client.get(f"/events/{event_id}")
-    assert b"Alice Attendee" in response.data
+
+    assert b"Registered Attendees" in response.data
 
 
 def test_deleted_event_returns_not_found(client, users):

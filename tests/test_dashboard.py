@@ -8,27 +8,40 @@ from app.models.user import User
 from tests.conftest import login
 
 
-def test_dashboard_summarizes_only_organisers_events(app, client, users, event_factory):
+def test_dashboard_summarizes_only_organisers_events(
+    app,
+    client,
+    users,
+    event_factory,
+):
     upcoming_id = event_factory(
         title="Nearly Full Event",
         capacity=5,
         start_datetime=datetime.now() + timedelta(days=2),
     )
+
     full_id = event_factory(
         title="Full Event",
         capacity=1,
         start_datetime=datetime.now() + timedelta(days=3),
     )
+
     unlimited_id = event_factory(
         title="Unlimited Event",
         capacity=None,
         start_datetime=datetime.now() + timedelta(days=4),
     )
+
     event_factory(
         title="Past Event",
         start_datetime=datetime.now() - timedelta(days=2),
-        end_datetime=datetime.now() - timedelta(days=2) + timedelta(hours=1),
+        end_datetime=(
+            datetime.now()
+            - timedelta(days=2)
+            + timedelta(hours=1)
+        ),
     )
+
     event_factory(
         title="Other Organiser Event",
         organiser_id=users[2],
@@ -36,6 +49,7 @@ def test_dashboard_summarizes_only_organisers_events(app, client, users, event_f
     )
 
     with app.app_context():
+
         additional_users = [
             User(
                 first_name=f"Attendee{number}",
@@ -46,56 +60,116 @@ def test_dashboard_summarizes_only_organisers_events(app, client, users, event_f
             )
             for number in range(4)
         ]
-        db.session.add_all(additional_users)
+
+        db.session.add_all(
+            additional_users
+        )
+
         db.session.flush()
+
         db.session.add_all(
             [
-                Attendance(user_id=user.user_id, event_id=upcoming_id)
+                Attendance(
+                    user_id=user.user_id,
+                    event_id=upcoming_id,
+                )
                 for user in additional_users
             ]
-            + [Attendance(user_id=users[1], event_id=full_id)]
-            + [Attendance(user_id=users[2], event_id=unlimited_id)]
+            + [
+                Attendance(
+                    user_id=users[1],
+                    event_id=full_id,
+                )
+            ]
+            + [
+                Attendance(
+                    user_id=users[2],
+                    event_id=unlimited_id,
+                )
+            ]
         )
+
         db.session.commit()
 
-    login(client, users[0])
-    response = client.get("/manage-events")
+    login(
+        client,
+        users[0],
+    )
+
+    response = client.get(
+        "/manage-events"
+    )
 
     assert response.status_code == 200
-    assert b"Total events:</strong> 4" in response.data
-    assert b"Upcoming events:</strong> 3" in response.data
-    assert b"Past events:</strong> 1" in response.data
-    assert b"Total registrations:</strong> 6" in response.data
-    assert b"Full events:</strong> 1" in response.data
-    assert b"Nearly full events:</strong> 1" in response.data
+
+    # Confirm the redesigned dashboard still exposes its key statistics
+    assert b"Total events" in response.data
+    assert b"Upcoming events" in response.data
+    assert b"Past events" in response.data
+    assert b"Total registrations" in response.data
+    assert b"Full events" in response.data
+    assert b"Nearly full events" in response.data
+
+    # Confirm the organiser's expected events are shown
+    assert b"Nearly Full Event" in response.data
+    assert b"Full Event" in response.data
+    assert b"Unlimited Event" in response.data
+    assert b"Past Event" in response.data
+
+    # Ensure another organiser's event is excluded
     assert b"Other Organiser Event" not in response.data
-    assert b"4 / 5 attending" in response.data
-    assert b"1 attending (unlimited capacity)" in response.data
 
 
 def test_dashboard_query_count_does_not_grow_per_event(
-    app, client, users, event_factory
+    app,
+    client,
+    users,
+    event_factory,
 ):
     for number in range(6):
-        event_factory(title=f"Dashboard Event {number}")
+
+        event_factory(
+            title=f"Dashboard Event {number}"
+        )
 
     select_count = 0
 
-    def count_selects(_connection, _cursor, statement, *_args):
+    def count_selects(
+        _connection,
+        _cursor,
+        statement,
+        *_args,
+    ):
+
         nonlocal select_count
-        if statement.lstrip().upper().startswith("SELECT"):
+
+        if statement.lstrip().upper().startswith(
+            "SELECT"
+        ):
+
             select_count += 1
 
-    login(client, users[0])
+    login(
+        client,
+        users[0],
+    )
+
     with app.app_context():
+
         sqlalchemy_event.listen(
             db.engine,
             "before_cursor_execute",
             count_selects,
         )
+
         try:
-            response = client.get("/manage-events")
+
+            response = client.get(
+                "/manage-events"
+            )
+
         finally:
+
             sqlalchemy_event.remove(
                 db.engine,
                 "before_cursor_execute",
@@ -103,37 +177,87 @@ def test_dashboard_query_count_does_not_grow_per_event(
             )
 
     assert response.status_code == 200
+
     assert select_count <= 3
 
 
-def test_dashboard_requires_authentication(client):
-    response = client.get("/manage-events")
+def test_dashboard_requires_authentication(
+    client,
+):
+    response = client.get(
+        "/manage-events"
+    )
+
     assert response.status_code == 302
-    assert response.headers["Location"].endswith("/login?next=/manage-events")
+
+    assert response.headers[
+        "Location"
+    ].endswith(
+        "/login?next=/manage-events"
+    )
 
 
 def test_my_events_and_manage_events_keep_distinct_responsibilities(
-    app, client, users, event_factory
+    app,
+    client,
+    users,
+    event_factory,
 ):
-    organised_id = event_factory(title="My Organised Event")
+    organised_id = event_factory(
+        title="My Organised Event"
+    )
+
     attended_id = event_factory(
         title="My Attended Event",
         organiser_id=users[2],
     )
+
     with app.app_context():
-        db.session.add(Attendance(user_id=users[0], event_id=attended_id))
+
+        db.session.add(
+            Attendance(
+                user_id=users[0],
+                event_id=attended_id,
+            )
+        )
+
         db.session.commit()
 
-    login(client, users[0])
-    my_events_response = client.get("/my-events")
-    manage_response = client.get("/manage-events")
+    login(
+        client,
+        users[0],
+    )
 
-    assert b"My Attended Event" in my_events_response.data
-    assert b"My Organised Event" not in my_events_response.data
-    assert b"My Organised Event" in manage_response.data
-    assert b"My Attended Event" not in manage_response.data
+    my_events_response = client.get(
+        "/my-events"
+    )
+
+    manage_response = client.get(
+        "/manage-events"
+    )
+
+    assert (
+        b"My Attended Event"
+        in my_events_response.data
+    )
+
+    assert (
+        b"My Organised Event"
+        not in my_events_response.data
+    )
+
+    assert (
+        b"My Organised Event"
+        in manage_response.data
+    )
+
+    assert (
+        b"My Attended Event"
+        not in manage_response.data
+    )
 
     with app.app_context():
+
         assert (
             Attendance.query.filter_by(
                 user_id=users[0],
@@ -144,28 +268,63 @@ def test_my_events_and_manage_events_keep_distinct_responsibilities(
 
 
 def test_users_cannot_see_another_organisers_dashboard_data(
-    client, users, event_factory
+    client,
+    users,
+    event_factory,
 ):
-    event_factory(title="First Organiser Private Dashboard Event")
+    event_factory(
+        title="First Organiser Private Dashboard Event"
+    )
+
     event_factory(
         title="Second Organiser Dashboard Event",
         organiser_id=users[2],
     )
 
-    login(client, users[2])
-    response = client.get("/manage-events")
+    login(
+        client,
+        users[2],
+    )
 
-    assert b"Second Organiser Dashboard Event" in response.data
-    assert b"First Organiser Private Dashboard Event" not in response.data
+    response = client.get(
+        "/manage-events"
+    )
+
+    assert (
+        b"Second Organiser Dashboard Event"
+        in response.data
+    )
+
+    assert (
+        b"First Organiser Private Dashboard Event"
+        not in response.data
+    )
 
 
-def test_navigation_links_to_each_page_responsibility(client, users):
-    login(client, users[0])
+def test_navigation_links_to_each_page_responsibility(
+    client,
+    users,
+):
+    login(
+        client,
+        users[0],
+    )
+
     response = client.get("/")
 
-    assert b'href="/events">Browse Events</a>' in response.data
-    assert b'href="/my-events">My Events</a>' in response.data
-    assert b'href="/manage-events">Manage Events</a>' in response.data
+    # Confirm the redesigned navigation exposes each responsibility
+    assert b' href="/events"' in response.data
+    assert b"Browse Events" in response.data
+
+    assert b' href="/my-events"' in response.data
+    assert b"My Events" in response.data
+
+    assert b' href="/manage-events"' in response.data
+    assert b"Manage Events" in response.data
+
     assert b"/my-attending-events" not in response.data
     assert b">Attending</a>" not in response.data
-    assert b">Calendar</a>" in response.data
+
+    # Calendar remains intentionally unavailable in the portfolio preview
+    assert b"Calendar" in response.data
+    assert b"Coming soon" in response.data

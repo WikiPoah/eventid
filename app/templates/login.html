@@ -1,16 +1,206 @@
 {% extends "base.html" %}
-{% block title %}Log in · EventID{% endblock %}
+
+{% block title %}Log in · eventid{% endblock %}
+
 {% block content %}
-<section class="panel auth-panel">
-    <h1>Log in</h1>
-    <p>Access your events and registrations.</p>
-    <form method="POST" class="form-layout">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        {% if next_url %}<input type="hidden" name="next" value="{{ next_url }}">{% endif %}
-        <div class="form-field"><label for="username">Username</label><input type="text" id="username" name="username" autocomplete="username" required></div>
-        <div class="form-field"><label for="password">Password</label><input type="password" id="password" name="password" autocomplete="current-password" required></div>
-        <button class="button button-primary" type="submit">Log in</button>
-    </form>
-    <p>New to EventID? <a href="{{ url_for('auth.signup') }}">Create an account</a>.</p>
+
+<section class="auth-page">
+
+    <div class="auth-layout">
+
+        <!-- Display the eventid branding panel -->
+
+        <aside class="auth-brand">
+
+            <div class="auth-brand-content">
+
+                <span class="auth-brand-label">
+                    eventid
+                </span>
+
+                <h2>
+                    Find events.
+                    <br>
+                    Create memories.
+                </h2>
+
+                <p>
+                    Discover local events, organise your own experiences,
+                    and keep everything together in one place.
+                </p>
+
+                <div class="auth-feature-list">
+
+                    <div class="auth-feature">
+
+                        <span class="auth-feature-number">
+                            01
+                        </span>
+
+                        <div>
+
+                            <strong>
+                                Discover
+                            </strong>
+
+                            <span>
+                                Browse events happening around you.
+                            </span>
+
+                        </div>
+
+                    </div>
+
+                    <div class="auth-feature">
+
+                        <span class="auth-feature-number">
+                            02
+                        </span>
+
+                        <div>
+
+                            <strong>
+                                Attend
+                            </strong>
+
+                            <span>
+                                Keep track of every event you join.
+                            </span>
+
+                        </div>
+
+                    </div>
+
+                    <div class="auth-feature">
+
+                        <span class="auth-feature-number">
+                            03
+                        </span>
+
+                        <div>
+
+                            <strong>
+                                Organise
+                            </strong>
+
+                            <span>
+                                Create events and manage your attendees.
+                            </span>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </aside>
+
+        <!-- Display the login form -->
+
+        <section class="auth-card">
+
+            <div class="auth-card-header">
+
+                <h1>
+                    Welcome back
+                </h1>
+
+                <p class="auth-card-subtitle">
+                    Log in to continue discovering, attending,
+                    and organising events.
+                </p>
+
+            </div>
+
+            <form
+                method="POST"
+                class="auth-card-form"
+            >
+
+                <input
+                    type="hidden"
+                    name="csrf_token"
+                    value="{{ csrf_token() }}"
+                >
+
+                {% if next_url %}
+
+                    <input
+                        type="hidden"
+                        name="next"
+                        value="{{ next_url }}"
+                    >
+
+                {% endif %}
+
+                <!-- Display the username or email field -->
+
+                <div class="form-field">
+
+                    <label for="identifier">
+                        Username or Email
+                    </label>
+
+                    <input
+                        type="text"
+                        id="identifier"
+                        name="identifier"
+                        placeholder="Enter your username or email"
+                        autocomplete="username"
+                        required
+                    >
+
+                </div>
+
+                <!-- Display the password field -->
+
+                <div class="form-field">
+
+                    <label for="password">
+                        Password
+                    </label>
+
+                    <input
+                        type="password"
+                        id="password"
+                        name="password"
+                        autocomplete="current-password"
+                        required
+                    >
+
+                </div>
+
+                <!-- Display the login button -->
+
+                <button
+                    type="submit"
+                    class="button button-primary auth-card-submit"
+                >
+                    Log in
+                </button>
+
+            </form>
+
+            <div class="auth-card-footer">
+
+                <p>
+
+                    New to eventid?
+
+                    <a href="{{ url_for('auth.signup') }}">
+                        Create an account
+                    </a>
+
+                </p>
+
+            </div>
+
+        </section>
+
+    </div>
+
 </section>
+
 {% endblock %}

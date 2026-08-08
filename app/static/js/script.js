@@ -43,69 +43,256 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
 
-    // Handle the account dropdown menu
+    // Find navigation controls
 
-    document.querySelectorAll("[data-account-menu]").forEach((menu) => {
-        const toggle = menu.querySelector(
-            "[data-account-menu-toggle]"
-        );
+    const filters = document.querySelector("[data-filters]");
 
-        const panel = menu.querySelector(
-            "[data-account-menu-panel]"
-        );
+    const filtersToggle = filters?.querySelector(
+        "[data-filters-toggle]"
+    );
 
-        if (!toggle || !panel) {
+    const filtersPanel = filters?.querySelector(
+        "[data-filters-panel]"
+    );
+
+    const filtersForm = filters?.querySelector(
+        "[data-filters-form]"
+    );
+
+    const filterSearch = filters?.querySelector(
+        "[data-filter-search]"
+    );
+
+    const navigationSearch = document.querySelector(
+        "#navigation-search"
+    );
+
+    const accountMenu = document.querySelector(
+        "[data-account-menu]"
+    );
+
+    const accountToggle = accountMenu?.querySelector(
+        "[data-account-menu-toggle]"
+    );
+
+    const accountPanel = accountMenu?.querySelector(
+        "[data-account-menu-panel]"
+    );
+
+
+    // Close the filters panel
+
+    const closeFilters = () => {
+        if (!filtersPanel || !filtersToggle) {
             return;
         }
 
-        const openMenu = () => {
-            panel.hidden = false;
+        filtersPanel.hidden = true;
 
-            toggle.setAttribute("aria-expanded", "true");
-            toggle.setAttribute("aria-label", "Close account menu");
-        };
+        filtersToggle.setAttribute(
+            "aria-expanded",
+            "false"
+        );
 
-        const closeMenu = () => {
-            panel.hidden = true;
+        filtersToggle.setAttribute(
+            "aria-label",
+            "Open event filters"
+        );
+    };
 
-            toggle.setAttribute("aria-expanded", "false");
-            toggle.setAttribute("aria-label", "Open account menu");
-        };
 
-        toggle.addEventListener("click", (event) => {
-            event.stopPropagation();
+    // Close the account menu
 
-            if (panel.hidden) {
-                openMenu();
-            } else {
-                closeMenu();
+    const closeAccountMenu = () => {
+        if (!accountPanel || !accountToggle) {
+            return;
+        }
+
+        accountPanel.hidden = true;
+
+        accountToggle.setAttribute(
+            "aria-expanded",
+            "false"
+        );
+
+        accountToggle.setAttribute(
+            "aria-label",
+            "Open account menu"
+        );
+    };
+
+
+    // Open the filters panel
+
+    const openFilters = () => {
+        if (!filtersPanel || !filtersToggle) {
+            return;
+        }
+
+        closeAccountMenu();
+
+        filtersPanel.hidden = false;
+
+        filtersToggle.setAttribute(
+            "aria-expanded",
+            "true"
+        );
+
+        filtersToggle.setAttribute(
+            "aria-label",
+            "Close event filters"
+        );
+
+        if (filterSearch && navigationSearch) {
+            filterSearch.value = navigationSearch.value;
+        }
+    };
+
+
+    // Open the account menu
+
+    const openAccountMenu = () => {
+        if (!accountPanel || !accountToggle) {
+            return;
+        }
+
+        closeFilters();
+
+        accountPanel.hidden = false;
+
+        accountToggle.setAttribute(
+            "aria-expanded",
+            "true"
+        );
+
+        accountToggle.setAttribute(
+            "aria-label",
+            "Close account menu"
+        );
+    };
+
+
+    // Toggle the navigation filters
+
+    if (filtersToggle && filtersPanel) {
+        filtersToggle.addEventListener(
+            "click",
+            (event) => {
+                event.stopPropagation();
+
+                if (filtersPanel.hidden) {
+                    openFilters();
+                } else {
+                    closeFilters();
+                }
             }
-        });
+        );
 
-        panel.addEventListener("click", (event) => {
-            event.stopPropagation();
-        });
+        filtersPanel.addEventListener(
+            "click",
+            (event) => {
+                event.stopPropagation();
+            }
+        );
+    }
 
-        document.addEventListener("click", (event) => {
+
+    // Keep the search value when filters are applied
+
+    if (filtersForm) {
+        filtersForm.addEventListener(
+            "submit",
+            () => {
+                if (filterSearch && navigationSearch) {
+                    filterSearch.value =
+                        navigationSearch.value;
+                }
+            }
+        );
+    }
+
+
+    // Toggle the account menu
+
+    if (accountToggle && accountPanel) {
+        accountToggle.addEventListener(
+            "click",
+            (event) => {
+                event.stopPropagation();
+
+                if (accountPanel.hidden) {
+                    openAccountMenu();
+                } else {
+                    closeAccountMenu();
+                }
+            }
+        );
+
+        accountPanel.addEventListener(
+            "click",
+            (event) => {
+                event.stopPropagation();
+            }
+        );
+    }
+
+
+    // Close open navigation panels when clicking elsewhere
+
+    document.addEventListener(
+        "click",
+        (event) => {
             if (
-                !panel.hidden &&
-                !menu.contains(event.target)
+                filters &&
+                filtersPanel &&
+                !filtersPanel.hidden &&
+                !filters.contains(event.target)
             ) {
-                closeMenu();
+                closeFilters();
             }
-        });
 
-        document.addEventListener("keydown", (event) => {
             if (
-                event.key === "Escape" &&
-                !panel.hidden
+                accountMenu &&
+                accountPanel &&
+                !accountPanel.hidden &&
+                !accountMenu.contains(event.target)
             ) {
-                closeMenu();
-
-                toggle.focus();
+                closeAccountMenu();
             }
-        });
-    });
+        }
+    );
+
+
+    // Close open navigation panels with the Escape key
+
+    document.addEventListener(
+        "keydown",
+        (event) => {
+            if (event.key !== "Escape") {
+                return;
+            }
+
+            if (
+                filtersPanel &&
+                !filtersPanel.hidden
+            ) {
+                closeFilters();
+
+                filtersToggle?.focus();
+
+                return;
+            }
+
+            if (
+                accountPanel &&
+                !accountPanel.hidden
+            ) {
+                closeAccountMenu();
+
+                accountToggle?.focus();
+            }
+        }
+    );
 
 
     // Initialise each homepage event carousel independently
@@ -145,12 +332,19 @@ document.addEventListener("DOMContentLoaded", () => {
                 return viewport.clientWidth;
             }
 
-            const trackStyles = window.getComputedStyle(track);
+            const trackStyles =
+                window.getComputedStyle(track);
 
             const gap =
-                Number.parseFloat(trackStyles.columnGap) || 0;
+                Number.parseFloat(
+                    trackStyles.columnGap
+                ) || 0;
 
-            return firstSlide.getBoundingClientRect().width + gap;
+            return (
+                firstSlide
+                    .getBoundingClientRect()
+                    .width + gap
+            );
         };
 
 
@@ -158,7 +352,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const updateControls = () => {
             const maximumScroll =
-                viewport.scrollWidth - viewport.clientWidth;
+                viewport.scrollWidth -
+                viewport.clientWidth;
 
             const edgeTolerance = 4;
 
@@ -170,12 +365,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
             previous.disabled =
                 !canScroll ||
-                viewport.scrollLeft <= edgeTolerance;
+                viewport.scrollLeft <=
+                    edgeTolerance;
 
             next.disabled =
                 !canScroll ||
                 viewport.scrollLeft >=
-                    maximumScroll - edgeTolerance;
+                    maximumScroll -
+                        edgeTolerance;
         };
 
 
@@ -183,18 +380,30 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const moveCarousel = (direction) => {
             viewport.scrollBy({
-                left: direction * getStepSize(),
-                behavior: reduceMotion ? "auto" : "smooth",
+                left:
+                    direction *
+                    getStepSize(),
+
+                behavior:
+                    reduceMotion
+                        ? "auto"
+                        : "smooth",
             });
         };
 
-        previous.addEventListener("click", () => {
-            moveCarousel(-1);
-        });
+        previous.addEventListener(
+            "click",
+            () => {
+                moveCarousel(-1);
+            }
+        );
 
-        next.addEventListener("click", () => {
-            moveCarousel(1);
-        });
+        next.addEventListener(
+            "click",
+            () => {
+                moveCarousel(1);
+            }
+        );
 
         viewport.addEventListener(
             "scroll",
@@ -207,19 +416,22 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // Allow keyboard carousel navigation
 
-        viewport.addEventListener("keydown", (event) => {
-            if (event.key === "ArrowLeft") {
-                event.preventDefault();
+        viewport.addEventListener(
+            "keydown",
+            (event) => {
+                if (event.key === "ArrowLeft") {
+                    event.preventDefault();
 
-                moveCarousel(-1);
+                    moveCarousel(-1);
+                }
+
+                if (event.key === "ArrowRight") {
+                    event.preventDefault();
+
+                    moveCarousel(1);
+                }
             }
-
-            if (event.key === "ArrowRight") {
-                event.preventDefault();
-
-                moveCarousel(1);
-            }
-        });
+        );
 
 
         // Measure the carousel after layout changes
@@ -227,16 +439,24 @@ document.addEventListener("DOMContentLoaded", () => {
         const measureCarousel = () => {
             updateControls();
 
-            window.requestAnimationFrame(updateControls);
+            window.requestAnimationFrame(
+                updateControls
+            );
         };
 
         if (window.ResizeObserver) {
-            const resizeObserver = new ResizeObserver(
-                measureCarousel
+            const resizeObserver =
+                new ResizeObserver(
+                    measureCarousel
+                );
+
+            resizeObserver.observe(
+                viewport
             );
 
-            resizeObserver.observe(viewport);
-            resizeObserver.observe(track);
+            resizeObserver.observe(
+                track
+            );
         } else {
             window.addEventListener(
                 "resize",
@@ -244,20 +464,24 @@ document.addEventListener("DOMContentLoaded", () => {
             );
         }
 
-        viewport.querySelectorAll("img").forEach((image) => {
-            if (!image.complete) {
-                image.addEventListener(
-                    "load",
-                    measureCarousel,
-                    {
-                        once: true,
-                    }
-                );
-            }
-        });
+        viewport
+            .querySelectorAll("img")
+            .forEach((image) => {
+                if (!image.complete) {
+                    image.addEventListener(
+                        "load",
+                        measureCarousel,
+                        {
+                            once: true,
+                        }
+                    );
+                }
+            });
 
         if (document.fonts?.ready) {
-            document.fonts.ready.then(measureCarousel);
+            document.fonts.ready.then(
+                measureCarousel
+            );
         }
 
         window.addEventListener(

@@ -1,15 +1,15 @@
 /* Style the homepage hero */
 
 .landing-hero {
-    min-height: 520px;
+    min-height: 500px;
 
-    padding: clamp(36px, 7vw, 88px);
+    padding: clamp(34px, 6vw, 78px);
 
     display: grid;
     grid-template-columns: 1.25fr 0.75fr;
     align-items: center;
 
-    gap: 48px;
+    gap: 44px;
 
     overflow: hidden;
 
@@ -29,7 +29,7 @@
 .hero-copy h1 {
     max-width: 780px;
 
-    margin: 12px 0 20px;
+    margin: 12px 0 18px;
 
     color: var(--navy);
 
@@ -43,13 +43,13 @@
 .hero-copy p {
     max-width: 650px;
 
-    margin-bottom: 28px;
+    margin-bottom: 26px;
 
     color: var(--muted);
 
     font-size: 1.1rem;
 
-    line-height: 1.75;
+    line-height: 1.7;
 }
 
 .eyebrow {
@@ -85,11 +85,15 @@
 /* Style homepage sections */
 
 .landing-section {
-    padding: 80px 0 30px;
+    padding: 54px 0 22px;
+}
+
+.landing-section + .landing-section {
+    padding-top: 46px;
 }
 
 .section-heading {
-    margin-bottom: 28px;
+    margin-bottom: 22px;
 }
 
 .section-heading h2 {
@@ -104,7 +108,7 @@
 /* Style carousel headings */
 
 .carousel-heading {
-    margin-bottom: 28px;
+    margin-bottom: 20px;
 
     display: flex;
     align-items: flex-end;
@@ -114,7 +118,7 @@
 }
 
 .carousel-heading h2 {
-    margin: 8px 0;
+    margin: 8px 0 6px;
 
     color: var(--navy);
 
@@ -124,7 +128,11 @@
 .carousel-heading p {
     max-width: 720px;
 
+    margin: 0;
+
     color: var(--muted);
+
+    line-height: 1.6;
 }
 
 
@@ -155,7 +163,7 @@
 .carousel-track {
     width: 100%;
 
-    padding: 4px 0 18px;
+    padding: 2px 0 12px;
 
     display: flex;
     flex-flow: row nowrap;
@@ -184,8 +192,8 @@
     top: 50%;
     z-index: 10;
 
-    width: 48px;
-    height: 48px;
+    width: 46px;
+    height: 46px;
 
     padding: 0;
 
@@ -203,7 +211,7 @@
     box-shadow: 0 8px 24px rgba(22, 47, 103, 0.18);
 
     font-family: inherit;
-    font-size: 2rem;
+    font-size: 1.9rem;
     font-weight: 500;
     line-height: 1;
 
@@ -219,11 +227,11 @@
 }
 
 .carousel-button-previous {
-    left: -24px;
+    left: -23px;
 }
 
 .carousel-button-next {
-    right: -24px;
+    right: -23px;
 }
 
 .carousel-button:hover:not(:disabled) {
@@ -256,9 +264,9 @@
 }
 
 .feature-card {
-    min-height: 230px;
+    min-height: 220px;
 
-    padding: 28px;
+    padding: 26px;
 
     border: 1px solid #dce4f2;
     border-radius: 20px;
@@ -271,7 +279,7 @@
 .feature-number {
     display: block;
 
-    margin-bottom: 38px;
+    margin-bottom: 32px;
 
     color: #8298c4;
 
@@ -293,7 +301,6 @@
 }
 
 
-
 /* Adjust homepage layouts for smaller screens */
 
 @media (max-width: 800px) {
@@ -301,7 +308,7 @@
     .landing-hero {
         min-height: auto;
 
-        padding: 38px 24px;
+        padding: 36px 24px;
 
         grid-template-columns: 1fr;
     }
@@ -310,7 +317,17 @@
         display: none;
     }
 
+    .landing-section {
+        padding-top: 44px;
+    }
+
+    .landing-section + .landing-section {
+        padding-top: 40px;
+    }
+
     .carousel-heading {
+        margin-bottom: 18px;
+
         align-items: flex-start;
         flex-direction: column;
     }
@@ -325,6 +342,14 @@
 /* Display one carousel card on mobile */
 
 @media (max-width: 650px) {
+
+    .landing-section {
+        padding-top: 38px;
+    }
+
+    .landing-section + .landing-section {
+        padding-top: 34px;
+    }
 
     .carousel-slide {
         flex-basis: 100%;

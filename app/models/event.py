@@ -38,6 +38,8 @@ class Event(db.Model):
 
     address = db.Column(db.String(255), nullable=False)
 
+    postcode = db.Column(db.String(20), nullable=False)
+
     city = db.Column(db.String(100), nullable=False)
 
     country = db.Column(db.String(100), nullable=False)

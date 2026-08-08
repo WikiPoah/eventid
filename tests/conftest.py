@@ -79,6 +79,7 @@ def event_factory(app, users):
             "description": "An event used by the test suite.",
             "venue_name": "Test Hall",
             "address": "1 Test Street",
+            "postcode": "10115",
             "city": "Berlin",
             "country": "Germany",
             "start_datetime": datetime.now() + timedelta(days=1),
