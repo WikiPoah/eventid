@@ -48,8 +48,6 @@
                     Browse Events
                 </a>
 
-                {% if g.user %}
-
                 <a href="{{ url_for('events.my_events') }}">
                     My Events
                 </a>
@@ -62,15 +60,14 @@
                     Create Event
                 </a>
 
-                {% endif %}
-
             </div>
 
             <div class="nav-actions">
 
                 <div class="nav-search-wrapper" data-filters>
 
-                    <form class="nav-search" data-filters-form method="GET" action="{{ url_for('events.browse_events') }}" role="search">
+                    <form class="nav-search" data-filters-form method="GET" action="{{ url_for('events.browse_events') }}"
+                        role="search">
 
                         <button class="search-button" type="submit" aria-label="Search events">
 
@@ -327,13 +324,9 @@
                     Calendar · Coming soon
                 </span>
 
-                {% if g.user %}
-
                 <a href="{{ url_for('events.create_event') }}">
                     Create Event
                 </a>
-
-                {% endif %}
 
                 <a href="mailto:your@email.com">
                     Contact
