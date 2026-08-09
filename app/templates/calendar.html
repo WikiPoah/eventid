@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block title %}Calendar · EventID{% endblock %}
+
+{% block content %}
+
+<!-- Display the calendar page heading -->
+
+<div class="page-heading">
+
+    <div>
+
+        <span class="eyebrow">
+            Coming soon
+        </span>
+
+        <h1>
+            Calendar
+        </h1>
+
+        <p>
+            A clearer way to keep track of the events you organise and attend is on the way.
+        </p>
+
+    </div>
+
+</div>
+
+<!-- Display the unavailable calendar state -->
+
+<div class="empty-state empty-state-stacked">
+
+    <h2>
+        Calendar is coming soon
+    </h2>
+
+    <p>
+        This feature is still being developed and will be available in a future version of EventID.
+    </p>
+
+    <a
+        class="button button-primary"
+        href="{{ url_for('events.my_events') }}"
+    >
+        View My Events
+    </a>
+
+</div>
+
+{% endblock %}

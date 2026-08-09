@@ -47,9 +47,7 @@ def test_cancelled_event_rejects_new_attendance_but_remains_for_attendee(
         assert Attendance.query.filter_by(event_id=event_id).count() == 1
 
 
-def test_organiser_can_view_draft_and_cancelled_events(
-    client, users, event_factory
-):
+def test_organiser_can_view_draft_and_cancelled_events(client, users, event_factory):
     draft_id = event_factory(status="Draft")
     cancelled_id = event_factory(status="Cancelled")
     login(client, users[0])
@@ -73,8 +71,11 @@ def test_attendee_csv_is_owner_only_and_excludes_sensitive_fields(
     assert response.mimetype == "text/csv"
     rows = list(csv.reader(StringIO(response.get_data(as_text=True))))
     assert rows[0] == [
-        "First name", "Last name", "Username",
-        "Registration date", "Attendance status",
+        "First name",
+        "Last name",
+        "Username",
+        "Registration date",
+        "Attendance status",
     ]
     assert rows[1][0:3] == ["Alice", "Attendee", "attendee"]
     assert "password" not in response.get_data(as_text=True).lower()
@@ -88,11 +89,15 @@ def test_custom_error_pages_render(app, client, users):
     assert response.status_code == 404
     assert b"Page not found" in response.data
     with app.test_request_context():
-        response = app.handle_http_exception(__import__("werkzeug").exceptions.Forbidden())
+        response = app.handle_http_exception(
+            __import__("werkzeug").exceptions.Forbidden()
+        )
         response = app.make_response(response)
         assert response.status_code == 403
         assert b"Access denied" in response.get_data()
-        response = app.handle_http_exception(__import__("werkzeug").exceptions.InternalServerError())
+        response = app.handle_http_exception(
+            __import__("werkzeug").exceptions.InternalServerError()
+        )
         response = app.make_response(response)
         assert response.status_code == 500
         assert b"Something went wrong" in response.get_data()

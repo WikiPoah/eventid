@@ -1,0 +1,364 @@
+/* Adjust navigation spacing on smaller desktop screens */
+
+@media (max-width: 1350px) {
+
+    .main-navigation {
+        width: min(1500px, calc(100% - 36px));
+
+        gap: 30px;
+    }
+
+    .nav-links {
+        gap: 34px;
+    }
+
+    .nav-search {
+        width: 290px;
+    }
+
+}
+
+
+/* Keep the navigation balanced on laptop screens */
+
+@media (max-width: 1150px) {
+
+    .main-navigation {
+        gap: 22px;
+    }
+
+    .nav-logo img {
+        height: 35px;
+    }
+
+    .nav-links {
+        gap: 24px;
+    }
+
+    .nav-links a {
+        font-size: 0.96rem;
+    }
+
+    .nav-actions {
+        gap: 12px;
+    }
+
+    .nav-search {
+        width: 255px;
+    }
+
+}
+
+
+/* Display two carousel cards on medium screens */
+
+@media (max-width: 1000px) {
+
+    .carousel-slide {
+        flex-basis: calc((100% - 20px) / 2);
+    }
+
+}
+
+
+/* Adjust navigation for tablet screens */
+
+@media (max-width: 920px) {
+
+    .main-navigation {
+        min-height: auto;
+
+        padding: 14px 0;
+
+        flex-wrap: wrap;
+
+        row-gap: 14px;
+    }
+
+    .nav-logo {
+        order: 1;
+    }
+
+    .nav-actions {
+        order: 2;
+
+        margin-left: auto;
+    }
+
+    .nav-links {
+        order: 3;
+
+        width: 100%;
+
+        flex-basis: 100%;
+
+        padding: 4px 0;
+
+        display: flex;
+        align-items: center;
+
+        gap: 26px;
+
+        overflow-x: auto;
+
+        scrollbar-width: none;
+    }
+
+    .nav-links::-webkit-scrollbar {
+        display: none;
+    }
+
+    .nav-search {
+        width: 270px;
+    }
+
+}
+
+
+/* Adjust the homepage and footer layouts for smaller screens */
+
+@media (max-width: 800px) {
+
+    .landing-hero {
+        min-height: auto;
+
+        padding: 38px 24px;
+
+        grid-template-columns: 1fr;
+    }
+
+    .hero-mark {
+        display: none;
+    }
+
+    .carousel-heading {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .feature-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .footer-container {
+        grid-template-columns: 1fr;
+    }
+
+    .footer-bottom {
+        padding: 24px 20px;
+
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+}
+
+
+/* Adjust shared layouts for small screens */
+
+@media (max-width: 768px) {
+
+    .main-navigation {
+        width: min(100% - 28px, 1500px);
+
+        gap: 14px;
+    }
+
+    .nav-logo img {
+        height: 34px;
+    }
+
+    .nav-links {
+        order: 2;
+
+        gap: 22px;
+    }
+
+    .nav-actions {
+        width: 100%;
+
+        order: 3;
+
+        display: flex;
+        align-items: center;
+
+        gap: 10px;
+    }
+
+    .nav-search-wrapper {
+        min-width: 0;
+
+        flex: 1;
+    }
+
+    .nav-search {
+        width: 100%;
+    }
+
+    .account-menu {
+        flex-shrink: 0;
+    }
+
+    .filters-panel {
+        left: auto;
+        right: 0;
+
+        width: min(340px, calc(100vw - 28px));
+    }
+
+    .form-grid,
+    .filter-grid,
+    .details-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .form-field-wide {
+        grid-column: auto;
+    }
+
+    .page-heading {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .card-actions {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .management-primary-actions,
+    .management-status-actions {
+        flex-direction: column;
+    }
+
+    .management-actions form,
+    .management-actions .button {
+        width: 100%;
+    }
+
+    .stats-grid {
+        width: 100%;
+
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .stat-card {
+        min-width: 0;
+
+        padding: 18px;
+
+        overflow-wrap: anywhere;
+    }
+
+    .calendar-entry {
+        grid-template-columns: 64px minmax(0, 1fr);
+
+        gap: 14px;
+    }
+
+    .calendar-entry > .button {
+        grid-column: 2;
+
+        justify-self: start;
+    }
+
+    .calendar-date {
+        min-height: 62px;
+    }
+
+    .calendar-date strong {
+        font-size: 1.55rem;
+    }
+
+}
+
+
+/* Adjust navigation for narrow mobile screens */
+
+@media (max-width: 600px) {
+
+    .main-navigation {
+        gap: 12px;
+    }
+
+    .nav-logo img {
+        height: 32px;
+    }
+
+    .nav-links {
+        width: 100%;
+
+        flex-direction: column;
+        align-items: flex-start;
+
+        gap: 13px;
+
+        overflow: visible;
+    }
+
+    .nav-actions {
+        align-items: center;
+    }
+
+    .account-links {
+        gap: 10px;
+    }
+
+    .account-menu-toggle {
+        width: 44px;
+        height: 44px;
+    }
+
+    .account-menu-panel {
+        width: min(300px, calc(100vw - 28px));
+    }
+
+    .filters-panel {
+        width: min(340px, calc(100vw - 28px));
+    }
+
+}
+
+
+/* Display one carousel card on mobile screens */
+
+@media (max-width: 650px) {
+
+    .carousel-slide {
+        flex-basis: 100%;
+    }
+
+    .carousel-button {
+        width: 42px;
+        height: 42px;
+
+        font-size: 1.7rem;
+    }
+
+    .carousel-button-previous {
+        left: 8px;
+    }
+
+    .carousel-button-next {
+        right: 8px;
+    }
+
+}
+
+
+/* Reduce motion for users who prefer fewer animations */
+
+@media (prefers-reduced-motion: reduce) {
+
+    *,
+    *::before,
+    *::after {
+        scroll-behavior: auto !important;
+
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+
+        transition-duration: 0.01ms !important;
+    }
+
+}

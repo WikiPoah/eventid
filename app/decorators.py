@@ -1,6 +1,12 @@
 from functools import wraps
 
-from flask import g, session, redirect, url_for
+from flask import flash, g, redirect, request, session, url_for
+
+LOGIN_MESSAGES = {
+    "events.my_events": "Please log in to view your events.",
+    "events.manage_events": "Please log in to manage events.",
+    "events.create_event": "Please log in to create an event.",
+}
 
 
 # Restrict access to routes that require a logged in user
@@ -14,7 +20,13 @@ def login_required(view):
 
             session.pop("user_id", None)
 
-            return redirect(url_for("auth.login"))
+            message = LOGIN_MESSAGES.get(
+                request.endpoint,
+                "Please log in to continue.",
+            )
+            flash(message, "info")
+            destination = request.full_path.rstrip("?")
+            return redirect(url_for("auth.login", next=destination))
 
         return view(*args, **kwargs)
 

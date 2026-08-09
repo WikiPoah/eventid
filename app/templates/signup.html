@@ -1,20 +1,272 @@
 {% extends "base.html" %}
-{% block title %}Sign up · EventID{% endblock %}
+
+{% block title %}Sign up · eventid{% endblock %}
+
 {% block content %}
-<section class="panel auth-panel">
-    <h1>Create an account</h1>
-    <form method="POST" class="form-layout">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        {% for name, label, type, autocomplete in [
-            ('first_name', 'First Name', 'text', 'given-name'),
-            ('last_name', 'Last Name', 'text', 'family-name'),
-            ('username', 'Username', 'text', 'username'),
-            ('email', 'Email', 'email', 'email'),
-            ('password', 'Password', 'password', 'new-password'),
-            ('confirm_password', 'Confirm Password', 'password', 'new-password')
-        ] %}<div class="form-field"><label for="{{ name }}">{{ label }}</label><input type="{{ type }}" id="{{ name }}" name="{{ name }}" autocomplete="{{ autocomplete }}" {% if name == 'username' %}minlength="3" maxlength="20"{% endif %} required></div>{% endfor %}
-        <button class="button button-primary" type="submit">Create Account</button>
-    </form>
-    <p>Already registered? <a href="{{ url_for('auth.login') }}">Log in</a>.</p>
+
+<section class="auth-page">
+
+    <div class="auth-layout">
+
+        <!-- Display the eventid branding panel -->
+
+        <aside class="auth-brand">
+
+            <div class="auth-brand-content">
+
+                <span class="auth-brand-label">
+                    eventid
+                </span>
+
+                <h2>
+                    Make plans.
+                    <br>
+                    Make moments.
+                </h2>
+
+                <p>
+                    Discover experiences around you, keep track of your plans,
+                    and create events worth bringing people together for.
+                </p>
+
+                <div class="auth-feature-list">
+
+                    <div class="auth-feature">
+
+                        <span class="auth-feature-number">
+                            01
+                        </span>
+
+                        <div>
+
+                            <strong>
+                                Explore
+                            </strong>
+
+                            <span>
+                                Find events that match what you enjoy.
+                            </span>
+
+                        </div>
+
+                    </div>
+
+                    <div class="auth-feature">
+
+                        <span class="auth-feature-number">
+                            02
+                        </span>
+
+                        <div>
+
+                            <strong>
+                                Connect
+                            </strong>
+
+                            <span>
+                                Keep your upcoming experiences together.
+                            </span>
+
+                        </div>
+
+                    </div>
+
+                    <div class="auth-feature">
+
+                        <span class="auth-feature-number">
+                            03
+                        </span>
+
+                        <div>
+
+                            <strong>
+                                Create
+                            </strong>
+
+                            <span>
+                                Organise your own events and manage your attendees.
+                            </span>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </aside>
+
+        <!-- Display the account creation form -->
+
+        <section class="auth-card">
+
+            <div class="auth-card-header">
+
+                <h1>
+                    Create an account
+                </h1>
+
+                <p class="auth-card-subtitle">
+                    Join eventid to discover, attend, and organise memorable events.
+                </p>
+
+            </div>
+
+            <form
+                method="POST"
+                class="auth-card-form"
+            >
+
+                <input
+                    type="hidden"
+                    name="csrf_token"
+                    value="{{ csrf_token() }}"
+                >
+
+                <!-- Display the first name field -->
+
+                <div class="form-field">
+
+                    <label for="first_name">
+                        First Name
+                    </label>
+
+                    <input
+                        type="text"
+                        id="first_name"
+                        name="first_name"
+                        value="{{ form_values.first_name }}"
+                        autocomplete="given-name"
+                        required
+                    >
+
+                </div>
+
+                <!-- Display the last name field -->
+
+                <div class="form-field">
+
+                    <label for="last_name">
+                        Last Name
+                    </label>
+
+                    <input
+                        type="text"
+                        id="last_name"
+                        name="last_name"
+                        value="{{ form_values.last_name }}"
+                        autocomplete="family-name"
+                        required
+                    >
+
+                </div>
+
+                <!-- Display the username field -->
+
+                <div class="form-field">
+
+                    <label for="username">
+                        Username
+                    </label>
+
+                    <input
+                        type="text"
+                        id="username"
+                        name="username"
+                        value="{{ form_values.username }}"
+                        autocomplete="username"
+                        minlength="3"
+                        maxlength="20"
+                        required
+                    >
+
+                </div>
+
+                <!-- Display the email field -->
+
+                <div class="form-field">
+
+                    <label for="email">
+                        Email
+                    </label>
+
+                    <input
+                        type="email"
+                        id="email"
+                        name="email"
+                        value="{{ form_values.email }}"
+                        autocomplete="email"
+                        required
+                    >
+
+                </div>
+
+                <!-- Display the password field -->
+
+                <div class="form-field">
+
+                    <label for="password">
+                        Password
+                    </label>
+
+                    <input
+                        type="password"
+                        id="password"
+                        name="password"
+                        autocomplete="new-password"
+                        required
+                    >
+
+                </div>
+
+                <!-- Display the password confirmation field -->
+
+                <div class="form-field">
+
+                    <label for="confirm_password">
+                        Confirm Password
+                    </label>
+
+                    <input
+                        type="password"
+                        id="confirm_password"
+                        name="confirm_password"
+                        autocomplete="new-password"
+                        required
+                    >
+
+                </div>
+
+                <!-- Display the account creation button -->
+
+                <button
+                    type="submit"
+                    class="button button-primary auth-card-submit"
+                >
+                    Create Account
+                </button>
+
+            </form>
+
+            <div class="auth-card-footer">
+
+                <p>
+
+                    Already have an account?
+
+                    <a href="{{ url_for('auth.login') }}">
+                        Log in
+                    </a>
+
+                </p>
+
+            </div>
+
+        </section>
+
+    </div>
+
 </section>
+
 {% endblock %}

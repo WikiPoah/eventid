@@ -1,0 +1,27 @@
+<section class="landing-section event-carousel" data-carousel aria-labelledby="{{ carousel_id }}-title">
+    <div class="carousel-heading">
+        <div>
+            <span class="eyebrow">{{ carousel_eyebrow }}</span>
+            <h2 id="{{ carousel_id }}-title">{{ carousel_title }}</h2>
+            {% if carousel_description %}<p>{{ carousel_description }}</p>{% endif %}
+        </div>
+        {% if carousel_link_url %}<a class="button button-secondary" href="{{ carousel_link_url }}">{{ carousel_link_text }}</a>{% endif %}
+    </div>
+    {% if carousel_events %}
+        <div class="carousel-shell">
+            <div class="carousel-viewport" id="{{ carousel_id }}-viewport" data-carousel-viewport tabindex="0" aria-label="{{ carousel_title }} cards">
+                <div class="carousel-track stagger-grid" data-carousel-track>
+                    {% for event in carousel_events %}<div class="carousel-slide stagger-item">{% include "event_card.html" %}</div>{% endfor %}
+                </div>
+            </div>
+            {% if carousel_events|length > 1 %}
+                <div class="carousel-controls" data-carousel-controls hidden>
+                    <button class="carousel-button" type="button" data-carousel-previous aria-label="Previous events" aria-controls="{{ carousel_id }}-viewport" disabled>Previous</button>
+                    <button class="carousel-button" type="button" data-carousel-next aria-label="Next events" aria-controls="{{ carousel_id }}-viewport">Next</button>
+                </div>
+            {% endif %}
+        </div>
+    {% else %}
+        <div class="empty-state"><p>{{ carousel_empty_message }}</p></div>
+    {% endif %}
+</section>

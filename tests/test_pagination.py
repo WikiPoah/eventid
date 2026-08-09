@@ -6,9 +6,7 @@ from app.models.event_category import EventCategory
 from tests.conftest import login
 
 
-def test_browse_events_paginates_in_start_date_order(
-    app, client, users, event_factory
-):
+def test_browse_events_paginates_in_start_date_order(app, client, users, event_factory):
     for number in range(12):
         event_factory(
             title=f"Paginated Event {number:02d}",
@@ -26,9 +24,7 @@ def test_browse_events_paginates_in_start_date_order(
     assert b"Previous" in second_page.data
 
 
-def test_pagination_links_preserve_active_filters(
-    app, client, users, event_factory
-):
+def test_pagination_links_preserve_active_filters(app, client, users, event_factory):
     with app.app_context():
         category = Category(name="Pagination Category")
         db.session.add(category)
@@ -41,9 +37,7 @@ def test_pagination_links_preserve_active_filters(
             city="Hamburg",
         )
         with app.app_context():
-            db.session.add(
-                EventCategory(event_id=event_id, category_id=category_id)
-            )
+            db.session.add(EventCategory(event_id=event_id, category_id=category_id))
             db.session.commit()
 
     event_factory(title="Filtered Event Elsewhere", city="Berlin")
@@ -62,9 +56,7 @@ def test_pagination_links_preserve_active_filters(
     assert b"city=Hamburg" in response.data
 
 
-def test_invalid_or_empty_page_returns_not_found(
-    client, users
-):
+def test_invalid_or_empty_page_returns_not_found(client, users):
     login(client, users[1])
     assert client.get("/events?page=0").status_code == 404
     assert client.get("/events?page=999").status_code == 404

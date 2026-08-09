@@ -1,0 +1,216 @@
+/* Style the website footer */
+
+.site-footer {
+    margin-top: 60px;
+
+    background:
+        linear-gradient(
+            180deg,
+            #fbfcff 0%,
+            #f2f7ff 100%
+        );
+
+    border-top: 1px solid #dde6f2;
+}
+
+
+/* Style the footer call to action */
+
+.footer-cta {
+    max-width: 900px;
+
+    margin: 0 auto;
+
+    padding: 56px 24px 48px;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    text-align: center;
+}
+
+.footer-cta h2 {
+    margin: 0 0 16px;
+
+    color: var(--navy);
+
+    font-size: clamp(2rem, 4vw, 2.7rem);
+
+    letter-spacing: -0.04em;
+}
+
+.footer-cta p {
+    max-width: 620px;
+
+    margin: 0 0 28px;
+
+    color: #64738d;
+
+    font-size: 1.05rem;
+
+    line-height: 1.7;
+}
+
+
+/* Style the main footer section */
+
+.footer-content {
+    max-width: 900px;
+
+    margin: 0 auto;
+
+    padding: 42px 24px 38px;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    text-align: center;
+
+    border-top: 1px solid #dde6f2;
+}
+
+
+/* Style the footer branding */
+
+.footer-content h2 {
+    margin: 0;
+
+    color: var(--navy);
+
+    font-size: 2.2rem;
+    font-weight: 700;
+
+    letter-spacing: -0.05em;
+}
+
+.footer-tagline {
+    margin: 12px 0 14px;
+
+    color: var(--navy);
+
+    font-size: 1.08rem;
+    font-weight: 600;
+}
+
+.footer-description {
+    max-width: 520px;
+
+    margin: 0;
+
+    color: #6a7892;
+
+    line-height: 1.7;
+}
+
+
+/* Style the primary footer links */
+
+.footer-links {
+    margin: 28px 0 24px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+
+    gap: 34px;
+}
+
+.footer-links a {
+    color: var(--navy);
+
+    font-weight: 600;
+
+    text-decoration: none;
+
+    transition:
+        color 0.2s ease,
+        transform 0.2s ease;
+}
+
+.footer-links a:hover {
+    color: var(--navy-light);
+
+    transform: translateY(-2px);
+}
+
+
+/* Style the secondary footer links */
+
+.footer-secondary-links {
+    margin-bottom: 22px;
+
+    display: flex;
+    align-items: center;
+
+    gap: 24px;
+}
+
+.footer-secondary-links a {
+    color: #61718d;
+
+    text-decoration: none;
+
+    transition: color 0.2s ease;
+}
+
+.footer-secondary-links a:hover {
+    color: var(--navy);
+}
+
+
+/* Style the footer copyright */
+
+.footer-copyright {
+    margin: 0;
+
+    color: #8793a8;
+
+    font-size: 0.9rem;
+
+    line-height: 1.6;
+}
+
+
+/* Adjust the footer for tablets */
+
+@media (max-width: 900px) {
+
+    .footer-cta {
+        padding: 46px 24px 38px;
+    }
+
+    .footer-content {
+        padding: 36px 24px 34px;
+    }
+
+    .footer-links {
+        gap: 22px;
+    }
+
+}
+
+
+/* Adjust the footer for mobile screens */
+
+@media (max-width: 600px) {
+
+    .footer-cta h2 {
+        font-size: 2rem;
+    }
+
+    .footer-links {
+        flex-direction: column;
+
+        gap: 18px;
+    }
+
+    .footer-secondary-links {
+        flex-direction: column;
+
+        gap: 14px;
+    }
+
+}

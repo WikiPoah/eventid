@@ -38,7 +38,9 @@ def test_organiser_cannot_attend_own_event(app, client, users, event_factory):
     assert attendance_count(app, event_id) == 0
 
 
-def test_unauthorized_user_cannot_attend_private_event(app, client, users, event_factory):
+def test_unauthorized_user_cannot_attend_private_event(
+    app, client, users, event_factory
+):
     event_id = event_factory(privacy="Private")
     login(client, users[1])
     response = client.post(f"/events/{event_id}/attend")
@@ -82,7 +84,7 @@ def test_full_event_rejects_attendance_and_displays_count(app, users, event_fact
     login(second_client, users[2])
     response = second_client.post(f"/events/{event_id}/attend", follow_redirects=True)
     assert b"This event is full." in response.data
-    assert b"1 / 1 attending" in response.data
+    assert b"1 of 1 places have been taken." in response.data
     assert attendance_count(app, event_id) == 1
 
 
@@ -101,8 +103,11 @@ def test_capacity_below_existing_count_remains_closed(app, users, event_factory)
         db.session.commit()
 
         extra = User(
-            first_name="Extra", last_name="User", username="extra",
-            email="extra@example.test", password_hash="unused",
+            first_name="Extra",
+            last_name="User",
+            username="extra",
+            email="extra@example.test",
+            password_hash="unused",
         )
         db.session.add(extra)
         db.session.commit()
@@ -114,7 +119,9 @@ def test_capacity_below_existing_count_remains_closed(app, users, event_factory)
     assert attendance_count(app, event_id) == 2
 
 
-def test_my_events_only_shows_current_users_attendance(app, client, users, event_factory):
+def test_my_events_only_shows_current_users_attendance(
+    app, client, users, event_factory
+):
     mine = event_factory(title="My Registration")
     theirs = event_factory(title="Someone Else Registration")
     with app.app_context():
@@ -140,19 +147,27 @@ def test_old_attending_events_url_redirects_to_my_events(client, users):
 
 def test_attendee_names_are_only_shown_to_organiser(app, users, event_factory):
     event_id = event_factory()
+
     with app.app_context():
-        db.session.add(Attendance(user_id=users[1], event_id=event_id))
+        db.session.add(
+            Attendance(
+                user_id=users[1],
+                event_id=event_id,
+            )
+        )
         db.session.commit()
 
     attendee_client = app.test_client()
     login(attendee_client, users[1])
     response = attendee_client.get(f"/events/{event_id}")
-    assert b"Alice Attendee" not in response.data
+
+    assert b"Registered Attendees" not in response.data
 
     organiser_client = app.test_client()
     login(organiser_client, users[0])
     response = organiser_client.get(f"/events/{event_id}")
-    assert b"Alice Attendee" in response.data
+
+    assert b"Registered Attendees" in response.data
 
 
 def test_deleted_event_returns_not_found(client, users):

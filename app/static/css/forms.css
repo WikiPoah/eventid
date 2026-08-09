@@ -1,0 +1,888 @@
+/* Style shared form layouts */
+
+.form-layout {
+    display: flex;
+    flex-direction: column;
+
+    gap: 52px;
+}
+
+.form-grid {
+    display: grid;
+
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+
+    column-gap: 26px;
+    row-gap: 32px;
+}
+
+.form-field {
+    min-width: 0;
+
+    display: flex;
+    flex-direction: column;
+
+    gap: 11px;
+}
+
+.form-field-wide {
+    grid-column: 1 / -1;
+}
+
+
+/* Style event form sections */
+
+.form-layout > section {
+    padding-bottom: 48px;
+
+    border-bottom: 1px solid #e6ebf2;
+}
+
+.form-layout > section:last-of-type {
+    padding-bottom: 0;
+
+    border-bottom: 0;
+}
+
+
+/* Style event form section headings */
+
+.form-section-heading {
+    margin: 0 0 38px;
+}
+
+.form-section-heading h2 {
+    margin: 0 0 11px;
+
+    color: var(--navy);
+
+    font-size: 1.72rem;
+    font-weight: 700;
+
+    letter-spacing: -0.025em;
+    line-height: 1.2;
+}
+
+.form-section-heading .help-text {
+    max-width: 780px;
+
+    margin: 0;
+
+    color: #68758a;
+
+    font-size: 1.03rem;
+
+    line-height: 1.7;
+}
+
+
+/* Support older form section layouts */
+
+.form-section {
+    padding: 32px;
+
+    border: 1px solid #e1e7f0;
+    border-radius: 14px;
+
+    background-color: white;
+
+    box-shadow: 0 1px 2px rgba(23, 35, 61, 0.03);
+}
+
+.form-section-header {
+    margin-bottom: 34px;
+    padding-bottom: 20px;
+
+    border-bottom: 1px solid #e8edf4;
+}
+
+.form-section-header h2,
+.form-section-header h3 {
+    margin: 0 0 14px;
+
+    color: var(--navy);
+
+    font-size: 1.5rem;
+    font-weight: 700;
+
+    letter-spacing: -0.022em;
+    line-height: 1.3;
+}
+
+.form-section-header p {
+    max-width: 780px;
+
+    margin: 0;
+
+    color: #68758a;
+
+    font-size: 1rem;
+
+    line-height: 1.65;
+}
+
+
+/* Style form labels */
+
+.form-field label {
+    color: #24375a;
+
+    font-size: 1.03rem;
+    font-weight: 600;
+
+    line-height: 1.4;
+}
+
+
+/* Keep labels and indicators together */
+
+.form-label-row {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+
+    gap: 5px;
+
+    color: #24375a;
+
+    font-size: 1.03rem;
+    font-weight: 600;
+
+    line-height: 1.4;
+}
+
+.form-label-row label {
+    margin: 0;
+
+    color: inherit;
+
+    font-size: inherit;
+    font-weight: inherit;
+}
+
+
+/* Style required indicators */
+
+.required,
+.required-indicator,
+.required-marker {
+    margin-left: 1px;
+
+    color: #b4233b;
+
+    font-size: 0.96rem;
+    font-weight: 700;
+
+    line-height: 1;
+}
+
+
+/* Style optional indicators */
+
+.optional,
+.optional-label,
+.optional-indicator {
+    margin-left: 6px;
+
+    color: #8d97a6;
+
+    font-size: 0.9rem;
+    font-style: italic;
+    font-weight: 400;
+
+    letter-spacing: 0;
+
+    line-height: 1.2;
+
+    text-transform: lowercase;
+}
+
+
+/* Style form inputs */
+
+.form-field input,
+.form-field textarea,
+.form-field select,
+.card-actions select {
+    width: 100%;
+    min-height: 52px;
+
+    padding: 13px 15px;
+
+    border: 1px solid #cbd5e5;
+    border-radius: 10px;
+
+    outline: none;
+
+    background-color: #fbfcfe;
+
+    color: #17233d;
+
+    font-family: inherit;
+    font-size: 1.02rem;
+
+    line-height: 1.5;
+
+    transition:
+        border-color 0.18s ease,
+        box-shadow 0.18s ease,
+        background-color 0.18s ease;
+}
+
+.form-field textarea {
+    min-height: 160px;
+
+    line-height: 1.65;
+
+    resize: vertical;
+}
+
+.form-field select {
+    cursor: pointer;
+}
+
+.form-field input::placeholder,
+.form-field textarea::placeholder {
+    color: #98a2b2;
+}
+
+
+/* Style hovered form controls */
+
+.form-field input:hover,
+.form-field textarea:hover,
+.form-field select:hover,
+.card-actions select:hover {
+    border-color: #b5c1d2;
+}
+
+
+/* Style focused form controls */
+
+.form-field input:focus,
+.form-field textarea:focus,
+.form-field select:focus,
+.card-actions select:focus {
+    border-color: var(--navy-light);
+
+    background-color: white;
+
+    box-shadow: 0 0 0 3px rgba(36, 71, 137, 0.12);
+}
+
+
+/* Style invalid form controls */
+
+.form-field input[aria-invalid="true"],
+.form-field textarea[aria-invalid="true"],
+.form-field select[aria-invalid="true"] {
+    border-color: #c44b5d;
+
+    background-color: #fffafb;
+}
+
+.form-field input[aria-invalid="true"]:focus,
+.form-field textarea[aria-invalid="true"]:focus,
+.form-field select[aria-invalid="true"]:focus {
+    box-shadow: 0 0 0 3px rgba(196, 75, 93, 0.11);
+}
+
+
+/* Style date and time fields */
+
+.form-field input[type="date"],
+.form-field input[type="datetime-local"],
+.form-field input[type="time"] {
+    color: #24375a;
+
+    cursor: pointer;
+}
+
+
+/* Style number fields */
+
+.form-field input[type="number"] {
+    font-variant-numeric: tabular-nums;
+}
+
+
+/* Style file uploads */
+
+.form-field input[type="file"] {
+    min-height: 56px;
+
+    padding: 7px 8px;
+
+    background-color: #fbfcfe;
+
+    color: #66738a;
+
+    cursor: pointer;
+}
+
+.form-field input[type="file"]::file-selector-button {
+    margin-right: 13px;
+
+    padding: 10px 14px;
+
+    border: 1px solid #cbd5e5;
+    border-radius: 8px;
+
+    background-color: white;
+
+    color: #24375a;
+
+    font-family: inherit;
+    font-size: 0.96rem;
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition:
+        border-color 0.18s ease,
+        background-color 0.18s ease,
+        color 0.18s ease;
+}
+
+.form-field input[type="file"]::file-selector-button:hover {
+    border-color: #aebbd0;
+
+    background-color: #f3f6fa;
+
+    color: var(--navy);
+}
+
+
+/* Remove default browser fieldset styling */
+
+fieldset {
+    min-width: 0;
+
+    margin: 0;
+    padding: 0;
+
+    border: 0;
+}
+
+legend {
+    padding: 0;
+}
+
+
+/* Style category fields */
+
+.category-field {
+    margin-top: 34px;
+}
+
+.category-field legend {
+    margin-bottom: 13px;
+}
+
+.category-field > .help-text {
+    margin-bottom: 22px;
+}
+
+.checkbox-grid {
+    width: 100%;
+
+    display: grid;
+
+    grid-template-columns: repeat(
+        auto-fit,
+        minmax(190px, 1fr)
+    );
+
+    gap: 14px;
+}
+
+.checkbox-grid label {
+    min-height: 60px;
+
+    padding: 15px 17px;
+
+    display: flex;
+    align-items: center;
+
+    gap: 12px;
+
+    border: 1px solid #dce3ed;
+    border-radius: 10px;
+
+    background-color: #fbfcfe;
+
+    color: #34445f;
+
+    font-size: 1rem;
+    font-weight: 500;
+
+    line-height: 1.4;
+
+    cursor: pointer;
+
+    transition:
+        border-color 0.18s ease,
+        background-color 0.18s ease,
+        box-shadow 0.18s ease;
+}
+
+.checkbox-grid label:hover {
+    border-color: #b4c1d4;
+
+    background-color: #f6f8fb;
+}
+
+.checkbox-grid label:has(input:checked) {
+    border-color: #8fa5c8;
+
+    background-color: #f1f5fb;
+
+    box-shadow: inset 0 0 0 1px rgba(36, 71, 137, 0.05);
+}
+
+.checkbox-grid input {
+    width: 18px;
+    height: 18px;
+
+    flex: 0 0 auto;
+
+    margin: 0;
+
+    accent-color: var(--navy-light);
+
+    cursor: pointer;
+}
+
+
+/* Style individual checkbox rows */
+
+.checkbox-row {
+    min-height: 44px;
+
+    display: flex;
+    align-items: flex-start;
+
+    gap: 11px;
+}
+
+.checkbox-row input {
+    width: 18px;
+    height: 18px;
+
+    flex: 0 0 auto;
+
+    margin: 3px 0 0;
+
+    accent-color: var(--navy-light);
+
+    cursor: pointer;
+}
+
+.checkbox-row label {
+    color: #34445f;
+
+    font-size: 1rem;
+    font-weight: 500;
+
+    line-height: 1.55;
+
+    cursor: pointer;
+}
+
+
+/* Style supporting form text */
+
+.help-text {
+    margin: 0;
+
+    color: #6b788d;
+
+    font-size: 0.97rem;
+
+    line-height: 1.65;
+}
+
+.section-help-text {
+    margin-top: 28px;
+}
+
+.field-error {
+    margin: 2px 0 0;
+
+    color: #a32135;
+
+    font-size: 0.94rem;
+    font-weight: 600;
+
+    line-height: 1.5;
+}
+
+
+/* Style image previews */
+
+.image-preview {
+    display: block;
+
+    width: min(100%, 520px);
+    max-height: 300px;
+
+    margin-bottom: 26px;
+
+    border: 1px solid #e0e6ef;
+    border-radius: 10px;
+
+    object-fit: cover;
+}
+
+
+/* Style form action groups */
+
+.form-actions {
+    margin-top: 0;
+    padding-top: 30px;
+
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+
+    gap: 14px;
+
+    border-top: 1px solid #e3e9f2;
+}
+
+.form-actions .button,
+.form-actions button,
+.form-actions input[type="submit"] {
+    min-height: 48px;
+
+    font-size: 1rem;
+}
+
+
+/* Style browse event filters */
+
+.filter-grid {
+    margin-bottom: 30px;
+
+    display: grid;
+
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+
+    gap: 18px;
+}
+
+.filter-actions {
+    align-items: stretch;
+    justify-content: flex-end;
+}
+
+.search-submit {
+    min-width: 112px;
+
+    white-space: nowrap;
+}
+
+
+/* Style narrow forms */
+
+.narrow-panel {
+    max-width: 620px;
+
+    margin: 60px auto;
+}
+
+
+/* Style authentication pages */
+
+.auth-panel {
+    width: min(100%, 600px);
+    max-width: 600px;
+
+    margin: 72px auto;
+
+    padding: 44px 46px 40px;
+}
+
+
+/* Style the authentication heading */
+
+.auth-header {
+    margin-bottom: 34px;
+}
+
+.auth-header h1 {
+    margin: 0 0 12px;
+
+    color: var(--navy);
+
+    font-size: clamp(2rem, 4vw, 2.6rem);
+    font-weight: 700;
+
+    letter-spacing: -0.035em;
+    line-height: 1.1;
+}
+
+.auth-subtitle {
+    max-width: 440px;
+
+    margin: 0;
+
+    color: var(--muted);
+
+    font-size: 1.05rem;
+
+    line-height: 1.7;
+}
+
+
+/* Give authentication forms more breathing room */
+
+.auth-form {
+    gap: 26px;
+}
+
+.auth-form .form-field {
+    gap: 10px;
+}
+
+.auth-form .form-field label {
+    font-size: 1rem;
+}
+
+.auth-form .form-field input {
+    min-height: 50px;
+
+    padding: 13px 15px;
+
+    border-radius: 10px;
+
+    background-color: #fbfcff;
+
+    font-size: 1rem;
+}
+
+.auth-form .form-field input:focus {
+    background-color: white;
+}
+
+
+/* Keep authentication layouts separate from event form sections */
+
+.auth-form .form-actions {
+    margin-top: 0;
+    padding-top: 0;
+
+    border-top: 0;
+}
+
+
+/* Style authentication submit buttons */
+
+.auth-submit {
+    width: 100%;
+    min-height: 50px;
+
+    margin-top: 4px;
+
+    font-size: 1rem;
+}
+
+
+/* Style authentication supporting links */
+
+.auth-footer {
+    margin-top: 32px;
+    padding-top: 24px;
+
+    border-top: 1px solid #e3e9f2;
+}
+
+.auth-footer p {
+    margin: 0;
+
+    color: #66738b;
+
+    font-size: 1rem;
+
+    line-height: 1.65;
+}
+
+.auth-footer a {
+    color: var(--navy);
+
+    font-weight: 600;
+}
+
+.auth-footer a:hover {
+    color: var(--navy-light);
+}
+
+
+/* Adjust forms on smaller screens */
+
+@media (max-width: 768px) {
+
+    .form-layout {
+        gap: 40px;
+    }
+
+    .form-grid,
+    .filter-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .form-grid {
+        row-gap: 25px;
+    }
+
+    .form-field-wide {
+        grid-column: auto;
+    }
+
+    .form-layout > section {
+        padding-bottom: 40px;
+    }
+
+    .form-section {
+        padding: 24px 20px 26px;
+
+        border-radius: 12px;
+    }
+
+    .form-section-heading {
+        margin-bottom: 30px;
+    }
+
+    .form-section-heading h2 {
+        margin-bottom: 12px;
+
+        font-size: 1.5rem;
+    }
+
+    .form-section-heading .help-text {
+        font-size: 0.98rem;
+    }
+
+    .form-section-header {
+        margin-bottom: 26px;
+        padding-bottom: 17px;
+    }
+
+    .category-field {
+        margin-top: 28px;
+    }
+
+    .checkbox-grid {
+        grid-template-columns: repeat(
+            auto-fit,
+            minmax(160px, 1fr)
+        );
+    }
+
+    .form-actions {
+        padding-top: 25px;
+    }
+
+    .auth-panel {
+        width: 100%;
+
+        margin: 36px auto;
+
+        padding: 32px 24px;
+    }
+
+    .auth-header {
+        margin-bottom: 28px;
+    }
+
+    .auth-form {
+        gap: 22px;
+    }
+
+    .auth-footer {
+        margin-top: 28px;
+        padding-top: 22px;
+    }
+
+}
+
+
+/* Adjust forms on small mobile screens */
+
+@media (max-width: 520px) {
+
+    .form-layout {
+        gap: 34px;
+    }
+
+    .form-layout > section {
+        padding-bottom: 34px;
+    }
+
+    .form-section {
+        padding: 21px 17px 23px;
+    }
+
+    .form-section-heading {
+        margin-bottom: 26px;
+    }
+
+    .form-section-heading h2 {
+        margin-bottom: 10px;
+
+        font-size: 1.4rem;
+    }
+
+    .form-section-heading .help-text {
+        font-size: 0.96rem;
+    }
+
+    .form-label-row,
+    .form-field label {
+        font-size: 0.98rem;
+    }
+
+    .optional,
+    .optional-label,
+    .optional-indicator {
+        margin-left: 4px;
+
+        font-size: 0.86rem;
+    }
+
+    .form-field input,
+    .form-field textarea,
+    .form-field select {
+        font-size: 0.98rem;
+    }
+
+    .help-text {
+        font-size: 0.93rem;
+    }
+
+    .checkbox-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .checkbox-grid label {
+        min-height: 54px;
+
+        font-size: 0.96rem;
+    }
+
+    .form-actions {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .form-actions .button,
+    .form-actions button,
+    .form-actions input[type="submit"],
+    .form-actions a {
+        width: 100%;
+
+        justify-content: center;
+        text-align: center;
+    }
+
+}

@@ -14,17 +14,11 @@ class Category(db.Model):
 
     # Link each category to the events assigned to it
     event_categories = db.relationship(
-        "EventCategory",
-        back_populates="category",
-        cascade="all, delete-orphan"
+        "EventCategory", back_populates="category", cascade="all, delete-orphan"
     )
 
     # Provide read-only access to events without hiding association records
-    events = db.relationship(
-        "Event",
-        secondary="event_categories",
-        viewonly=True
-    )
+    events = db.relationship("Event", secondary="event_categories", viewonly=True)
 
     def __repr__(self):
 

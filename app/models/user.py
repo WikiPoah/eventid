@@ -1,4 +1,4 @@
-from datetime import datetime, UTC
+from datetime import UTC, datetime
 
 from app.database.db import db
 
@@ -38,23 +38,14 @@ class User(db.Model):
     )
 
     # Link each user to the events they organise and attend
-    events = db.relationship(
-        "Event",
-        back_populates="organiser"
-    )
+    events = db.relationship("Event", back_populates="organiser")
 
     attendances = db.relationship(
-        "Attendance",
-        back_populates="user",
-        cascade="all, delete-orphan"
+        "Attendance", back_populates="user", cascade="all, delete-orphan"
     )
 
     # Provide read-only event access while retaining attendance records
-    attending_events = db.relationship(
-        "Event",
-        secondary="attendance",
-        viewonly=True
-    )
+    attending_events = db.relationship("Event", secondary="attendance", viewonly=True)
 
     def __repr__(self):
 

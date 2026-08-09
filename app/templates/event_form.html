@@ -1,88 +1,613 @@
 {% extends "base.html" %}
-{% block title %}{{ page_title }} · EventID{% endblock %}
+
+{% block title %}{{ page_title }} · eventid{% endblock %}
+
 {% block content %}
+
+<!-- Display the page heading -->
+
 <div class="page-heading">
+
     <div>
-        <h1>{{ page_title }}</h1>
-        <p>Provide clear event details and choose when the event is ready to publish.</p>
+
+        <h1>
+            {{ page_title }}
+        </h1>
+
+        <p>
+            Create a professional event listing for attendees.
+            Fields marked with <strong>*</strong> are required.
+            All other fields are optional.
+        </p>
+
     </div>
-    <a class="button button-secondary" href="{{ url_for('events.manage_events') }}">Back to Manage Events</a>
+
+    <a class="button button-secondary" href="{{ url_for('events.manage_events') }}">
+        Back to Manage Events
+    </a>
+
 </div>
 
+<!-- Display the event form -->
+
 <form class="panel form-layout" method="POST" enctype="multipart/form-data">
+
     {{ form.hidden_tag() }}
 
+    <!-- Display the event details section -->
+
     <section>
-        <h2>Event details</h2>
-        <div class="form-grid">
-            {% for field in [form.title, form.description] %}
-                <div class="form-field form-field-wide">
-                    {{ field.label }}
-                    {{ field() }}
-                    {% for error in field.errors %}<span class="field-error">{{ error }}</span>{% endfor %}
-                </div>
-            {% endfor %}
+
+        <div class="form-section-heading">
+
+            <h2>
+                Event Details
+            </h2>
+
+            <p class="help-text">
+                Tell attendees what your event is about.
+            </p>
+
         </div>
-        <fieldset class="form-field">
-            <legend>Categories</legend>
-            <div class="checkbox-grid">
-                {% for category in categories %}
-                    <label>
-                        <input type="checkbox" name="categories" value="{{ category.category_id }}"
-                            {% if category.category_id in selected_category_ids or category.category_id|string in selected_category_ids %}checked{% endif %}>
-                        {{ category.name }}
-                    </label>
+
+        <div class="form-grid">
+
+            <div class="form-field form-field-wide">
+
+                <div class="form-label-row">
+
+                    {{ form.title.label }}
+
+                    <span class="required-indicator">
+                        *
+                    </span>
+
+                </div>
+
+                {{ form.title() }}
+
+                {% for error in form.title.errors %}
+
+                <span class="field-error">
+                    {{ error }}
+                </span>
+
                 {% endfor %}
+
             </div>
+
+            <div class="form-field form-field-wide">
+
+                <div class="form-label-row">
+
+                    {{ form.description.label }}
+
+                    <span class="required-indicator">
+                        *
+                    </span>
+
+                </div>
+
+                {{ form.description() }}
+
+                {% for error in form.description.errors %}
+
+                <span class="field-error">
+                    {{ error }}
+                </span>
+
+                {% endfor %}
+
+            </div>
+
+        </div>
+
+        <fieldset class="form-field category-field">
+
+            <legend class="form-label-row">
+
+                <span>
+                    Categories
+                </span>
+
+                <span class="required-indicator">
+                    *
+                </span>
+
+            </legend>
+
+            <p class="help-text">
+                Select one or more categories that best describe your event.
+            </p>
+
+            <div class="checkbox-grid">
+
+                {% for category in categories %}
+
+                <label>
+
+                    <input
+                        type="checkbox"
+                        name="categories"
+                        value="{{ category.category_id }}"
+                        {% if category.category_id in selected_category_ids or category.category_id|string in selected_category_ids %}checked{% endif %}
+                    >
+
+                    {{ category.name }}
+
+                </label>
+
+                {% endfor %}
+
+            </div>
+
         </fieldset>
+
     </section>
 
+    <!-- Display the location section -->
+
     <section>
-        <h2>Location</h2>
-        <div class="form-grid">
-            {% for field in [form.venue_name, form.address, form.city, form.country, form.location_notes, form.latitude, form.longitude] %}
-                <div class="form-field {% if field == form.location_notes %}form-field-wide{% endif %}">
-                    {{ field.label }}
-                    {{ field() }}
-                    {% for error in field.errors %}<span class="field-error">{{ error }}</span>{% endfor %}
-                </div>
-            {% endfor %}
+
+        <div class="form-section-heading">
+
+            <h2>
+                Location
+            </h2>
+
+            <p class="help-text">
+                Enter the full location attendees will need to find your event.
+            </p>
+
         </div>
-    </section>
 
-    <section>
-        <h2>Schedule and availability</h2>
         <div class="form-grid">
-            {% for field in [form.start_datetime, form.end_datetime, form.capacity, form.privacy, form.status] %}
-                <div class="form-field">
-                    {{ field.label }}
-                    {{ field() }}
-                    {% for error in field.errors %}<span class="field-error">{{ error }}</span>{% endfor %}
+
+            <div class="form-field">
+
+                <div class="form-label-row">
+
+                    {{ form.venue_name.label }}
+
+                    <span class="required-indicator">
+                        *
+                    </span>
+
                 </div>
-            {% endfor %}
+
+                {{ form.venue_name() }}
+
+                {% for error in form.venue_name.errors %}
+
+                <span class="field-error">
+                    {{ error }}
+                </span>
+
+                {% endfor %}
+
+            </div>
+
+            <div class="form-field">
+
+                <div class="form-label-row">
+
+                    {{ form.address.label }}
+
+                    <span class="required-indicator">
+                        *
+                    </span>
+
+                </div>
+
+                {{ form.address() }}
+
+                {% for error in form.address.errors %}
+
+                <span class="field-error">
+                    {{ error }}
+                </span>
+
+                {% endfor %}
+
+            </div>
+
+            <div class="form-field">
+
+                <div class="form-label-row">
+
+                    {{ form.postcode.label }}
+
+                    <span class="required-indicator">
+                        *
+                    </span>
+
+                </div>
+
+                {{ form.postcode() }}
+
+                {% for error in form.postcode.errors %}
+
+                <span class="field-error">
+                    {{ error }}
+                </span>
+
+                {% endfor %}
+
+            </div>
+
+            <div class="form-field">
+
+                <div class="form-label-row">
+
+                    {{ form.city.label }}
+
+                    <span class="required-indicator">
+                        *
+                    </span>
+
+                </div>
+
+                {{ form.city() }}
+
+                {% for error in form.city.errors %}
+
+                <span class="field-error">
+                    {{ error }}
+                </span>
+
+                {% endfor %}
+
+            </div>
+
+            <div class="form-field">
+
+                <div class="form-label-row">
+
+                    {{ form.country.label }}
+
+                    <span class="required-indicator">
+                        *
+                    </span>
+
+                </div>
+
+                {{ form.country() }}
+
+                {% for error in form.country.errors %}
+
+                <span class="field-error">
+                    {{ error }}
+                </span>
+
+                {% endfor %}
+
+            </div>
+
+            <div class="form-field form-field-wide">
+
+                <div class="form-label-row">
+
+                    {{ form.location_notes.label }}
+
+                    <span class="optional-indicator">
+                        optional
+                    </span>
+
+                </div>
+
+                {{ form.location_notes() }}
+
+                <span class="help-text">
+                    Add directions, entrance details, room numbers or other useful information.
+                </span>
+
+                {% for error in form.location_notes.errors %}
+
+                <span class="field-error">
+                    {{ error }}
+                </span>
+
+                {% endfor %}
+
+            </div>
+
+            <div class="form-field">
+
+                <div class="form-label-row">
+
+                    {{ form.latitude.label }}
+
+                    <span class="optional-indicator">
+                        optional
+                    </span>
+
+                </div>
+
+                {{ form.latitude() }}
+
+                <span class="help-text">
+                    Only needed if you want to provide an exact map location.
+                </span>
+
+                {% for error in form.latitude.errors %}
+
+                <span class="field-error">
+                    {{ error }}
+                </span>
+
+                {% endfor %}
+
+            </div>
+
+            <div class="form-field">
+
+                <div class="form-label-row">
+
+                    {{ form.longitude.label }}
+
+                    <span class="optional-indicator">
+                        optional
+                    </span>
+
+                </div>
+
+                {{ form.longitude() }}
+
+                <span class="help-text">
+                    Only needed if you want to provide an exact map location.
+                </span>
+
+                {% for error in form.longitude.errors %}
+
+                <span class="field-error">
+                    {{ error }}
+                </span>
+
+                {% endfor %}
+
+            </div>
+
         </div>
-        <p class="help-text">Draft events are organiser-only. Cancelled events remain visible to existing attendees but cannot accept registrations.</p>
+
     </section>
 
+    <!-- Display the schedule and availability section -->
+
     <section>
-        <h2>Event image</h2>
+
+        <div class="form-section-heading">
+
+            <h2>
+                Schedule &amp; Availability
+            </h2>
+
+            <p class="help-text">
+                Choose when the event takes place, how many people can attend,
+                and who can see it.
+            </p>
+
+        </div>
+
+        <div class="form-grid">
+
+            <div class="form-field">
+
+                <div class="form-label-row">
+
+                    {{ form.start_datetime.label }}
+
+                    <span class="required-indicator">
+                        *
+                    </span>
+
+                </div>
+
+                {{ form.start_datetime() }}
+
+                {% for error in form.start_datetime.errors %}
+
+                <span class="field-error">
+                    {{ error }}
+                </span>
+
+                {% endfor %}
+
+            </div>
+
+            <div class="form-field">
+
+                <div class="form-label-row">
+
+                    {{ form.end_datetime.label }}
+
+                    <span class="required-indicator">
+                        *
+                    </span>
+
+                </div>
+
+                {{ form.end_datetime() }}
+
+                {% for error in form.end_datetime.errors %}
+
+                <span class="field-error">
+                    {{ error }}
+                </span>
+
+                {% endfor %}
+
+            </div>
+
+            <div class="form-field">
+
+                <div class="form-label-row">
+
+                    {{ form.capacity.label }}
+
+                    <span class="optional-indicator">
+                        optional
+                    </span>
+
+                </div>
+
+                {{ form.capacity() }}
+
+                <span class="help-text">
+                    Leave empty for unlimited attendees.
+                </span>
+
+                {% for error in form.capacity.errors %}
+
+                <span class="field-error">
+                    {{ error }}
+                </span>
+
+                {% endfor %}
+
+            </div>
+
+            <div class="form-field">
+
+                <div class="form-label-row">
+
+                    {{ form.privacy.label }}
+
+                    <span class="required-indicator">
+                        *
+                    </span>
+
+                </div>
+
+                {{ form.privacy() }}
+
+                {% for error in form.privacy.errors %}
+
+                <span class="field-error">
+                    {{ error }}
+                </span>
+
+                {% endfor %}
+
+            </div>
+
+            <div class="form-field">
+
+                <div class="form-label-row">
+
+                    {{ form.status.label }}
+
+                    <span class="required-indicator">
+                        *
+                    </span>
+
+                </div>
+
+                {{ form.status() }}
+
+                {% for error in form.status.errors %}
+
+                <span class="field-error">
+                    {{ error }}
+                </span>
+
+                {% endfor %}
+
+            </div>
+
+        </div>
+
+        <p class="help-text section-help-text">
+            Draft events are only visible to organisers.
+            Cancelled events remain visible to existing attendees but cannot accept new registrations.
+        </p>
+
+    </section>
+
+    <!-- Display the event image section -->
+
+    <section>
+
+        <div class="form-section-heading">
+
+            <h2>
+                Event Image
+            </h2>
+
+            <p class="help-text">
+                Upload a cover image to help your event stand out.
+            </p>
+
+        </div>
+
         {% if event and event.image_path %}
-            <img class="image-preview" src="{{ url_for('events.event_image', filename=event.image_path) }}" alt="Current image for {{ event.title }}">
+
+        <img
+            class="image-preview"
+            src="{{ url_for('events.event_image', filename=event.image_path) }}"
+            alt="Current image for {{ event.title }}"
+        >
+
         {% endif %}
+
         <div class="form-field">
-            {{ form.image.label }}
-            {{ form.image(accept="image/jpeg,image/png,image/webp") }}
-            <span class="help-text">JPEG, PNG, or WebP; maximum 4 MB.</span>
-            {% for error in form.image.errors %}<span class="field-error">{{ error }}</span>{% endfor %}
+
+            <div class="form-label-row">
+
+                {{ form.image.label }}
+
+                <span class="optional-indicator">
+                    optional
+                </span>
+
+            </div>
+
+            {{ form.image(
+                accept="image/jpeg,image/png,image/webp"
+            ) }}
+
+            <span class="help-text">
+                JPEG, PNG or WebP • Maximum 4 MB • Recommended landscape image.
+            </span>
+
+            {% for error in form.image.errors %}
+
+            <span class="field-error">
+                {{ error }}
+            </span>
+
+            {% endfor %}
+
         </div>
-        {% if event and event.image_path %}
-            <label class="checkbox-row">{{ form.remove_image() }} {{ form.remove_image.label.text }}</label>
+
+        {% if event and event.image_path and form.remove_image is defined %}
+
+        <label class="checkbox-row">
+
+            {{ form.remove_image() }}
+
+            {{ form.remove_image.label.text }}
+
+        </label>
+
         {% endif %}
+
     </section>
+
+    <!-- Display the form actions -->
 
     <div class="form-actions">
-        {{ form.submit(class_="button button-primary", value="Save Event") }}
-        <a class="button button-secondary" href="{{ url_for('events.manage_events') }}">Cancel</a>
+
+        {{ form.submit(
+            class_="button button-primary",
+            value="Create Event" if "Create" in page_title else "Save Changes"
+        ) }}
+
+        <a class="button button-secondary" href="{{ url_for('events.manage_events') }}">
+            Cancel
+        </a>
+
     </div>
+
 </form>
+
 {% endblock %}

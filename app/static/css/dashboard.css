@@ -1,0 +1,66 @@
+/* Style shared application page shells */
+
+.page-shell {
+    width: min(1180px, calc(100% - 40px));
+
+    min-height: 65vh;
+
+    margin: 40px auto 80px;
+}
+
+
+/* Style dashboard grids */
+
+.stats-grid,
+.management-grid {
+    display: grid;
+
+    gap: 18px;
+}
+
+.stats-grid {
+    grid-template-columns: repeat(
+        auto-fit,
+        minmax(135px, 1fr)
+    );
+
+    margin-bottom: 40px;
+}
+
+
+/* Style statistic cards */
+
+.stat-card {
+    min-width: 0;
+}
+
+
+/* Style management layouts */
+
+.management-grid {
+    grid-template-columns: repeat(
+        auto-fit,
+        minmax(280px, 1fr)
+    );
+}
+
+
+/* Style dashboard action groups */
+
+.card-actions {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+
+    gap: 12px;
+}
+
+
+/* Style dashboard sections */
+
+.content-section {
+    display: flex;
+    flex-direction: column;
+
+    gap: 10px;
+}

@@ -1,50 +1,359 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}EventID{% endblock %}</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
+    <meta name="description"
+        content="{% block description %}Discover, attend, and organise events with EventID.{% endblock %}">
+
+    <meta name="theme-color" content="#162f67">
+
+    <meta property="og:title" content="EventID">
+
+    <meta property="og:description" content="Discover, attend, and organise memorable events.">
+
+    <meta property="og:type" content="website">
+
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/logo.png') }}">
+
+    <title>
+        {% block title %}EventID{% endblock %}
+    </title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css', v='5') }}">
+
+    <script src="{{ url_for('static', filename='js/script.js', v='5') }}" defer></script>
 </head>
+
 <body>
-    <header>
-        <nav aria-label="Main navigation">
+
+    <a class="skip-link" href="#main-content">
+        Skip to main content
+    </a>
+
+    <header class="site-header">
+
+        <nav class="main-navigation" aria-label="Main navigation">
+
             <a class="nav-logo" href="{{ url_for('home') }}" aria-label="EventID home">
                 <img src="{{ url_for('static', filename='images/logo.png') }}" alt="EventID">
             </a>
-            {% if g.user %}
-                <div class="nav-links">
-                    <a href="{{ url_for('events.browse_events') }}">Browse Events</a>
-                    <a href="{{ url_for('events.my_events') }}">My Events</a>
-                    <a href="{{ url_for('events.manage_events') }}">Manage Events</a>
+
+            <div class="nav-links">
+
+                <a href="{{ url_for('events.browse_events') }}">
+                    Browse Events
+                </a>
+
+                <a href="{{ url_for('events.my_events') }}">
+                    My Events
+                </a>
+
+                <a href="{{ url_for('events.manage_events') }}">
+                    Manage Events
+                </a>
+
+                <a href="{{ url_for('events.create_event') }}">
+                    Create Event
+                </a>
+
+            </div>
+
+            <div class="nav-actions">
+
+                <div class="nav-search-wrapper" data-filters>
+
+                    <form class="nav-search" data-filters-form method="GET" action="{{ url_for('events.browse_events') }}"
+                        role="search">
+
+                        <button class="search-button" type="submit" aria-label="Search events">
+
+                            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <circle cx="11" cy="11" r="8"></circle>
+
+                                <path d="m21 21-4.35-4.35"></path>
+                            </svg>
+
+                        </button>
+
+                        <label class="visually-hidden" for="navigation-search">
+                            Search events
+                        </label>
+
+                        <input id="navigation-search" name="search" type="search" placeholder="Search events..."
+                            autocomplete="off" data-filter-search>
+
+                        <button class="filters-toggle" type="button" data-filters-toggle aria-label="Open event filters"
+                            aria-expanded="false" aria-controls="navigation-filters">
+
+                            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <line x1="4" y1="6" x2="20" y2="6"></line>
+
+                                <circle cx="9" cy="6" r="2"></circle>
+
+                                <line x1="4" y1="12" x2="20" y2="12"></line>
+
+                                <circle cx="15" cy="12" r="2"></circle>
+
+                                <line x1="4" y1="18" x2="20" y2="18"></line>
+
+                                <circle cx="11" cy="18" r="2"></circle>
+                            </svg>
+
+                        </button>
+
+                    </form>
+
+                    <div class="filters-panel" id="navigation-filters" data-filters-panel hidden>
+
+                        <div class="filters-panel-heading">
+
+                            <strong>
+                                Event filters
+                            </strong>
+
+                            <span>
+                                Narrow down the events you want to discover.
+                            </span>
+
+                        </div>
+
+                        <p class="filters-panel-copy">
+                            Browse Events contains the full category and city filters.
+                        </p>
+
+                        <a class="button button-primary filters-browse-link"
+                            href="{{ url_for('events.browse_events') }}">
+                            Browse with filters
+                        </a>
+
+                    </div>
+
                 </div>
-                <form method="POST" action="{{ url_for('auth.logout') }}">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                    <button class="button button-secondary" type="submit">Log out</button>
-                </form>
-            {% else %}
+
+                {% if g.user %}
+
+                <div class="account-menu" data-account-menu>
+
+                    <button class="account-menu-toggle" type="button" data-account-menu-toggle aria-expanded="false"
+                        aria-controls="account-menu-panel" aria-label="Open account menu">
+
+                        <span class="account-menu-icon" aria-hidden="true">
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                        </span>
+
+                    </button>
+
+                    <div class="account-menu-panel" id="account-menu-panel" data-account-menu-panel hidden>
+
+                        <div class="account-menu-header">
+
+                            <span class="profile-icon" aria-hidden="true">
+
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                    stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="12" cy="8" r="4"></circle>
+
+                                    <path d="M4 20c1.5-4 5-6 8-6s6.5 2 8 6"></path>
+                                </svg>
+
+                            </span>
+
+                            <div>
+
+                                <strong>
+                                    {{ g.user.first_name }} {{ g.user.last_name }}
+                                </strong>
+
+                                <span>
+                                    @{{ g.user.username }}
+                                </span>
+
+                            </div>
+
+                        </div>
+
+                        <div class="account-menu-links">
+
+                            <button class="account-menu-link account-menu-link-disabled" type="button" disabled>
+                                My Profile
+
+                                <span>
+                                    Coming soon
+                                </span>
+                            </button>
+
+                            <button class="account-menu-link account-menu-link-disabled" type="button" disabled>
+                                Calendar
+
+                                <span>
+                                    Coming soon
+                                </span>
+                            </button>
+
+                            <button class="account-menu-link account-menu-link-disabled" type="button" disabled>
+                                Settings
+
+                                <span>
+                                    Coming soon
+                                </span>
+                            </button>
+
+                            <button class="account-menu-link account-menu-link-disabled" type="button" disabled>
+                                Help
+
+                                <span>
+                                    Coming soon
+                                </span>
+                            </button>
+
+                        </div>
+
+                        <form class="account-menu-logout" method="POST" action="{{ url_for('auth.logout') }}">
+
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                            <button class="account-menu-logout-button" type="submit">
+                                Log out
+                            </button>
+
+                        </form>
+
+                    </div>
+
+                </div>
+
+                {% else %}
+
                 <div class="account-links">
-                    <a href="{{ url_for('auth.login') }}">Log in</a>
-                    <a href="{{ url_for('auth.signup') }}">Sign up</a>
+
+                    <a href="{{ url_for('auth.login') }}">
+                        Log in
+                    </a>
+
+                    <a class="button button-primary" href="{{ url_for('auth.signup') }}">
+                        Sign up
+                    </a>
+
                 </div>
-            {% endif %}
+
+                {% endif %}
+
+            </div>
+
         </nav>
+
     </header>
 
-    <main class="page-shell">
+    <main class="page-shell" id="main-content" tabindex="-1">
+
         {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                <section aria-label="Messages">
-                    {% for category, message in messages %}
-                        <p class="flash flash-{{ category }}">{{ message }}</p>
-                    {% endfor %}
-                </section>
-            {% endif %}
+
+        {% if messages %}
+
+        <section aria-label="Messages">
+
+            {% for category, message in messages %}
+
+            <p class="flash flash-{{ category }}" role="status">
+                {{ message }}
+            </p>
+
+            {% endfor %}
+
+        </section>
+
+        {% endif %}
+
         {% endwith %}
+
         {% block content %}{% endblock %}
+
     </main>
+
+    <footer class="site-footer">
+
+        <!-- Encourage users to continue exploring the platform -->
+
+        <section class="footer-cta">
+
+            <h2>
+                Ready to discover your next event?
+            </h2>
+
+            <p>
+                Explore upcoming events or create one of your own in just a few clicks.
+            </p>
+
+            <a class="button button-primary" href="{{ url_for('events.browse_events') }}">
+                Browse Events
+            </a>
+
+        </section>
+
+        <!-- Display the website footer -->
+
+        <div class="footer-content">
+
+            <h2>
+                eventid
+            </h2>
+
+            <p class="footer-tagline">
+                Discover. Attend. Organise.
+            </p>
+
+            <p class="footer-description">
+                Helping people discover experiences worth remembering.
+            </p>
+
+            <nav class="footer-links" aria-label="Footer navigation">
+
+                <a href="{{ url_for('events.browse_events') }}">
+                    Browse Events
+                </a>
+
+                <span class="muted-copy" aria-disabled="true">
+                    Calendar · Coming soon
+                </span>
+
+                <a href="{{ url_for('events.create_event') }}">
+                    Create Event
+                </a>
+
+                <a href="mailto:your@email.com">
+                    Contact
+                </a>
+
+            </nav>
+
+            <div class="footer-secondary-links">
+
+                <a href="https://github.com/WikiPoah/eventid" target="_blank" rel="noopener">
+                    GitHub
+                </a>
+
+                <a href="https://github.com/WikiPoah/eventid/issues/new" target="_blank" rel="noopener">
+                    Report a Bug
+                </a>
+
+            </div>
+
+            <p class="footer-copyright">
+                © 2026 eventid · Designed &amp; developed by Wiktoria Sobieska
+            </p>
+
+        </div>
+
+    </footer>
+
 </body>
+
 </html>
