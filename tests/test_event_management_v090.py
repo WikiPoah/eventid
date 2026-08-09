@@ -57,9 +57,7 @@ def test_organiser_can_edit_event_and_replace_categories(
 
     response = client.post(
         f"/events/{event_id}/edit",
-        data=edit_data(
-            categories=str(new_id)
-        ),
+        data=edit_data(categories=str(new_id)),
         follow_redirects=True,
     )
 
@@ -75,10 +73,7 @@ def test_organiser_can_edit_event_and_replace_categories(
         assert event.title == "Updated Event"
         assert event.status == "Published"
 
-        assert [
-            category.name
-            for category in event.categories
-        ] == ["New Category"]
+        assert [category.name for category in event.categories] == ["New Category"]
 
 
 def test_edit_is_owner_only_and_missing_event_is_not_found(
@@ -93,24 +88,14 @@ def test_edit_is_owner_only_and_missing_event_is_not_found(
         users[1],
     )
 
-    assert (
-        client.get(
-            f"/events/{event_id}/edit"
-        ).status_code
-        == 403
-    )
+    assert client.get(f"/events/{event_id}/edit").status_code == 403
 
     login(
         client,
         users[0],
     )
 
-    assert (
-        client.get(
-            "/events/999999/edit"
-        ).status_code
-        == 404
-    )
+    assert client.get("/events/999999/edit").status_code == 404
 
 
 def test_edit_rejects_invalid_dates_and_categories(
@@ -119,9 +104,7 @@ def test_edit_rejects_invalid_dates_and_categories(
     users,
     event_factory,
 ):
-    event_id = event_factory(
-        title="Original"
-    )
+    event_id = event_factory(title="Original")
 
     login(
         client,
@@ -140,9 +123,7 @@ def test_edit_rejects_invalid_dates_and_categories(
 
     response = client.post(
         f"/events/{event_id}/edit",
-        data=edit_data(
-            categories="999999"
-        ),
+        data=edit_data(categories="999999"),
     )
 
     assert b"selected categories are invalid" in response.data
@@ -163,9 +144,7 @@ def test_capacity_cannot_be_reduced_below_attendance(
     users,
     event_factory,
 ):
-    event_id = event_factory(
-        capacity=10
-    )
+    event_id = event_factory(capacity=10)
 
     with app.app_context():
         db.session.add_all(
@@ -190,15 +169,10 @@ def test_capacity_cannot_be_reduced_below_attendance(
 
     response = client.post(
         f"/events/{event_id}/edit",
-        data=edit_data(
-            capacity="1"
-        ),
+        data=edit_data(capacity="1"),
     )
 
-    assert (
-        b"Capacity cannot be lower than the 2 existing attendees"
-        in response.data
-    )
+    assert b"Capacity cannot be lower than the 2 existing attendees" in response.data
 
     with app.app_context():
         assert (
@@ -217,9 +191,7 @@ def test_edit_database_failure_rolls_back(
     event_factory,
     monkeypatch,
 ):
-    event_id = event_factory(
-        title="Before Failure"
-    )
+    event_id = event_factory(title="Before Failure")
 
     login(
         client,
@@ -227,9 +199,7 @@ def test_edit_database_failure_rolls_back(
     )
 
     def fail_commit():
-        raise SQLAlchemyError(
-            "forced failure"
-        )
+        raise SQLAlchemyError("forced failure")
 
     monkeypatch.setattr(
         db.session,
@@ -263,13 +233,9 @@ def test_delete_is_owner_only_post_only_and_cascades(
     event_id = event_factory()
 
     with app.app_context():
-        category = Category(
-            name="Delete Category"
-        )
+        category = Category(name="Delete Category")
 
-        db.session.add(
-            category
-        )
+        db.session.add(category)
         db.session.flush()
 
         db.session.add_all(
@@ -294,12 +260,7 @@ def test_delete_is_owner_only_post_only_and_cascades(
         users[1],
     )
 
-    assert (
-        other_client.post(
-            f"/events/{event_id}/delete"
-        ).status_code
-        == 403
-    )
+    assert other_client.post(f"/events/{event_id}/delete").status_code == 403
 
     owner_client = app.test_client()
 
@@ -308,12 +269,7 @@ def test_delete_is_owner_only_post_only_and_cascades(
         users[0],
     )
 
-    assert (
-        owner_client.get(
-            f"/events/{event_id}/delete"
-        ).status_code
-        == 405
-    )
+    assert owner_client.get(f"/events/{event_id}/delete").status_code == 405
 
     response = owner_client.post(
         f"/events/{event_id}/delete",
@@ -331,19 +287,9 @@ def test_delete_is_owner_only_post_only_and_cascades(
             is None
         )
 
-        assert (
-            Attendance.query.filter_by(
-                event_id=event_id
-            ).count()
-            == 0
-        )
+        assert Attendance.query.filter_by(event_id=event_id).count() == 0
 
-        assert (
-            EventCategory.query.filter_by(
-                event_id=event_id
-            ).count()
-            == 0
-        )
+        assert EventCategory.query.filter_by(event_id=event_id).count() == 0
 
 
 def test_delete_missing_event_and_csrf_requirement(
@@ -357,31 +303,17 @@ def test_delete_missing_event_and_csrf_requirement(
         users[0],
     )
 
-    assert (
-        client.post(
-            "/events/999999/delete"
-        ).status_code
-        == 404
-    )
+    assert client.post("/events/999999/delete").status_code == 404
 
     event_id = event_factory()
 
-    app.config[
-        "WTF_CSRF_ENABLED"
-    ] = True
+    app.config["WTF_CSRF_ENABLED"] = True
 
     try:
-        assert (
-            client.post(
-                f"/events/{event_id}/delete"
-            ).status_code
-            == 400
-        )
+        assert client.post(f"/events/{event_id}/delete").status_code == 400
 
     finally:
-        app.config[
-            "WTF_CSRF_ENABLED"
-        ] = False
+        app.config["WTF_CSRF_ENABLED"] = False
 
 
 def test_status_change_is_owner_only(
@@ -399,9 +331,7 @@ def test_status_change_is_owner_only(
     assert (
         client.post(
             f"/events/{event_id}/status",
-            data={
-                "status": "Cancelled"
-            },
+            data={"status": "Cancelled"},
         ).status_code
         == 403
     )
@@ -413,13 +343,8 @@ def test_status_change_is_owner_only(
 
     response = client.post(
         f"/events/{event_id}/status",
-        data={
-            "status": "Cancelled"
-        },
+        data={"status": "Cancelled"},
         follow_redirects=True,
     )
 
-    assert (
-        b"status changed to Cancelled"
-        in response.data
-    )
+    assert b"status changed to Cancelled" in response.data

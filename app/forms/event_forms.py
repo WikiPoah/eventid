@@ -21,7 +21,7 @@ from wtforms.validators import (
 
 
 # Collect and validate information when creating or editing an event
-class EventForm(FlaskForm): 
+class EventForm(FlaskForm):
 
     # Collect the event's main details
     title = StringField(
@@ -167,9 +167,7 @@ class EventForm(FlaskForm):
         ],
     )
 
-    remove_image = BooleanField(
-        "Remove current image"
-    )
+    remove_image = BooleanField("Remove current image")
 
     submit = SubmitField("Save Event")
 

@@ -21,9 +21,7 @@ def test_calendar_renders_coming_soon_state(client, users):
 
 
 def test_calendar_does_not_expose_unfinished_schedule(client, users, event_factory):
-    event_factory(
-        title="Hidden Calendar Event"
-    )
+    event_factory(title="Hidden Calendar Event")
 
     login(client, users[1])
 

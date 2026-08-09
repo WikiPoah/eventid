@@ -46,27 +46,15 @@ def test_valid_image_upload_uses_safe_generated_filename(app, client, users):
     assert response.status_code == 302
 
     with app.app_context():
-        event = Event.query.filter_by(
-            title="Image Event"
-        ).one()
+        event = Event.query.filter_by(title="Image Event").one()
 
         assert event.image_path.endswith(".png")
         assert "unsafe" not in event.image_path
         assert "/" not in event.image_path
 
-        saved_path = (
-            Path(
-                app.config[
-                    "EVENT_IMAGE_UPLOAD_FOLDER"
-                ]
-            )
-            / event.image_path
-        )
+        saved_path = Path(app.config["EVENT_IMAGE_UPLOAD_FOLDER"]) / event.image_path
 
-        assert (
-            saved_path.read_bytes()
-            == PNG_IMAGE
-        )
+        assert saved_path.read_bytes() == PNG_IMAGE
 
 
 def test_invalid_image_extension_and_signature_are_rejected(
@@ -90,10 +78,7 @@ def test_invalid_image_extension_and_signature_are_rejected(
         content_type="multipart/form-data",
     )
 
-    assert (
-        b"Only JPEG, PNG and WebP images are allowed."
-        in response.data
-    )
+    assert b"Only JPEG, PNG and WebP images are allowed." in response.data
 
     response = client.post(
         "/events/create",
@@ -106,18 +91,10 @@ def test_invalid_image_extension_and_signature_are_rejected(
         content_type="multipart/form-data",
     )
 
-    assert (
-        b"not a valid supported image"
-        in response.data
-    )
+    assert b"not a valid supported image" in response.data
 
     with app.app_context():
-        assert (
-            Event.query.filter_by(
-                title="Image Event"
-            ).count()
-            == 0
-        )
+        assert Event.query.filter_by(title="Image Event").count() == 0
 
 
 def test_oversized_image_is_rejected(
@@ -125,9 +102,7 @@ def test_oversized_image_is_rejected(
     client,
     users,
 ):
-    app.config[
-        "EVENT_IMAGE_MAX_BYTES"
-    ] = 16
+    app.config["EVENT_IMAGE_MAX_BYTES"] = 16
 
     login(
         client,
@@ -145,10 +120,7 @@ def test_oversized_image_is_rejected(
         content_type="multipart/form-data",
     )
 
-    assert (
-        b"4 MB or smaller"
-        in response.data
-    )
+    assert b"4 MB or smaller" in response.data
 
 
 def test_organiser_can_replace_image_and_old_file_is_removed(
@@ -157,28 +129,15 @@ def test_organiser_can_replace_image_and_old_file_is_removed(
     users,
     event_factory,
 ):
-    upload_directory = Path(
-        app.config[
-            "EVENT_IMAGE_UPLOAD_FOLDER"
-        ]
-    )
+    upload_directory = Path(app.config["EVENT_IMAGE_UPLOAD_FOLDER"])
 
-    upload_directory.mkdir(
-        parents=True
-    )
+    upload_directory.mkdir(parents=True)
 
-    old_path = (
-        upload_directory
-        / "old.png"
-    )
+    old_path = upload_directory / "old.png"
 
-    old_path.write_bytes(
-        PNG_IMAGE
-    )
+    old_path.write_bytes(PNG_IMAGE)
 
-    event_id = event_factory(
-        image_path="old.png"
-    )
+    event_id = event_factory(image_path="old.png")
 
     login(
         client,
@@ -196,10 +155,7 @@ def test_organiser_can_replace_image_and_old_file_is_removed(
         content_type="multipart/form-data",
     )
 
-    assert (
-        response.status_code
-        == 302
-    )
+    assert response.status_code == 302
 
     with app.app_context():
         new_name = db.session.get(
@@ -207,17 +163,11 @@ def test_organiser_can_replace_image_and_old_file_is_removed(
             event_id,
         ).image_path
 
-    assert (
-        new_name
-        != "old.png"
-    )
+    assert new_name != "old.png"
 
     assert not old_path.exists()
 
-    assert (
-        upload_directory
-        / new_name
-    ).exists()
+    assert (upload_directory / new_name).exists()
 
 
 def test_unauthorised_user_cannot_replace_image(
@@ -244,10 +194,7 @@ def test_unauthorised_user_cannot_replace_image(
         content_type="multipart/form-data",
     )
 
-    assert (
-        response.status_code
-        == 403
-    )
+    assert response.status_code == 403
 
     with app.app_context():
         assert (
@@ -265,75 +212,37 @@ def test_image_fallback_and_image_access_rules(
     users,
     event_factory,
 ):
-    public_id = event_factory(
-        image_path=None
-    )
+    public_id = event_factory(image_path=None)
 
     event_factory(
         status="Draft",
         image_path="private.png",
     )
 
-    upload_directory = Path(
-        app.config[
-            "EVENT_IMAGE_UPLOAD_FOLDER"
-        ]
-    )
+    upload_directory = Path(app.config["EVENT_IMAGE_UPLOAD_FOLDER"])
 
-    upload_directory.mkdir(
-        parents=True
-    )
+    upload_directory.mkdir(parents=True)
 
-    (
-        upload_directory
-        / "private.png"
-    ).write_bytes(
-        PNG_IMAGE
-    )
+    (upload_directory / "private.png").write_bytes(PNG_IMAGE)
 
     login(
         client,
         users[1],
     )
 
-    assert (
-        b"No event image available"
-        in client.get(
-            f"/events/{public_id}"
-        ).data
-    )
+    assert b"No event image available" in client.get(f"/events/{public_id}").data
 
-    assert (
-        client.get(
-            "/event-images/private.png"
-        ).status_code
-        == 403
-    )
+    assert client.get("/event-images/private.png").status_code == 403
 
     login(
         client,
         users[0],
     )
 
-    image_response = client.get(
-        "/event-images/private.png"
-    )
+    image_response = client.get("/event-images/private.png")
 
-    assert (
-        image_response.status_code
-        == 200
-    )
+    assert image_response.status_code == 200
 
-    assert (
-        image_response.headers[
-            "X-Content-Type-Options"
-        ]
-        == "nosniff"
-    )
+    assert image_response.headers["X-Content-Type-Options"] == "nosniff"
 
-    assert (
-        client.get(
-            "/event-images/../private.png"
-        ).status_code
-        == 404
-    )
+    assert client.get("/event-images/../private.png").status_code == 404

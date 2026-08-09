@@ -35,11 +35,7 @@ def test_dashboard_summarizes_only_organisers_events(
     event_factory(
         title="Past Event",
         start_datetime=datetime.now() - timedelta(days=2),
-        end_datetime=(
-            datetime.now()
-            - timedelta(days=2)
-            + timedelta(hours=1)
-        ),
+        end_datetime=(datetime.now() - timedelta(days=2) + timedelta(hours=1)),
     )
 
     event_factory(
@@ -61,9 +57,7 @@ def test_dashboard_summarizes_only_organisers_events(
             for number in range(4)
         ]
 
-        db.session.add_all(
-            additional_users
-        )
+        db.session.add_all(additional_users)
 
         db.session.flush()
 
@@ -96,9 +90,7 @@ def test_dashboard_summarizes_only_organisers_events(
         users[0],
     )
 
-    response = client.get(
-        "/manage-events"
-    )
+    response = client.get("/manage-events")
 
     assert response.status_code == 200
 
@@ -128,9 +120,7 @@ def test_dashboard_query_count_does_not_grow_per_event(
 ):
     for number in range(6):
 
-        event_factory(
-            title=f"Dashboard Event {number}"
-        )
+        event_factory(title=f"Dashboard Event {number}")
 
     select_count = 0
 
@@ -143,9 +133,7 @@ def test_dashboard_query_count_does_not_grow_per_event(
 
         nonlocal select_count
 
-        if statement.lstrip().upper().startswith(
-            "SELECT"
-        ):
+        if statement.lstrip().upper().startswith("SELECT"):
 
             select_count += 1
 
@@ -164,9 +152,7 @@ def test_dashboard_query_count_does_not_grow_per_event(
 
         try:
 
-            response = client.get(
-                "/manage-events"
-            )
+            response = client.get("/manage-events")
 
         finally:
 
@@ -184,17 +170,11 @@ def test_dashboard_query_count_does_not_grow_per_event(
 def test_dashboard_requires_authentication(
     client,
 ):
-    response = client.get(
-        "/manage-events"
-    )
+    response = client.get("/manage-events")
 
     assert response.status_code == 302
 
-    assert response.headers[
-        "Location"
-    ].endswith(
-        "/login?next=/manage-events"
-    )
+    assert response.headers["Location"].endswith("/login?next=/manage-events")
 
 
 def test_my_events_and_manage_events_keep_distinct_responsibilities(
@@ -203,9 +183,7 @@ def test_my_events_and_manage_events_keep_distinct_responsibilities(
     users,
     event_factory,
 ):
-    organised_id = event_factory(
-        title="My Organised Event"
-    )
+    organised_id = event_factory(title="My Organised Event")
 
     attended_id = event_factory(
         title="My Attended Event",
@@ -228,33 +206,17 @@ def test_my_events_and_manage_events_keep_distinct_responsibilities(
         users[0],
     )
 
-    my_events_response = client.get(
-        "/my-events"
-    )
+    my_events_response = client.get("/my-events")
 
-    manage_response = client.get(
-        "/manage-events"
-    )
+    manage_response = client.get("/manage-events")
 
-    assert (
-        b"My Attended Event"
-        in my_events_response.data
-    )
+    assert b"My Attended Event" in my_events_response.data
 
-    assert (
-        b"My Organised Event"
-        not in my_events_response.data
-    )
+    assert b"My Organised Event" not in my_events_response.data
 
-    assert (
-        b"My Organised Event"
-        in manage_response.data
-    )
+    assert b"My Organised Event" in manage_response.data
 
-    assert (
-        b"My Attended Event"
-        not in manage_response.data
-    )
+    assert b"My Attended Event" not in manage_response.data
 
     with app.app_context():
 
@@ -272,9 +234,7 @@ def test_users_cannot_see_another_organisers_dashboard_data(
     users,
     event_factory,
 ):
-    event_factory(
-        title="First Organiser Private Dashboard Event"
-    )
+    event_factory(title="First Organiser Private Dashboard Event")
 
     event_factory(
         title="Second Organiser Dashboard Event",
@@ -286,19 +246,11 @@ def test_users_cannot_see_another_organisers_dashboard_data(
         users[2],
     )
 
-    response = client.get(
-        "/manage-events"
-    )
+    response = client.get("/manage-events")
 
-    assert (
-        b"Second Organiser Dashboard Event"
-        in response.data
-    )
+    assert b"Second Organiser Dashboard Event" in response.data
 
-    assert (
-        b"First Organiser Private Dashboard Event"
-        not in response.data
-    )
+    assert b"First Organiser Private Dashboard Event" not in response.data
 
 
 def test_navigation_links_to_each_page_responsibility(

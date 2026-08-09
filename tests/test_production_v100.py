@@ -24,10 +24,7 @@ def test_legacy_postgres_url_is_normalized(monkeypatch):
         "postgres://user:pass@db/eventid",
     )
 
-    assert (
-        database_url()
-        == "postgresql+psycopg://user:pass@db/eventid"
-    )
+    assert database_url() == "postgresql+psycopg://user:pass@db/eventid"
 
 
 def test_production_keeps_secure_cookie_default(monkeypatch):
@@ -48,54 +45,27 @@ def test_production_keeps_secure_cookie_default(monkeypatch):
 
     app = create_app()
 
-    assert (
-        app.config["SESSION_COOKIE_SECURE"]
-        is True
-    )
+    assert app.config["SESSION_COOKIE_SECURE"] is True
 
 
 def test_landing_page_uses_accessible_animation_contract(client):
     response = client.get("/")
 
-    assert (
-        b'class="feature-grid stagger-grid"'
-        in response.data
-    )
+    assert b'class="feature-grid stagger-grid"' in response.data
 
-    assert (
-        b'class="skip-link"'
-        in response.data
-    )
+    assert b'class="skip-link"' in response.data
 
-    style_css = client.get(
-        "/static/css/style.css"
-    ).data
+    style_css = client.get("/static/css/style.css").data
 
-    responsive_css = client.get(
-        "/static/css/responsive.css"
-    ).data
+    responsive_css = client.get("/static/css/responsive.css").data
 
-    landing_css = client.get(
-        "/static/css/landing.css"
-    ).data
+    landing_css = client.get("/static/css/landing.css").data
 
-    combined_styles = (
-        style_css
-        + responsive_css
-        + landing_css
-    )
+    combined_styles = style_css + responsive_css + landing_css
 
-    assert (
-        b"prefers-reduced-motion"
-        in combined_styles
-    )
+    assert b"prefers-reduced-motion" in combined_styles
 
-    assert (
-        b"IntersectionObserver"
-        in client.get(
-            "/static/js/script.js"
-        ).data
-    )
+    assert b"IntersectionObserver" in client.get("/static/js/script.js").data
 
 
 def test_local_artifact_patterns_are_ignored():

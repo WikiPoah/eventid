@@ -166,9 +166,7 @@ def manage_events():
         "published_events": sum(
             event.status == "Published" for event in organiser_events
         ),
-        "draft_events": sum(
-            event.status == "Draft" for event in organiser_events
-        ),
+        "draft_events": sum(event.status == "Draft" for event in organiser_events),
         "cancelled_events": sum(
             event.status == "Cancelled" for event in organiser_events
         ),
@@ -295,9 +293,7 @@ def browse_events():
 
     # Filter events whose titles contain the search term
     if search:
-        statement = statement.where(
-            Event.title.ilike(f"%{search}%")
-        )
+        statement = statement.where(Event.title.ilike(f"%{search}%"))
 
     # Filter events by category
     if category_id:
@@ -307,9 +303,7 @@ def browse_events():
 
     # Filter events by city
     if selected_city:
-        statement = statement.where(
-            Event.city == selected_city
-        )
+        statement = statement.where(Event.city == selected_city)
 
     # Retrieve only the requested page while retaining chronological ordering
     pagination = db.paginate(
@@ -352,14 +346,10 @@ def event_details(event_id):
     attendee_count = len(event.attendees)
 
     is_attending = g.user is not None and any(
-        attendance.user_id == g.user.user_id
-        for attendance in event.attendees
+        attendance.user_id == g.user.user_id for attendance in event.attendees
     )
 
-    is_full = (
-        event.capacity is not None
-        and attendee_count >= event.capacity
-    )
+    is_full = event.capacity is not None and attendee_count >= event.capacity
 
     return render_template(
         "event_details.html",
@@ -377,9 +367,7 @@ def event_image(filename):
     if filename != filename.rsplit("/", 1)[-1]:
         abort(404)
 
-    event = db.session.scalar(
-        select(Event).where(Event.image_path == filename)
-    )
+    event = db.session.scalar(select(Event).where(Event.image_path == filename))
 
     if event is None:
         abort(404)
@@ -409,9 +397,7 @@ def _locked_event(event_id):
         db.session.rollback()
 
         # Serialize the capacity check and insert with SQLite's write lock
-        db.session.execute(
-            text("BEGIN IMMEDIATE")
-        )
+        db.session.execute(text("BEGIN IMMEDIATE"))
 
         return db.session.get(
             Event,
@@ -420,9 +406,7 @@ def _locked_event(event_id):
 
     # Serialize registrations for this event using a database row lock
     return db.session.scalar(
-        select(Event)
-        .where(Event.event_id == event_id)
-        .with_for_update()
+        select(Event).where(Event.event_id == event_id).with_for_update()
     )
 
 
@@ -651,9 +635,7 @@ def leave_event(event_id):
 def my_attending_events():
 
     # Preserve existing bookmarks while keeping one attendance-page query
-    return redirect(
-        url_for("events.my_events")
-    )
+    return redirect(url_for("events.my_events"))
 
 
 @events.route("/events/create", methods=["GET", "POST"])
@@ -662,15 +644,11 @@ def create_event():
 
     form = EventForm()
 
-    categories = Category.query.order_by(
-        Category.name
-    ).all()
+    categories = Category.query.order_by(Category.name).all()
 
     if form.validate_on_submit():
 
-        selected_category_ids = _category_ids(
-            categories
-        )
+        selected_category_ids = _category_ids(categories)
 
         if selected_category_ids is None:
 
@@ -687,15 +665,11 @@ def create_event():
                 page_title="Create Event",
             )
 
-        image_extension, image_error = validate_event_image(
-            form.image.data
-        )
+        image_extension, image_error = validate_event_image(form.image.data)
 
         if image_error:
 
-            form.image.errors.append(
-                image_error
-            )
+            form.image.errors.append(image_error)
 
         else:
 
@@ -751,9 +725,7 @@ def create_event():
                 # Roll back data and remove a newly saved orphan image
                 db.session.rollback()
 
-                delete_event_image(
-                    saved_image
-                )
+                delete_event_image(saved_image)
 
                 flash(
                     "The event could not be created. Please try again.",
@@ -767,17 +739,13 @@ def create_event():
                     "success",
                 )
 
-                return redirect(
-                    url_for("events.manage_events")
-                )
+                return redirect(url_for("events.manage_events"))
 
     return render_template(
         "event_form.html",
         form=form,
         categories=categories,
-        selected_category_ids=set(
-            request.form.getlist("categories")
-        ),
+        selected_category_ids=set(request.form.getlist("categories")),
         page_title="Create Event",
     )
 
@@ -786,28 +754,17 @@ def create_event():
 @login_required
 def edit_event(event_id):
 
-    event = _owned_event_or_404(
-        event_id
-    )
+    event = _owned_event_or_404(event_id)
 
-    form = EventForm(
-        obj=event
-    )
+    form = EventForm(obj=event)
 
-    categories = Category.query.order_by(
-        Category.name
-    ).all()
+    categories = Category.query.order_by(Category.name).all()
 
-    selected_category_ids = {
-        link.category_id
-        for link in event.event_categories
-    }
+    selected_category_ids = {link.category_id for link in event.event_categories}
 
     if form.validate_on_submit():
 
-        submitted_category_ids = _category_ids(
-            categories
-        )
+        submitted_category_ids = _category_ids(categories)
 
         if submitted_category_ids is None:
 
@@ -821,16 +778,11 @@ def edit_event(event_id):
             attendee_count = db.session.scalar(
                 select(func.count())
                 .select_from(Attendance)
-                .where(
-                    Attendance.event_id == event.event_id
-                )
+                .where(Attendance.event_id == event.event_id)
             )
 
             # Prevent organisers from reducing capacity below attendance
-            if (
-                form.capacity.data is not None
-                and form.capacity.data < attendee_count
-            ):
+            if form.capacity.data is not None and form.capacity.data < attendee_count:
 
                 form.capacity.errors.append(
                     f"Capacity cannot be lower than the {attendee_count} "
@@ -839,15 +791,11 @@ def edit_event(event_id):
 
             else:
 
-                image_extension, image_error = validate_event_image(
-                    form.image.data
-                )
+                image_extension, image_error = validate_event_image(form.image.data)
 
                 if image_error:
 
-                    form.image.errors.append(
-                        image_error
-                    )
+                    form.image.errors.append(image_error)
 
                 else:
 
@@ -866,67 +814,37 @@ def edit_event(event_id):
 
                         event.title = form.title.data
 
-                        event.description = (
-                            form.description.data or ""
-                        )
+                        event.description = form.description.data or ""
 
-                        event.venue_name = (
-                            form.venue_name.data
-                        )
+                        event.venue_name = form.venue_name.data
 
-                        event.address = (
-                            form.address.data
-                        )
+                        event.address = form.address.data
 
-                        event.postcode = (
-                            form.postcode.data
-                        )
+                        event.postcode = form.postcode.data
 
-                        event.city = (
-                            form.city.data
-                        )
+                        event.city = form.city.data
 
-                        event.country = (
-                            form.country.data
-                        )
+                        event.country = form.country.data
 
-                        event.location_notes = (
-                            form.location_notes.data
-                        )
+                        event.location_notes = form.location_notes.data
 
-                        event.latitude = (
-                            form.latitude.data
-                        )
+                        event.latitude = form.latitude.data
 
-                        event.longitude = (
-                            form.longitude.data
-                        )
+                        event.longitude = form.longitude.data
 
-                        event.start_datetime = (
-                            form.start_datetime.data
-                        )
+                        event.start_datetime = form.start_datetime.data
 
-                        event.end_datetime = (
-                            form.end_datetime.data
-                        )
+                        event.end_datetime = form.end_datetime.data
 
-                        event.capacity = (
-                            form.capacity.data
-                        )
+                        event.capacity = form.capacity.data
 
-                        event.privacy = (
-                            form.privacy.data
-                        )
+                        event.privacy = form.privacy.data
 
-                        event.status = (
-                            form.status.data
-                        )
+                        event.status = form.status.data
 
                         if new_image:
 
-                            event.image_path = (
-                                new_image
-                            )
+                            event.image_path = new_image
 
                         elif form.remove_image.data:
 
@@ -936,9 +854,7 @@ def edit_event(event_id):
                         event.event_categories.clear()
 
                         event.event_categories.extend(
-                            EventCategory(
-                                category_id=category_id
-                            )
+                            EventCategory(category_id=category_id)
                             for category_id in submitted_category_ids
                         )
 
@@ -948,9 +864,7 @@ def edit_event(event_id):
 
                         db.session.rollback()
 
-                        delete_event_image(
-                            new_image
-                        )
+                        delete_event_image(new_image)
 
                         flash(
                             "The event could not be updated. Please try again.",
@@ -959,27 +873,18 @@ def edit_event(event_id):
 
                     else:
 
-                        if old_image and (
-                            new_image
-                            or form.remove_image.data
-                        ):
+                        if old_image and (new_image or form.remove_image.data):
 
-                            delete_event_image(
-                                old_image
-                            )
+                            delete_event_image(old_image)
 
                         flash(
                             "Event updated successfully.",
                             "success",
                         )
 
-                        return redirect(
-                            url_for("events.manage_events")
-                        )
+                        return redirect(url_for("events.manage_events"))
 
-        selected_category_ids = set(
-            request.form.getlist("categories")
-        )
+        selected_category_ids = set(request.form.getlist("categories"))
 
     return render_template(
         "event_form.html",
@@ -995,13 +900,9 @@ def edit_event(event_id):
 @login_required
 def change_event_status(event_id):
 
-    event = _owned_event_or_404(
-        event_id
-    )
+    event = _owned_event_or_404(event_id)
 
-    new_status = request.form.get(
-        "status"
-    )
+    new_status = request.form.get("status")
 
     if new_status not in EVENT_STATUSES:
         abort(400)
@@ -1028,18 +929,14 @@ def change_event_status(event_id):
             "success",
         )
 
-    return redirect(
-        url_for("events.manage_events")
-    )
+    return redirect(url_for("events.manage_events"))
 
 
 @events.route("/events/<int:event_id>/delete-confirmation")
 @login_required
 def confirm_delete_event(event_id):
 
-    event = _owned_event_or_404(
-        event_id
-    )
+    event = _owned_event_or_404(event_id)
 
     return render_template(
         "delete_event.html",
@@ -1051,9 +948,7 @@ def confirm_delete_event(event_id):
 @login_required
 def delete_event(event_id):
 
-    event = _owned_event_or_404(
-        event_id
-    )
+    event = _owned_event_or_404(event_id)
 
     image_path = event.image_path
 
@@ -1062,9 +957,7 @@ def delete_event(event_id):
     try:
 
         # ORM cascades remove attendance and category associations atomically
-        db.session.delete(
-            event
-        )
+        db.session.delete(event)
 
         db.session.commit()
 
@@ -1079,38 +972,26 @@ def delete_event(event_id):
 
     else:
 
-        delete_event_image(
-            image_path
-        )
+        delete_event_image(image_path)
 
         flash(
             f'Event "{title}" was deleted.',
             "success",
         )
 
-    return redirect(
-        url_for("events.manage_events")
-    )
+    return redirect(url_for("events.manage_events"))
 
 
 @events.route("/events/<int:event_id>/attendees/export")
 @login_required
 def export_attendees(event_id):
 
-    event = _owned_event_or_404(
-        event_id
-    )
+    event = _owned_event_or_404(event_id)
 
     attendances = db.session.scalars(
         select(Attendance)
-        .where(
-            Attendance.event_id == event.event_id
-        )
-        .options(
-            selectinload(
-                Attendance.user
-            )
-        )
+        .where(Attendance.event_id == event.event_id)
+        .options(selectinload(Attendance.user))
         .order_by(
             Attendance.registered_at,
             Attendance.user_id,
@@ -1118,13 +999,9 @@ def export_attendees(event_id):
     ).all()
 
     # Generate CSV with the standard writer to quote untrusted values safely
-    output = StringIO(
-        newline=""
-    )
+    output = StringIO(newline="")
 
-    writer = csv.writer(
-        output
-    )
+    writer = csv.writer(output)
 
     writer.writerow(
         [
@@ -1140,30 +1017,18 @@ def export_attendees(event_id):
 
         writer.writerow(
             [
-                _safe_csv_value(
-                    attendance.user.first_name
-                ),
-                _safe_csv_value(
-                    attendance.user.last_name
-                ),
-                _safe_csv_value(
-                    attendance.user.username
-                ),
+                _safe_csv_value(attendance.user.first_name),
+                _safe_csv_value(attendance.user.last_name),
+                _safe_csv_value(attendance.user.username),
                 attendance.registered_at.isoformat(),
                 attendance.status,
             ]
         )
 
-    filename = (
-        f"event-{event.event_id}-attendees.csv"
-    )
+    filename = f"event-{event.event_id}-attendees.csv"
 
     return Response(
         output.getvalue(),
         mimetype="text/csv",
-        headers={
-            "Content-Disposition": (
-                f'attachment; filename="{filename}"'
-            )
-        },
+        headers={"Content-Disposition": (f'attachment; filename="{filename}"')},
     )

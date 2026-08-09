@@ -32,24 +32,13 @@ def _safe_next_url(candidate):
 
     parsed = urlsplit(candidate)
 
-    if (
-        parsed.scheme
-        or parsed.netloc
-        or not parsed.path.startswith("/")
-    ):
+    if parsed.scheme or parsed.netloc or not parsed.path.startswith("/"):
         return None
 
-    if (
-        parsed.path.startswith("//")
-        or "\\" in parsed.path
-    ):
+    if parsed.path.startswith("//") or "\\" in parsed.path:
         return None
 
-    return parsed.path + (
-        f"?{parsed.query}"
-        if parsed.query
-        else ""
-    )
+    return parsed.path + (f"?{parsed.query}" if parsed.query else "")
 
 
 def _normalize_email(value):
@@ -84,9 +73,7 @@ def signup():
 
     if "user_id" in session:
 
-        return redirect(
-            url_for("home")
-        )
+        return redirect(url_for("home"))
 
     form_values = _signup_form_values()
 
@@ -175,10 +162,7 @@ def signup():
 
         # Prevent duplicate usernames
 
-        if any(
-            row.username == username
-            for row in existing_credentials
-        ):
+        if any(row.username == username for row in existing_credentials):
 
             flash(
                 "That username is already taken.",
@@ -192,10 +176,7 @@ def signup():
 
         # Prevent duplicate email addresses
 
-        if any(
-            row.email == email
-            for row in existing_credentials
-        ):
+        if any(row.email == email for row in existing_credentials):
 
             flash(
                 "An account with this email already exists.",
@@ -209,9 +190,7 @@ def signup():
 
         # Securely hash the password
 
-        password_hash = generate_password_hash(
-            password
-        )
+        password_hash = generate_password_hash(password)
 
         # Create the new user
 
@@ -261,9 +240,7 @@ def signup():
             "success",
         )
 
-        return redirect(
-            url_for("home")
-        )
+        return redirect(url_for("home"))
 
     return render_template(
         "signup.html",
@@ -282,22 +259,16 @@ def login():
 
     if "user_id" in session:
 
-        return redirect(
-            url_for("home")
-        )
+        return redirect(url_for("home"))
 
-    next_url = _safe_next_url(
-        request.values.get("next")
-    )
+    next_url = _safe_next_url(request.values.get("next"))
 
     if request.method == "POST":
 
         # Retrieve the login credentials entered by the user
 
         identifier = (
-            request.form.get("identifier")
-            or request.form.get("username")
-            or ""
+            request.form.get("identifier") or request.form.get("username") or ""
         ).strip()
 
         password = request.form.get(
@@ -370,9 +341,7 @@ def login():
             "success",
         )
 
-        return redirect(
-            next_url or url_for("home")
-        )
+        return redirect(next_url or url_for("home"))
 
     return render_template(
         "login.html",
@@ -390,9 +359,12 @@ def login_rate_limit_exceeded(_error):
         "error",
     )
 
-    return render_template(
-        "errors/429.html",
-    ), 429
+    return (
+        render_template(
+            "errors/429.html",
+        ),
+        429,
+    )
 
 
 @auth.route("/logout", methods=["POST"])
@@ -410,6 +382,4 @@ def logout():
         "success",
     )
 
-    return redirect(
-        url_for("auth.login")
-    )
+    return redirect(url_for("auth.login"))

@@ -9,9 +9,7 @@ def test_anonymous_home_never_calculates_or_renders_recommendations(
     monkeypatch,
 ):
     def unexpected_recommendation_call(*_args, **_kwargs):
-        raise AssertionError(
-            "anonymous request calculated recommendations"
-        )
+        raise AssertionError("anonymous request calculated recommendations")
 
     monkeypatch.setattr(
         "main.recommended_events",
@@ -91,7 +89,8 @@ def test_each_sliding_carousel_has_unique_controls(
         event_factory(
             title=f"Week Slider {number}",
             start_datetime=now + timedelta(days=number + 1),
-            end_datetime=now + timedelta(
+            end_datetime=now
+            + timedelta(
                 days=number + 1,
                 hours=2,
             ),
@@ -100,15 +99,14 @@ def test_each_sliding_carousel_has_unique_controls(
         event_factory(
             title=f"Later Slider {number}",
             start_datetime=now + timedelta(days=number + 9),
-            end_datetime=now + timedelta(
+            end_datetime=now
+            + timedelta(
                 days=number + 9,
                 hours=2,
             ),
         )
 
-    html = client.get("/").get_data(
-        as_text=True
-    )
+    html = client.get("/").get_data(as_text=True)
 
     viewport_ids = re.findall(
         r'id="([^"]+-viewport)"',
@@ -125,37 +123,15 @@ def test_each_sliding_carousel_has_unique_controls(
         "more-upcoming-viewport",
     ]
 
-    assert len(viewport_ids) == len(
-        set(viewport_ids)
-    )
+    assert len(viewport_ids) == len(set(viewport_ids))
 
-    assert (
-        controlled_ids.count(
-            "upcoming-week-viewport"
-        )
-        == 2
-    )
+    assert controlled_ids.count("upcoming-week-viewport") == 2
 
-    assert (
-        controlled_ids.count(
-            "more-upcoming-viewport"
-        )
-        == 2
-    )
+    assert controlled_ids.count("more-upcoming-viewport") == 2
 
-    assert (
-        html.count(
-            'aria-label="Previous events"'
-        )
-        == 2
-    )
+    assert html.count('aria-label="Previous events"') == 2
 
-    assert (
-        html.count(
-            'aria-label="Next events"'
-        )
-        == 2
-    )
+    assert html.count('aria-label="Next events"') == 2
 
 
 def test_single_card_carousel_omits_controls(
@@ -169,9 +145,7 @@ def test_single_card_carousel_omits_controls(
         end_datetime=now + timedelta(days=2, hours=2),
     )
 
-    html = client.get("/").get_data(
-        as_text=True
-    )
+    html = client.get("/").get_data(as_text=True)
 
     assert html.count("data-carousel") >= 2
     assert "data-carousel-controls" not in html
@@ -188,7 +162,8 @@ def test_authenticated_recommendation_carousel_is_independent(
         event_factory(
             title=f"Recommendation Candidate {number}",
             start_datetime=now + timedelta(days=number + 9),
-            end_datetime=now + timedelta(
+            end_datetime=now
+            + timedelta(
                 days=number + 9,
                 hours=2,
             ),
@@ -199,126 +174,61 @@ def test_authenticated_recommendation_carousel_is_independent(
         users[2],
     )
 
-    html = client.get("/").get_data(
-        as_text=True
-    )
+    html = client.get("/").get_data(as_text=True)
 
     viewport_ids = re.findall(
         r'id="([^"]+-viewport)"',
         html,
     )
 
-    assert (
-        "recommendations-viewport"
-        in viewport_ids
-    )
+    assert "recommendations-viewport" in viewport_ids
 
-    assert len(viewport_ids) == len(
-        set(viewport_ids)
-    )
+    assert len(viewport_ids) == len(set(viewport_ids))
 
-    assert (
-        'aria-controls="recommendations-viewport"'
-        in html
-    )
+    assert 'aria-controls="recommendations-viewport"' in html
 
-    assert (
-        "Events We Think You’ll Like"
-        in html
-    )
+    assert "Events We Think You’ll Like" in html
 
 
 def test_carousel_static_contract_supports_independent_responsive_motion(
     client,
 ):
-    script = client.get(
-        "/static/js/script.js"
-    ).get_data(
-        as_text=True
-    )
+    script = client.get("/static/js/script.js").get_data(as_text=True)
 
-    assert (
-        'querySelectorAll("[data-carousel]")'
-        in script
-    )
+    assert 'querySelectorAll("[data-carousel]")' in script
 
-    assert (
-        "[data-carousel-viewport]"
-        in script
-    )
+    assert "[data-carousel-viewport]" in script
 
-    assert (
-        "[data-carousel-track]"
-        in script
-    )
+    assert "[data-carousel-track]" in script
 
-    assert (
-        "[data-carousel-previous]"
-        in script
-    )
+    assert "[data-carousel-previous]" in script
 
-    assert (
-        "[data-carousel-next]"
-        in script
-    )
+    assert "[data-carousel-next]" in script
 
     # Confirm card width is measured from the rendered slide
-    assert (
-        "getBoundingClientRect"
-        in script
-    )
+    assert "getBoundingClientRect" in script
 
-    assert (
-        ".width"
-        in script
-    )
+    assert ".width" in script
 
     # Confirm carousel spacing is included in movement calculations
-    assert (
-        "columnGap"
-        in script
-    )
+    assert "columnGap" in script
 
     # Confirm movement uses the viewport rather than shifting the whole page
-    assert (
-        "viewport.scrollBy"
-        in script
-    )
+    assert "viewport.scrollBy" in script
 
     # Confirm reduced-motion preferences affect carousel behaviour
-    assert (
-        "prefers-reduced-motion: reduce"
-        in script
-    )
+    assert "prefers-reduced-motion: reduce" in script
 
-    assert (
-        'behavior:'
-        in script
-    )
+    assert "behavior:" in script
 
     # Confirm the carousel responds to layout changes
-    assert (
-        "ResizeObserver"
-        in script
-    )
+    assert "ResizeObserver" in script
 
-    assert (
-        'querySelectorAll("img")'
-        in script
-    )
+    assert 'querySelectorAll("img")' in script
 
-    assert (
-        "document.fonts.ready"
-        in script
-    )
+    assert "document.fonts.ready" in script
 
     # Confirm keyboard carousel navigation remains available
-    assert (
-        'event.key === "ArrowLeft"'
-        in script
-    )
+    assert 'event.key === "ArrowLeft"' in script
 
-    assert (
-        'event.key === "ArrowRight"'
-        in script
-    )
+    assert 'event.key === "ArrowRight"' in script
