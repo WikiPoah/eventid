@@ -64,3 +64,89 @@
 
     gap: 10px;
 }
+
+/* Keep the organiser's events ahead of secondary dashboard metrics. */
+.organiser-summary {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    margin-bottom: 16px;
+}
+
+.organiser-metrics {
+    margin-bottom: 32px;
+    padding: 14px 18px;
+    border: 1px solid #dde3ee;
+    border-radius: 12px;
+    background: white;
+}
+
+.organiser-metrics > summary {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 32px;
+    cursor: pointer;
+    color: var(--navy);
+}
+
+.organiser-metrics > summary span {
+    margin-left: auto;
+    color: var(--muted);
+    font-size: 0.85rem;
+}
+
+.organiser-metrics > summary::after {
+    content: "+";
+    font-size: 1.25rem;
+}
+
+.organiser-metrics[open] > summary::after {
+    content: "−";
+}
+
+.organiser-metrics-grid {
+    margin: 18px 0 0;
+}
+
+.organiser-metrics-grid .stat-card {
+    box-shadow: none;
+    background: #f8faff;
+}
+
+
+@media (max-width: 768px) {
+    .organiser-summary {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+    }
+
+    .organiser-summary .stat-card {
+        min-height: 82px;
+        padding: 14px 16px;
+        gap: 4px;
+    }
+
+    .organiser-summary .stat-value {
+        font-size: 1.7rem;
+    }
+
+    .organiser-metrics > summary {
+        flex-wrap: wrap;
+    }
+
+    .organiser-metrics > summary span {
+        margin-left: 0;
+        width: 100%;
+    }
+
+    .organiser-metrics > summary::after {
+        position: absolute;
+        right: 0;
+        top: 0;
+    }
+
+    .organiser-metrics > summary {
+        position: relative;
+        padding-right: 22px;
+    }
+
+}

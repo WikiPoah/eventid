@@ -1,6 +1,17 @@
 document.documentElement.classList.add("js");
 
 document.addEventListener("DOMContentLoaded", () => {
+    // Keep secondary discovery filters available without burying mobile results.
+    const browseFilters = document.querySelector("[data-browse-filters]");
+    if (browseFilters) {
+        const mobileFilters = window.matchMedia("(max-width: 768px)");
+        const updateBrowseFilters = () => {
+            browseFilters.open = !mobileFilters.matches;
+        };
+        updateBrowseFilters();
+        mobileFilters.addEventListener("change", updateBrowseFilters);
+    }
+
     const reduceMotion = window.matchMedia(
         "(prefers-reduced-motion: reduce)"
     ).matches;

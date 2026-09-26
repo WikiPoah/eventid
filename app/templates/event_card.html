@@ -25,8 +25,7 @@
         >
     {% else %}
         <div
-            class="event-card-image event-image-fallback"
-            style="--event-fallback-hue: {{ ((event.categories[0].category_id if event.categories else event.event_id) * 41) % 180 + 190 }}"
+            class="event-card-image event-image-fallback event-image-tone-{{ (event.categories[0].category_id if event.categories else event.event_id) % 4 }}"
             aria-hidden="true"
         >
             <span>eventid</span>
@@ -36,7 +35,7 @@
 
     <div class="event-information">
 
-        {% set card_attendee_count = attendee_count if attendee_count is defined else event.card_attendee_count if event.card_attendee_count is defined else event.attendees|length %}
+        {% set card_attendee_count = attendee_count if attendee_count is defined else event.card_attendee_count if event.card_attendee_count is defined else event.attendees|selectattr('status', 'equalto', 'Going')|list|length %}
 
         <div class="badge-row">
             <span class="badge badge-status-{{ event.status|lower }}">
@@ -47,9 +46,9 @@
                 {{ event.privacy }}
             </span>
 
-            {% if event.capacity is not none and card_attendee_count >= event.capacity %}
+            {% if event.status == 'Published' and event.capacity is not none and card_attendee_count >= event.capacity %}
                 <span class="badge badge-warning">Full</span>
-            {% elif event.capacity and card_attendee_count / event.capacity >= 0.8 %}
+            {% elif event.status == 'Published' and event.capacity and card_attendee_count / event.capacity >= 0.8 %}
                 <span class="badge badge-warning">Nearly full</span>
             {% endif %}
         </div>
@@ -84,7 +83,13 @@
         {% endif %}
 
         <p class="event-availability{% if event.capacity is not none and card_attendee_count >= event.capacity %} is-full{% elif event.capacity and card_attendee_count / event.capacity >= 0.8 %} is-limited{% endif %}">
-            {% if event.capacity is none %}
+            {% if event.status == 'Cancelled' %}
+                Event cancelled · Registrations closed
+            {% elif event.status == 'Draft' %}
+                Draft · Not open for registration
+            {% elif not event.requests_open %}
+                Registration closed
+            {% elif event.capacity is none %}
                 {{ card_attendee_count }} attending · Unlimited places
             {% elif card_attendee_count >= event.capacity %}
                 Event full · {{ card_attendee_count }} attending
@@ -93,7 +98,7 @@
             {% endif %}
         </p>
 
-        {% if event.registration_deadline %}
+        {% if event.registration_deadline and event.status == 'Published' %}
         <p class="event-registration-deadline">
             Register by {{ event.registration_deadline.strftime("%d %b at %H:%M") }}
         </p>

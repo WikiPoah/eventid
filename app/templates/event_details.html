@@ -79,7 +79,7 @@
 
 {% else %}
 
-<div class="event-hero-image event-image-fallback" role="img" aria-label="No event image available">
+<div class="event-hero-image event-image-fallback event-image-tone-{{ (event.categories[0].category_id if event.categories else event.event_id) % 4 }}" role="img" aria-label="No event image available">
     <span>eventid</span>
     {% if event.categories %}<small>#{{ event.categories[0].name }}</small>{% endif %}
 </div>

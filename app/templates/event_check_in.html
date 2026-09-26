@@ -24,8 +24,10 @@
         <form method="POST">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <input type="hidden" name="action" value="check_in">
-            <label for="ticket">Ticket code</label>
-            <input id="ticket" name="ticket" value="{{ ticket_token }}" required autocomplete="off" placeholder="Paste or enter ticket code">
+            <div class="form-field">
+                <label for="ticket">Ticket code</label>
+                <input id="ticket" name="ticket" value="{{ ticket_token }}" required autocomplete="off" placeholder="Paste or enter ticket code">
+            </div>
             <button class="button button-primary" type="submit">Verify and Check In</button>
         </form>
         {% if attendance %}
@@ -42,8 +44,10 @@
         <div class="check-in-list-heading">
             <div><h2>Attendee list</h2><p class="help-text">Check people in manually or correct an accidental check-in.</p></div>
             <form class="check-in-filter" method="GET">
-                <label class="visually-hidden" for="attendee-search">Search attendees</label>
-                <input type="search" id="attendee-search" name="search" value="{{ search }}" placeholder="Search name or username">
+                <div class="form-field">
+                    <label class="visually-hidden" for="attendee-search">Search attendees</label>
+                    <input type="search" id="attendee-search" name="search" value="{{ search }}" placeholder="Search name or username">
+                </div>
                 <button class="button button-secondary" type="submit">Search</button>
             </form>
         </div>

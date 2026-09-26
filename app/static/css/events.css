@@ -186,6 +186,23 @@
     z-index: 1;
 }
 
+.event-image-tone-0 {
+    --event-fallback-hue: 220;
+}
+
+.event-image-tone-1 {
+    --event-fallback-hue: 205;
+}
+
+.event-image-tone-2 {
+    --event-fallback-hue: 235;
+}
+
+.event-image-tone-3 {
+    --event-fallback-hue: 215;
+}
+
+
 .event-image-fallback small {
     margin-top: -45px;
 
@@ -210,6 +227,7 @@
 }
 
 .event-information h3 {
+    overflow-wrap: anywhere;
     color: var(--navy);
 
     font-size: 1.25rem;
@@ -438,6 +456,8 @@
 .private-attendee-identity {
     display: grid;
     gap: 4px;
+    min-width: 0;
+    overflow-wrap: anywhere;
 }
 
 .private-attendee-identity small {
@@ -567,6 +587,11 @@
 .event-details-heading {
     margin-bottom: 28px;
 }
+
+.event-details-heading h1 {
+    overflow-wrap: anywhere;
+}
+
 
 .event-heading-actions {
     display: flex;
@@ -713,6 +738,7 @@
 }
 
 .event-ticket-details h2 {
+    overflow-wrap: anywhere;
     margin: 16px 0 8px;
 
     font-size: 1.8rem;
@@ -927,7 +953,8 @@
 
 .check-in-list-heading {
     display: flex;
-    align-items: end;
+    align-items: stretch;
+    flex-direction: column;
     justify-content: space-between;
     gap: 20px;
 
@@ -945,12 +972,17 @@
 }
 
 .check-in-filter input {
-    min-width: 220px;
+    min-width: 0;
 }
+
+.check-in-filter .form-field {
+    flex: 1;
+}
+
 
 .check-in-filter input,
 .check-in-filter .button {
-    min-height: 44px;
+    min-height: 52px;
 }
 
 .check-in-attendee-list {

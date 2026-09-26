@@ -14,7 +14,8 @@
     <a class="button button-primary" href="{{ url_for('events.create_event') }}">Create Event</a>
 </div>
 
-<section class="calendar-shell" aria-label="Event calendar">
+<p class="calendar-scroll-hint" id="calendar-scroll-hint">Scroll sideways to see the full week.</p>
+<section class="calendar-shell" aria-label="Event calendar" aria-describedby="calendar-scroll-hint" tabindex="0">
     <header class="calendar-toolbar">
         <a class="button button-secondary calendar-today-button"
             href="{{ url_for('events.calendar', year=today.year, month=today.month) }}">Today</a>

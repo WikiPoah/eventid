@@ -23,9 +23,9 @@
         {% block title %}eventid{% endblock %}
     </title>
 
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css', v='31') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css', v='32') }}">
 
-    <script src="{{ url_for('static', filename='js/script.js', v='15') }}" defer></script>
+    <script src="{{ url_for('static', filename='js/script.js', v='16') }}" defer></script>
 </head>
 
 <body>
@@ -34,7 +34,7 @@
         Skip to main content
     </a>
 
-    <header class="site-header">
+    <header class="site-header{% if request.endpoint == 'events.browse_events' %} site-header-browse{% endif %}{% if request.endpoint == 'home' or request.endpoint in ['auth.login', 'auth.signup', 'auth.profile', 'auth.settings'] %} site-header-compact{% endif %}">
 
         <nav class="main-navigation" aria-label="Main navigation">
 
@@ -45,7 +45,7 @@
             <div class="nav-links">
 
                 <a href="{{ url_for('events.browse_events') }}"{% if request.endpoint == 'events.browse_events' %} aria-current="page"{% endif %}>
-                    Browse Events
+                    <span class="nav-label-full">Browse Events</span><span class="nav-label-short">Browse</span>
                 </a>
 
                 <a href="{{ url_for('events.my_events') }}"{% if request.endpoint == 'events.my_events' %} aria-current="page"{% endif %}>
@@ -53,11 +53,11 @@
                 </a>
 
                 <a href="{{ url_for('events.manage_events') }}"{% if request.endpoint == 'events.manage_events' %} aria-current="page"{% endif %}>
-                    Manage Events
+                    <span class="nav-label-full">Manage Events</span><span class="nav-label-short">Manage</span>
                 </a>
 
                 <a href="{{ url_for('events.create_event') }}"{% if request.endpoint == 'events.create_event' %} aria-current="page"{% endif %}>
-                    Create Event
+                    <span class="nav-label-full">Create Event</span><span class="nav-label-short">Create</span>
                 </a>
 
             </div>
@@ -194,14 +194,6 @@
                                 Settings
                             </a>
 
-                            <button class="account-menu-link account-menu-link-disabled" type="button" disabled>
-                                Help
-
-                                <span>
-                                    Coming soon
-                                </span>
-                            </button>
-
                         </div>
 
                         <form class="account-menu-logout" method="POST" action="{{ url_for('auth.logout') }}">
@@ -316,10 +308,6 @@
 
                 <a href="{{ url_for('events.create_event') }}">
                     Create Event
-                </a>
-
-                <a href="mailto:your@email.com">
-                    Contact
                 </a>
 
             </nav>

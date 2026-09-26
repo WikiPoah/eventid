@@ -21,7 +21,7 @@
 
     margin: 0 auto;
 
-    padding: 56px 24px 48px;
+    padding: 36px 24px 32px;
 
     display: flex;
     flex-direction: column;
@@ -35,7 +35,7 @@
 
     color: var(--navy);
 
-    font-size: clamp(2rem, 4vw, 2.7rem);
+    font-size: clamp(1.65rem, 3vw, 2.1rem);
 
     letter-spacing: -0.04em;
 }
@@ -60,7 +60,7 @@
 
     margin: 0 auto;
 
-    padding: 42px 24px 38px;
+    padding: 28px 24px;
 
     display: flex;
     flex-direction: column;

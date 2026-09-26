@@ -2,8 +2,11 @@
 {% block title %}Browse Events · eventid{% endblock %}
 {% block content %}
 <div class="page-heading browse-page-heading"><div><h1>Browse Events</h1><p>Find published public events that match your interests.</p></div></div>
-<form class="panel filter-grid" method="GET" role="search">
+<form class="panel filter-grid browse-filter-form" method="GET" role="search">
     <div class="form-field"><label for="search">Search events</label><input id="search" name="search" type="search" value="{{ search }}" placeholder="Title, description, venue or category..." autocomplete="off"></div>
+    <details class="browse-filter-options" data-browse-filters open>
+        <summary><strong>Filters</strong><span>{{ 'Filters applied' if selected_city or selected_category_ids else 'City & categories' }}</span></summary>
+        <div class="browse-filter-fields">
     <div class="form-field"><label for="city">City</label><select id="city" name="city"><option value="">All Cities</option>{% for city in cities %}<option value="{{ city }}" {% if selected_city == city %}selected{% endif %}>{{ city }}</option>{% endfor %}</select></div>
     <fieldset class="category-filter-field">
         <legend>Categories <span class="optional-indicator">Select any that apply</span></legend>
@@ -16,6 +19,8 @@
             {% endfor %}
         </div>
     </fieldset>
+        </div>
+    </details>
     <div class="form-actions filter-actions"><button class="button button-primary search-submit" type="submit">Search</button><a class="button button-secondary" href="{{ url_for('events.browse_events') }}">Clear Filters</a></div>
 </form>
 <div class="browse-results-summary">

@@ -1,3 +1,7 @@
+import pytest
+
+from app.database.db import db
+from app.models.attendance import Attendance
 from tests.conftest import login
 
 
@@ -72,7 +76,8 @@ def test_shared_navigation_and_key_routes_render(client, users, event_factory):
         assert b">Attending</a>" not in response.data
 
         assert b"Calendar" in response.data
-        assert b"Coming soon" in response.data
+        assert b"Coming soon" not in response.data
+        assert b"mailto:your@email.com" not in response.data
 
 
 def test_public_event_card_has_scannable_details_action(client, users, event_factory):
@@ -86,3 +91,35 @@ def test_public_event_card_has_scannable_details_action(client, users, event_fac
     assert b"Test Hall" in response.data
     assert b"Berlin" in response.data
     assert b"View Details" in response.data
+
+
+def test_private_card_capacity_excludes_pending_requests(
+    app, client, users, event_factory
+):
+    event_id = event_factory(privacy="Private", capacity=2)
+    with app.app_context():
+        db.session.add_all(
+            [
+                Attendance(user_id=users[1], event_id=event_id, status="Going"),
+                Attendance(user_id=users[2], event_id=event_id, status="Pending"),
+            ]
+        )
+        db.session.commit()
+    login(client, users[1])
+    response = client.get("/my-events")
+    assert b"1 place left" in response.data
+    assert b"Event full" not in response.data
+
+
+@pytest.mark.parametrize("status", ["Cancelled", "Draft"])
+def test_unavailable_cards_do_not_advertise_open_places(
+    client, users, event_factory, status
+):
+    event_factory(status=status, capacity=10)
+    login(client, users[0])
+    response = client.get("/manage-events")
+    assert (
+        b"Not open for registration" in response.data
+        or b"Registrations closed" in response.data
+    )
+    assert b"places left" not in response.data
