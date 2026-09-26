@@ -147,6 +147,7 @@
                         type="text"
                         id="identifier"
                         name="identifier"
+                        value="{{ identifier }}"
                         placeholder="Enter your username or email"
                         autocomplete="username"
                         required
@@ -171,6 +172,10 @@
                     >
 
                 </div>
+
+                <p class="auth-inline-link">
+                    <a href="{{ url_for('auth.forgot_password') }}">Forgot your password?</a>
+                </p>
 
                 <!-- Display the login button -->
 

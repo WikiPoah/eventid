@@ -13,6 +13,15 @@ def test_application_uses_environment_secret(monkeypatch):
     assert app.config["SECRET_KEY"] == "environment-test-secret"
 
 
+def test_development_enables_reload_and_production_disables_debug(monkeypatch):
+    monkeypatch.setenv("SECRET_KEY", "environment-test-secret")
+    monkeypatch.setenv("FLASK_ENV", "development")
+    assert create_app().debug is True
+
+    monkeypatch.setenv("FLASK_ENV", "production")
+    assert create_app().debug is False
+
+
 def test_missing_secret_fails_safely(monkeypatch):
     monkeypatch.delenv("SECRET_KEY", raising=False)
     with pytest.raises(RuntimeError, match="SECRET_KEY is required"):

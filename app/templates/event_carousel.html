@@ -1,4 +1,4 @@
-<section class="landing-section event-carousel" data-carousel aria-labelledby="{{ carousel_id }}-title">
+<section class="landing-section event-carousel{% if carousel_class %} {{ carousel_class }}{% endif %}" data-carousel aria-labelledby="{{ carousel_id }}-title">
     <div class="carousel-heading">
         <div>
             <span class="eyebrow">{{ carousel_eyebrow }}</span>
@@ -15,9 +15,13 @@
                 </div>
             </div>
             {% if carousel_events|length > 1 %}
-                <div class="carousel-controls" data-carousel-controls hidden>
-                    <button class="carousel-button" type="button" data-carousel-previous aria-label="Previous events" aria-controls="{{ carousel_id }}-viewport" disabled>Previous</button>
-                    <button class="carousel-button" type="button" data-carousel-next aria-label="Next events" aria-controls="{{ carousel_id }}-viewport">Next</button>
+                <div class="carousel-controls" data-carousel-controls>
+                    <button class="carousel-button carousel-button-previous" type="button" data-carousel-previous aria-label="Previous events" aria-controls="{{ carousel_id }}-viewport">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>
+                    </button>
+                    <button class="carousel-button carousel-button-next" type="button" data-carousel-next aria-label="Next events" aria-controls="{{ carousel_id }}-viewport">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+                    </button>
                 </div>
             {% endif %}
         </div>

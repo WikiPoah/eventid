@@ -1,5 +1,8 @@
 from datetime import UTC, datetime, timedelta
+from pathlib import Path
+from shutil import copyfile
 
+from flask import current_app
 from sqlalchemy import or_, select
 from werkzeug.security import generate_password_hash
 
@@ -18,13 +21,20 @@ EVENT_CATEGORIES = [
     "Food & Drink",
     "Music",
     "Networking",
+    "Other",
     "Socialising",
     "Sports & Fitness",
-    "Technology",
+    "Technology & Gaming",
 ]
 
 
 def seed_categories():
+
+    # Preserve existing event links when upgrading the former category name.
+    technology = Category.query.filter_by(name="Technology").first()
+    technology_and_gaming = Category.query.filter_by(name="Technology & Gaming").first()
+    if technology is not None and technology_and_gaming is None:
+        technology.name = "Technology & Gaming"
 
     # Insert each predefined category if it doesn't already exist
     for category_name in EVENT_CATEGORIES:
@@ -39,7 +49,7 @@ def seed_categories():
     db.session.commit()
 
 
-DEMO_PASSWORD = "EventID-demo-2026"
+DEMO_PASSWORD = "eventid-demo-2026"
 
 DEMO_USERS = [
     {
@@ -126,6 +136,8 @@ def _demo_event(organiser, now, event_data, categories_by_name):
         # Refresh only demo schedule fields so seeded timelines stay useful
         existing.start_datetime = now + event_data["start_offset"]
         existing.end_datetime = now + event_data["end_offset"]
+        if event_data.get("image_path"):
+            existing.image_path = event_data["image_path"]
         return existing, False
 
     event = Event(
@@ -143,6 +155,7 @@ def _demo_event(organiser, now, event_data, categories_by_name):
         privacy=event_data["privacy"],
         status=event_data["status"],
         organiser_id=organiser.user_id,
+        image_path=event_data.get("image_path"),
     )
     db.session.add(event)
     db.session.flush()
@@ -160,6 +173,14 @@ def seed_demo_data():
     """Create safe, repeatable users, events, and attendance for development."""
 
     seed_categories()
+
+    demo_image_directory = Path(current_app.static_folder) / "images" / "demo-events"
+    upload_directory = Path(current_app.config["EVENT_IMAGE_UPLOAD_FOLDER"])
+    upload_directory.mkdir(parents=True, exist_ok=True)
+    for source in demo_image_directory.glob("*.jpg"):
+        target = upload_directory / source.name
+        if not target.exists():
+            copyfile(source, target)
     now = datetime.now(UTC).replace(
         tzinfo=None,
         hour=18,
@@ -184,6 +205,70 @@ def seed_demo_data():
     # Generate dates relative to current UTC so demonstrations remain useful
     event_definitions = [
         {
+            "title": "Berlin Morning Yoga",
+            "description": "A welcoming outdoor yoga session for all experience levels.",
+            "venue_name": "Tiergarten Meeting Lawn",
+            "address": "1 Demo Park Path",
+            "postcode": "10785",
+            "city": "Berlin",
+            "country": "Germany",
+            "start_offset": timedelta(days=1),
+            "end_offset": timedelta(days=1, hours=2),
+            "capacity": 24,
+            "privacy": "Public",
+            "status": "Published",
+            "categories": ["Sports & Fitness", "Socialising"],
+            "image_path": "berlin-morning-yoga.jpg",
+        },
+        {
+            "title": "Hamburg Street Food Social",
+            "description": "An informal evening discovering local food stalls together.",
+            "venue_name": "Harbour Market Square",
+            "address": "12 Sample Promenade",
+            "postcode": "20457",
+            "city": "Hamburg",
+            "country": "Germany",
+            "start_offset": timedelta(days=2),
+            "end_offset": timedelta(days=2, hours=3),
+            "capacity": 40,
+            "privacy": "Public",
+            "status": "Published",
+            "categories": ["Food & Drink", "Socialising"],
+            "image_path": "hamburg-street-food-social.jpg",
+        },
+        {
+            "title": "Bremen Board Game Evening",
+            "description": "A relaxed evening of modern board games and new connections.",
+            "venue_name": "Weser Games Café",
+            "address": "6 Demo Arcade",
+            "postcode": "28195",
+            "city": "Bremen",
+            "country": "Germany",
+            "start_offset": timedelta(days=3),
+            "end_offset": timedelta(days=3, hours=3),
+            "capacity": 30,
+            "privacy": "Public",
+            "status": "Published",
+            "categories": ["Technology & Gaming", "Socialising"],
+            "image_path": "bremen-board-game-evening.jpg",
+        },
+        {
+            "title": "Berlin Local Art Walk",
+            "description": "A guided walk through fictional independent galleries and studios.",
+            "venue_name": "Museum Courtyard",
+            "address": "9 Example Platz",
+            "postcode": "10178",
+            "city": "Berlin",
+            "country": "Germany",
+            "start_offset": timedelta(days=4),
+            "end_offset": timedelta(days=4, hours=2),
+            "capacity": 20,
+            "privacy": "Public",
+            "status": "Published",
+            "categories": ["Arts & Culture", "Community & Charity"],
+            "image_path": "berlin-local-art-walk.jpg",
+        },
+        {
             "title": "Bremen Technology Meetup",
             "description": "A practical evening of fictional product demos and developer conversations.",
             "venue_name": "Weser Innovation Hall",
@@ -196,7 +281,7 @@ def seed_demo_data():
             "capacity": 50,
             "privacy": "Public",
             "status": "Published",
-            "categories": ["Technology", "Networking"],
+            "categories": ["Technology & Gaming", "Networking"],
         },
         {
             "title": "Hamburg Community Workshop",
@@ -241,7 +326,7 @@ def seed_demo_data():
             "capacity": None,
             "privacy": "Public",
             "status": "Published",
-            "categories": ["Technology", "Education & STEM"],
+            "categories": ["Technology & Gaming", "Education & STEM"],
         },
         {
             "title": "Warsaw Design Exchange",
@@ -316,7 +401,7 @@ def seed_demo_data():
             "capacity": 30,
             "privacy": "Public",
             "status": "Published",
-            "categories": ["Technology", "Education & STEM"],
+            "categories": ["Technology & Gaming", "Education & STEM"],
         },
         {
             "title": "Hamburg Networking Breakfast Archive",

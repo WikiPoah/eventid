@@ -1,4 +1,4 @@
-name: EventID quality gates
+name: eventid quality gates
 
 on:
   push:

@@ -6,7 +6,7 @@
 
 <!-- Display the page heading -->
 
-<div class="page-heading">
+<div class="page-heading event-details-heading">
 
     <div>
 
@@ -38,15 +38,37 @@
 
     </div>
 
-    {% if g.user and event.organiser_id == g.user.user_id %}
-
-    <a class="button button-primary" href="{{ url_for('events.edit_event', event_id=event.event_id) }}">
-        Edit Event
-    </a>
-
-    {% endif %}
+    <div class="event-heading-actions">
+        <details class="calendar-menu">
+            <summary class="button button-secondary">Add to Calendar</summary>
+            <div class="calendar-menu-options">
+                <a href="{{ url_for('events.open_event_calendar', event_id=event.event_id, provider='google', invite=request.args.get('invite')) }}"
+                    target="_blank" rel="noopener">Google Calendar</a>
+                <a href="{{ url_for('events.download_event_calendar', event_id=event.event_id, invite=request.args.get('invite')) }}">
+                    Apple Calendar (.ics)
+                </a>
+                <a href="{{ url_for('events.open_event_calendar', event_id=event.event_id, provider='outlook', invite=request.args.get('invite')) }}"
+                    target="_blank" rel="noopener">Outlook Calendar</a>
+            </div>
+        </details>
+        {% if g.user and event.organiser_id == g.user.user_id and not preview_mode %}
+        <a class="button button-secondary" href="{{ url_for('events.preview_event', event_id=event.event_id) }}">
+            Preview as Attendee
+        </a>
+        <a class="button button-primary" href="{{ url_for('events.edit_event', event_id=event.event_id) }}">
+            Edit Event
+        </a>
+        {% endif %}
+    </div>
 
 </div>
+
+{% if preview_mode %}
+<p class="notice event-preview-notice">
+    <strong>Attendee preview.</strong> Organiser controls are hidden so you can review the public-facing layout.
+    <a href="{{ url_for('events.event_details', event_id=event.event_id) }}">Exit preview</a>
+</p>
+{% endif %}
 
 <!-- Display the event banner -->
 
@@ -58,7 +80,8 @@
 {% else %}
 
 <div class="event-hero-image event-image-fallback" role="img" aria-label="No event image available">
-    eventid
+    <span>eventid</span>
+    {% if event.categories %}<small>#{{ event.categories[0].name }}</small>{% endif %}
 </div>
 
 {% endif %}
@@ -93,19 +116,19 @@
 
 <!-- Display the event content -->
 
-<div class="details-grid">
+<p class="back-link event-details-back-link">
+    <a href="{{ url_for('events.browse_events') }}">← Back to Browse Events</a>
+</p>
+
+<div class="details-grid event-details-grid{% if g.user and event.organiser_id == g.user.user_id and event.privacy == 'Private' and not preview_mode %} private-organiser-layout{% endif %}">
 
     <!-- Display the event information -->
 
-    <section class="panel">
+    <section class="panel event-about-panel">
 
         <h2>
             About this event
         </h2>
-
-        <p class="help-text">
-            Everything attendees need to know before joining the event.
-        </p>
 
         <p>
             {{ event.description }}
@@ -177,6 +200,15 @@
 
             </dd>
 
+            <dt>Registration</dt>
+            <dd>
+                {% if event.registration_deadline %}
+                    Closes {{ event.registration_deadline.strftime("%d %B %Y at %H:%M") }}
+                {% else %}
+                    Open until the event starts
+                {% endif %}
+            </dd>
+
             <dt>
                 Status
             </dt>
@@ -195,17 +227,68 @@
 
         </dl>
 
+        <section class="event-location-tools" aria-labelledby="event-location-heading">
+            <div class="event-location-icon" aria-hidden="true">⌖</div>
+            <div class="event-location-copy">
+                <h3 id="event-location-heading">Directions</h3>
+                <p>{{ event.venue_name }} · {{ event.city }}</p>
+                {% if event.latitude is not none and event.longitude is not none %}
+                <small>Exact location: {{ "%.5f"|format(event.latitude) }}, {{ "%.5f"|format(event.longitude) }}</small>
+                {% else %}
+                <small>Directions use the full venue address.</small>
+                {% endif %}
+            </div>
+            <div class="event-location-actions">
+                <a class="button button-primary" href="{{ url_for('events.event_directions', event_id=event.event_id, provider='google') }}" target="_blank" rel="noopener">Google Maps</a>
+                <a class="button button-secondary" href="{{ url_for('events.event_directions', event_id=event.event_id, provider='apple') }}" target="_blank" rel="noopener">Apple Maps</a>
+            </div>
+            {% if map_embed_url %}
+            <div class="event-map-preview">
+                <iframe
+                    src="{{ map_embed_url }}"
+                    title="Map showing {{ event.venue_name }}"
+                    loading="lazy"
+                    referrerpolicy="no-referrer-when-downgrade"
+                    allowfullscreen>
+                </iframe>
+            </div>
+            {% endif %}
+        </section>
+
+        {% if event.privacy == "Public" %}
+        <section class="event-share-tools" aria-labelledby="event-share-heading">
+            <div>
+                <h3 id="event-share-heading">Share this event</h3>
+                <p>Send the public event page to someone who may be interested.</p>
+            </div>
+            <div class="event-share-actions">
+                <button class="button button-secondary" type="button" data-copy-event-link data-share-url="{{ share_url }}">Copy Link</button>
+                <a class="button button-secondary" href="{{ whatsapp_share_url }}" target="_blank" rel="noopener">WhatsApp</a>
+                <button class="button button-secondary" type="button" data-share-event data-share-url="{{ share_url }}" data-share-title="{{ event.title }}">Share…</button>
+            </div>
+            <p class="event-share-status" data-share-status aria-live="polite"></p>
+        </section>
+        {% endif %}
+
     </section>
 
     <!-- Display the attendance panel -->
 
-    <aside class="panel attendance-panel" id="attendees">
+    <aside class="panel attendance-panel event-attendance-panel{% if g.user and event.organiser_id == g.user.user_id and event.privacy == 'Private' and not preview_mode %} private-management-panel{% endif %}" id="attendees">
 
-        <h2>
-            Attendance
-        </h2>
+        {% if g.user and event.organiser_id == g.user.user_id and event.privacy == "Private" and not preview_mode %}
+        <div class="private-management-title">
+            <div>
+                <span class="eyebrow">Private event management</span>
+                <h2>Invites and Attendance</h2>
+            </div>
+            <a class="button button-secondary" href="{{ url_for('events.edit_event', event_id=event.event_id) }}">Edit Invite Settings</a>
+        </div>
+        {% else %}
+        <h2>Attendance</h2>
+        {% endif %}
 
-        <p class="help-text">
+        <p class="help-text{% if g.user and event.organiser_id == g.user.user_id and event.privacy == 'Private' and not preview_mode %} private-capacity-overview{% endif %}">
 
             {% if event.capacity is none %}
 
@@ -234,34 +317,94 @@
 
         {% endif %}
 
-        {% if g.user and event.organiser_id == g.user.user_id %}
+        {% if preview_mode %}
 
-        <h3>
-            Registered Attendees
-        </h3>
+        <p class="notice"><strong>Registration area preview.</strong> Attendees will see the appropriate registration controls here.</p>
 
-        {% if event.attendees %}
+        {% elif g.user and event.organiser_id == g.user.user_id %}
+
+        {% if event.privacy == "Private" %}
+        <div class="private-invite-panel">
+            <div>
+                <span class="eyebrow">Invite access</span>
+                <h3>Private Invite Link</h3>
+                <p class="help-text">Expires {{ event.invite_expires_at.strftime("%d %B %Y at %H:%M") }}. Guests must log in and receive your approval.</p>
+            </div>
+            <div class="private-link-row">
+                <input type="text" value="{{ invite_url }}" readonly aria-label="Private invite link" data-private-invite-link>
+                <button class="button button-secondary" type="button" data-copy-private-invite>Copy Link</button>
+            </div>
+            <details class="private-link-reset">
+                <summary>Replace this link</summary>
+                <p>Anyone using the current link will immediately lose link access. Existing approved attendees remain approved.</p>
+                <form method="POST" action="{{ url_for('events.regenerate_invite_link', event_id=event.event_id) }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button class="button button-danger" type="submit">Disable Old Link and Replace</button>
+                </form>
+            </details>
+        </div>
+        {% endif %}
+
+        {% if event.privacy == "Private" %}
+        <div class="private-attendance-heading">
+            <div>
+                <span class="eyebrow">Guest access</span>
+                <h3>Invitations and Requests</h3>
+            </div>
+            <div class="private-status-summary" aria-label="Private attendance summary">
+                <span><strong data-private-status-count="Pending">{{ attendance_status_counts.Pending }}</strong> pending</span>
+                <span><strong data-private-status-count="Going">{{ attendance_status_counts.Going }}</strong> approved</span>
+                <span><strong data-private-status-count="Declined">{{ attendance_status_counts.Declined }}</strong> declined</span>
+                <span><strong data-private-status-count="Revoked">{{ attendance_status_counts.Revoked }}</strong> revoked</span>
+            </div>
+        </div>
+        {% else %}
+        <h3>Attendance Requests and Registrations</h3>
+        {% endif %}
+
+        {% if organiser_attendances %}
 
         <ul class="attendee-list">
 
-            {% for attendance in event.attendees %}
+            {% for attendance in organiser_attendances %}
 
-            <li>
-
-                <strong>
-                    {{ attendance.user.first_name }}
-                    {{ attendance.user.last_name }}
-                </strong>
-
-                <span>
-                    {{ attendance.status }}
+            <li class="private-attendee-row" data-private-attendee-row>
+                <span class="private-attendee-avatar" aria-hidden="true">{{ attendance.user.first_name[0] }}{{ attendance.user.last_name[0] }}</span>
+                <span class="private-attendee-identity">
+                    <strong>{{ attendance.user.first_name }} {{ attendance.user.last_name }}</strong>
+                    <small>{{ attendance.user.email }} · Requested {{ attendance.registered_at.strftime("%d %b %Y") }}</small>
                 </span>
+                <span class="badge private-status private-status-{{ attendance.status|lower }}" data-private-attendee-status>{{ "Approved" if attendance.status == "Going" else attendance.status }}</span>
+
+                <div class="request-actions" data-private-attendee-actions>
+                {% if attendance.status == "Pending" %}
+                    <form method="POST" action="{{ url_for('events.decide_attendance_request', event_id=event.event_id, user_id=attendance.user_id, decision='approve') }}" data-private-attendance-action>
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button class="button button-success" type="submit">Approve</button>
+                    </form>
+                    <form method="POST" action="{{ url_for('events.decide_attendance_request', event_id=event.event_id, user_id=attendance.user_id, decision='decline') }}" data-private-attendance-action>
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button class="button button-secondary" type="submit">Decline</button>
+                    </form>
+                {% elif event.privacy == "Private" and attendance.status != "Revoked" %}
+                <form method="POST" action="{{ url_for('events.manage_private_access', event_id=event.event_id, user_id=attendance.user_id, action='revoke') }}" data-private-attendance-action>
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button class="button button-secondary" type="submit">Revoke Access</button>
+                </form>
+                {% elif event.privacy == "Private" and attendance.status == "Revoked" %}
+                <form method="POST" action="{{ url_for('events.manage_private_access', event_id=event.event_id, user_id=attendance.user_id, action='restore') }}" data-private-attendance-action>
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button class="button button-secondary" type="submit">Restore as Pending</button>
+                </form>
+                {% endif %}
+                </div>
 
             </li>
 
             {% endfor %}
 
         </ul>
+        <p class="private-action-status" data-private-action-status aria-live="polite"></p>
 
         {% else %}
 
@@ -271,9 +414,18 @@
 
         {% endif %}
 
-        <a class="button button-secondary" href="{{ url_for('events.export_attendees', event_id=event.event_id) }}">
-            Export Attendees (CSV)
-        </a>
+        <div class="private-management-footer">
+            <a class="button button-secondary" href="{{ url_for('events.export_attendees', event_id=event.event_id) }}">Export Attendees (CSV)</a>
+            <a class="button button-primary" href="{{ url_for('events.check_in_attendee', event_id=event.event_id) }}">Check In Attendees</a>
+        </div>
+
+        {% elif current_attendance and current_attendance.status == "Pending" %}
+
+        <p class="notice"><strong>Request pending.</strong> The organiser must approve your attendance.</p>
+
+        {% elif current_attendance and current_attendance.status == "Declined" %}
+
+        <p class="notice notice-warning"><strong>Request declined.</strong> Contact the organiser if you believe this was a mistake.</p>
 
         {% elif g.user and is_attending %}
 
@@ -294,6 +446,10 @@
             </button>
 
         </form>
+
+        {% elif registration_closed %}
+
+        <p class="notice notice-warning"><strong>Registration closed.</strong> This event is no longer accepting registrations or requests.</p>
 
         {% elif not g.user and event.status == "Published" and not is_full %}
 
@@ -321,7 +477,7 @@
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
             <button class="button button-primary" type="submit">
-                Attend Event
+                {% if event.privacy == "Private" %}Request to Attend{% else %}Attend Event{% endif %}
             </button>
 
         </form>
@@ -331,15 +487,5 @@
     </aside>
 
 </div>
-
-<!-- Display the return link -->
-
-<p class="back-link">
-
-    <a href="{{ url_for('events.browse_events') }}">
-        ← Back to Browse Events
-    </a>
-
-</p>
 
 {% endblock %}

@@ -100,5 +100,8 @@ def event_factory(app, users):
 
 
 def login(client, user_id):
+    with client.application.app_context():
+        auth_version = db.session.get(User, user_id).auth_version
     with client.session_transaction() as session:
         session["user_id"] = user_id
+        session["auth_version"] = auth_version

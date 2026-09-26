@@ -194,6 +194,11 @@ def test_carousel_static_contract_supports_independent_responsive_motion(
     client,
 ):
     script = client.get("/static/js/script.js").get_data(as_text=True)
+    homepage = client.get("/").get_data(as_text=True)
+
+    assert "data-carousel-controls hidden" not in homepage
+    assert ">Next</button>" not in homepage
+    assert ">Previous</button>" not in homepage
 
     assert 'querySelectorAll("[data-carousel]")' in script
 
@@ -213,8 +218,11 @@ def test_carousel_static_contract_supports_independent_responsive_motion(
     # Confirm carousel spacing is included in movement calculations
     assert "columnGap" in script
 
-    # Confirm movement uses the viewport rather than shifting the whole page
-    assert "viewport.scrollBy" in script
+    # Confirm cards rotate individually for continuous navigation.
+    assert "viewport.scrollTo" in script
+    assert "track.prepend(track.lastElementChild)" in script
+    assert "track.append(track.firstElementChild)" in script
+    assert 'viewport.style.scrollBehavior = "auto"' in script
 
     # Confirm reduced-motion preferences affect carousel behaviour
     assert "prefers-reduced-motion: reduce" in script

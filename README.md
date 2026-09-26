@@ -1,19 +1,19 @@
-# EventID
+# eventid
 
-EventID is a full-stack event discovery and management web application built with Flask.
+eventid is a full-stack event discovery and management web application built with Flask.
 
 It allows users to discover events, create an account, attend events, save favourites, and manage events they organise through a dedicated organiser dashboard.
 
 The project was originally developed as a database-focused application and has since grown into a broader full-stack portfolio project covering authentication, relational data modelling, validation, concurrency, event management, responsive UI design, testing, and secure application structure.
 
 > **Current release:** `v0.9.1 – Recruiter Preview`
-> EventID is actively being polished ahead of its first stable `v1.0.0` release.
+> eventid is actively being polished ahead of its first stable `v1.0.0` release.
 
 ---
 
 ## Overview
 
-EventID supports two main use cases:
+eventid supports two main use cases:
 
 ### Attendees
 
@@ -174,7 +174,7 @@ The exact contents may evolve while the project approaches `v1.0.0`.
 
 ---
 
-# Running EventID Locally
+# Running eventid Locally
 
 ## 1. Prerequisites
 
@@ -282,7 +282,7 @@ The development database uses SQLite.
 
 ## 7. Run the Application
 
-Start EventID with:
+Start eventid with:
 
 ```bash
 python main.py
@@ -316,7 +316,7 @@ The project includes automated tests covering core application behaviour includi
 
 # Database Design
 
-EventID uses a relational data model.
+eventid uses a relational data model.
 
 Core entities include:
 
@@ -370,7 +370,7 @@ A composite key prevents duplicate attendance records.
 
 Capacity-limited events require more than a simple count followed by an insert.
 
-EventID includes protection against two users simultaneously claiming the final available place.
+eventid includes protection against two users simultaneously claiming the final available place.
 
 The local SQLite implementation uses transaction locking appropriate to SQLite, while the design also considers row-level locking for databases such as PostgreSQL.
 
@@ -402,7 +402,7 @@ Registration and event forms preserve user input when validation fails so users 
 
 # Current Development Status
 
-EventID is currently at:
+eventid is currently at:
 
 ## `v0.9.1 – Recruiter Preview`
 
@@ -428,7 +428,7 @@ The Calendar feature is currently intentionally marked as **Coming soon** instea
 
 # Release Approach
 
-EventID uses semantic versioning.
+eventid uses semantic versioning.
 
 Recent milestones have included:
 
@@ -454,7 +454,7 @@ only after the remaining visual, responsive and accessibility work has been comp
 
 # What I Learned
 
-Building EventID has involved working across more than just basic CRUD functionality.
+Building eventid has involved working across more than just basic CRUD functionality.
 
 Key areas include:
 
@@ -498,7 +498,7 @@ Future versions may expand discovery, recommendations, organiser tooling and dep
 
 ## Notes for Reviewers
 
-EventID is under active development.
+eventid is under active development.
 
 The `v0.9.1` release represents a deliberately stable recruiter preview of the application before the remaining frontend and accessibility work is completed for `v1.0.0`.
 

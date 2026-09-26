@@ -81,8 +81,8 @@ def test_public_event_card_has_scannable_details_action(client, users, event_fac
     response = client.get("/events")
 
     assert b"Scannable Card" in response.data
-    assert b"Date:</strong>" in response.data
-    assert b"Time:</strong>" in response.data
-    assert b"Venue:</strong>" in response.data
-    assert b"City:</strong>" in response.data
+    assert b"event-card-facts" in response.data
+    assert b"place" in response.data
+    assert b"Test Hall" in response.data
+    assert b"Berlin" in response.data
     assert b"View Details" in response.data

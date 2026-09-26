@@ -58,6 +58,14 @@
         flex-basis: calc((100% - 20px) / 2);
     }
 
+    .favourites-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .event-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
 }
 
 
@@ -212,6 +220,11 @@
         grid-template-columns: 1fr;
     }
 
+    .event-about-panel,
+    .event-attendance-panel {
+        padding: 24px;
+    }
+
     .form-field-wide {
         grid-column: auto;
     }
@@ -323,6 +336,11 @@
 /* Display one carousel card on mobile screens */
 
 @media (max-width: 650px) {
+
+    .event-grid,
+    .favourites-grid {
+        grid-template-columns: 1fr;
+    }
 
     .carousel-slide {
         flex-basis: 100%;

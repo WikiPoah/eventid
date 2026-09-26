@@ -18,7 +18,7 @@ def recommended_events(user_id, limit=6, candidate_limit=40):
         .select_from(Attendance)
         .join(Event, Event.event_id == Attendance.event_id)
         .outerjoin(EventCategory, EventCategory.event_id == Event.event_id)
-        .where(Attendance.user_id == user_id)
+        .where(Attendance.user_id == user_id, Attendance.status == "Going")
     ).all()
     preferred_cities = {row.city for row in preference_rows if row.city}
     preferred_categories = {
@@ -30,6 +30,7 @@ def recommended_events(user_id, limit=6, candidate_limit=40):
             Attendance.event_id,
             func.count(Attendance.user_id).label("attendee_count"),
         )
+        .where(Attendance.status == "Going")
         .group_by(Attendance.event_id)
         .subquery()
     )
@@ -38,6 +39,7 @@ def recommended_events(user_id, limit=6, candidate_limit=40):
         .where(
             Attendance.user_id == user_id,
             Attendance.event_id == Event.event_id,
+            Attendance.status == "Going",
         )
         .exists()
     )
@@ -83,4 +85,7 @@ def recommended_events(user_id, limit=6, candidate_limit=40):
         score += min(int(attendee_count), 20)
         return (-score, event.start_datetime, event.event_id)
 
-    return [row[0] for row in sorted(candidate_rows, key=rank)[:limit]]
+    ranked_rows = sorted(candidate_rows, key=rank)[:limit]
+    for event, attendee_count in ranked_rows:
+        event.card_attendee_count = int(attendee_count)
+    return [row[0] for row in ranked_rows]

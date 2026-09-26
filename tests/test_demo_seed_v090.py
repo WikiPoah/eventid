@@ -39,7 +39,7 @@ def test_demo_seeder_is_idempotent(app):
 
     assert first == {
         "users_created": 5,
-        "events_created": 10,
+        "events_created": 14,
         "attendances_created": 15,
     }
     assert second == {
@@ -47,7 +47,17 @@ def test_demo_seeder_is_idempotent(app):
         "events_created": 0,
         "attendances_created": 0,
     }
-    assert second_counts == first_counts == (5, 10, 9, 15)
+    assert second_counts == first_counts == (5, 14, 10, 15)
+
+
+def test_default_categories_include_fallback_and_expanded_technology(app):
+    with app.app_context():
+        seed_demo_data()
+        category_names = {category.name for category in Category.query.all()}
+
+    assert "Other" in category_names
+    assert "Technology & Gaming" in category_names
+    assert "Technology" not in category_names
 
 
 def test_seeded_users_use_hashed_development_password(app):
@@ -74,8 +84,8 @@ def test_seeded_statuses_and_relative_dates_are_correct(app):
         upcoming_count = Event.query.filter(Event.start_datetime >= now).count()
         past_count = Event.query.filter(Event.start_datetime < now).count()
 
-    assert status_counts == {"Cancelled": 1, "Draft": 1, "Published": 8}
-    assert upcoming_count == 8
+    assert status_counts == {"Cancelled": 1, "Draft": 1, "Published": 12}
+    assert upcoming_count == 12
     assert past_count == 2
 
 

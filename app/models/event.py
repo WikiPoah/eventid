@@ -67,6 +67,14 @@ class Event(db.Model):
     # Store the maximum number of attendees if a limit is set
     capacity = db.Column(db.Integer)
 
+    registration_deadline = db.Column(db.DateTime)
+
+    # Private events use expiring invite links and optional email restrictions.
+    invite_token = db.Column(db.String(128), unique=True)
+    invite_expires_at = db.Column(db.DateTime)
+    invited_emails = db.Column(db.Text)
+    requests_open = db.Column(db.Boolean, nullable=False, default=True)
+
     # Store only the safe relative filename for an optional event image
     image_path = db.Column(db.String(255))
 
@@ -92,6 +100,11 @@ class Event(db.Model):
 
     # Provide read-only user access without treating organisers as attendees
     attending_users = db.relationship("User", secondary="attendance", viewonly=True)
+
+    favourites = db.relationship(
+        "Favourite", back_populates="event", cascade="all, delete-orphan"
+    )
+    favourited_by = db.relationship("User", secondary="favourites", viewonly=True)
 
     # Record when the event was created and last updated
     created_at = db.Column(

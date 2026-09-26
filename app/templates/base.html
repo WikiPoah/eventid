@@ -7,11 +7,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <meta name="description"
-        content="{% block description %}Discover, attend, and organise events with EventID.{% endblock %}">
+        content="{% block description %}Discover, attend, and organise events with eventid.{% endblock %}">
 
     <meta name="theme-color" content="#162f67">
 
-    <meta property="og:title" content="EventID">
+    <meta property="og:title" content="eventid">
 
     <meta property="og:description" content="Discover, attend, and organise memorable events.">
 
@@ -20,12 +20,12 @@
     <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/logo.png') }}">
 
     <title>
-        {% block title %}EventID{% endblock %}
+        {% block title %}eventid{% endblock %}
     </title>
 
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css', v='5') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css', v='31') }}">
 
-    <script src="{{ url_for('static', filename='js/script.js', v='5') }}" defer></script>
+    <script src="{{ url_for('static', filename='js/script.js', v='15') }}" defer></script>
 </head>
 
 <body>
@@ -38,25 +38,25 @@
 
         <nav class="main-navigation" aria-label="Main navigation">
 
-            <a class="nav-logo" href="{{ url_for('home') }}" aria-label="EventID home">
-                <img src="{{ url_for('static', filename='images/logo.png') }}" alt="EventID">
+            <a class="nav-logo" href="{{ url_for('home') }}" aria-label="eventid home">
+                <img src="{{ url_for('static', filename='images/logo.png') }}" alt="eventid">
             </a>
 
             <div class="nav-links">
 
-                <a href="{{ url_for('events.browse_events') }}">
+                <a href="{{ url_for('events.browse_events') }}"{% if request.endpoint == 'events.browse_events' %} aria-current="page"{% endif %}>
                     Browse Events
                 </a>
 
-                <a href="{{ url_for('events.my_events') }}">
+                <a href="{{ url_for('events.my_events') }}"{% if request.endpoint == 'events.my_events' %} aria-current="page"{% endif %}>
                     My Events
                 </a>
 
-                <a href="{{ url_for('events.manage_events') }}">
+                <a href="{{ url_for('events.manage_events') }}"{% if request.endpoint == 'events.manage_events' %} aria-current="page"{% endif %}>
                     Manage Events
                 </a>
 
-                <a href="{{ url_for('events.create_event') }}">
+                <a href="{{ url_for('events.create_event') }}"{% if request.endpoint == 'events.create_event' %} aria-current="page"{% endif %}>
                     Create Event
                 </a>
 
@@ -182,29 +182,17 @@
 
                         <div class="account-menu-links">
 
-                            <button class="account-menu-link account-menu-link-disabled" type="button" disabled>
+                            <a class="account-menu-link" href="{{ url_for('auth.profile') }}">
                                 My Profile
+                            </a>
 
-                                <span>
-                                    Coming soon
-                                </span>
-                            </button>
-
-                            <button class="account-menu-link account-menu-link-disabled" type="button" disabled>
+                            <a class="account-menu-link" href="{{ url_for('events.calendar') }}">
                                 Calendar
+                            </a>
 
-                                <span>
-                                    Coming soon
-                                </span>
-                            </button>
-
-                            <button class="account-menu-link account-menu-link-disabled" type="button" disabled>
+                            <a class="account-menu-link" href="{{ url_for('auth.settings') }}">
                                 Settings
-
-                                <span>
-                                    Coming soon
-                                </span>
-                            </button>
+                            </a>
 
                             <button class="account-menu-link account-menu-link-disabled" type="button" disabled>
                                 Help
@@ -258,11 +246,11 @@
 
         {% if messages %}
 
-        <section aria-label="Messages">
+        <section aria-label="Messages" aria-live="polite" aria-atomic="true">
 
             {% for category, message in messages %}
 
-            <p class="flash flash-{{ category }}" role="status">
+            <p class="flash flash-{{ category }}" role="{% if category == 'error' %}alert{% else %}status{% endif %}">
                 {{ message }}
             </p>
 
@@ -320,9 +308,11 @@
                     Browse Events
                 </a>
 
-                <span class="muted-copy" aria-disabled="true">
-                    Calendar · Coming soon
-                </span>
+                {% if g.user %}
+                <a href="{{ url_for('events.calendar') }}">Calendar</a>
+                {% else %}
+                <a href="{{ url_for('auth.login', next=url_for('events.calendar')) }}">Calendar</a>
+                {% endif %}
 
                 <a href="{{ url_for('events.create_event') }}">
                     Create Event

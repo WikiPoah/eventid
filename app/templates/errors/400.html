@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{% block title %}Form Expired · eventid{% endblock %}
+
+{% block content %}
+<div class="empty-state empty-state-stacked error-state">
+    <span class="eyebrow">Request not completed</span>
+    <h1>That form has expired</h1>
+    <p>{{ message or "Refresh the page and try again." }}</p>
+    <a class="button button-primary" href="{{ request.referrer if request.referrer and request.referrer.startswith(request.host_url) else url_for('home') }}">Return and Try Again</a>
+</div>
+{% endblock %}

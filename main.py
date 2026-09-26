@@ -1,11 +1,21 @@
+import hashlib
 import os
 from logging.config import dictConfig
 
 import click
 from dotenv import load_dotenv
-from flask import Flask, g, jsonify, render_template, session
+from flask import (
+    Flask,
+    flash,
+    g,
+    jsonify,
+    render_template,
+    request,
+    session,
+)
 from flask_migrate import Migrate
-from sqlalchemy import text
+from flask_wtf.csrf import CSRFError
+from sqlalchemy import select, text
 from werkzeug.middleware.proxy_fix import ProxyFix
 
 # Load local development variables before reading the application configuration
@@ -15,7 +25,7 @@ from app.config import DevelopmentConfig, ProductionConfig, TestingConfig
 from app.database.db import csrf, db
 from app.database.seed import DEMO_PASSWORD, seed_categories, seed_demo_data
 from app.discovery import public_homepage_events
-from app.models import User
+from app.models import User, UserSession
 from app.rate_limit import limiter
 from app.recommendations import recommended_events
 from app.routes.auth import auth
@@ -25,7 +35,7 @@ migrate = Migrate()
 
 
 def create_app(test_config=None):
-    """Create and configure an EventID application instance."""
+    """Create and configure an eventid application instance."""
 
     application = Flask(
         __name__,
@@ -52,6 +62,21 @@ def create_app(test_config=None):
             "LOGIN_RATE_LIMIT",
             config_class.LOGIN_RATE_LIMIT,
         ),
+        SIGNUP_RATE_LIMIT=os.environ.get(
+            "SIGNUP_RATE_LIMIT", config_class.SIGNUP_RATE_LIMIT
+        ),
+        PRIVATE_LINK_RATE_LIMIT=os.environ.get(
+            "PRIVATE_LINK_RATE_LIMIT", config_class.PRIVATE_LINK_RATE_LIMIT
+        ),
+        ATTENDANCE_RATE_LIMIT=os.environ.get(
+            "ATTENDANCE_RATE_LIMIT", config_class.ATTENDANCE_RATE_LIMIT
+        ),
+        ACCOUNT_ACTION_RATE_LIMIT=os.environ.get(
+            "ACCOUNT_ACTION_RATE_LIMIT", config_class.ACCOUNT_ACTION_RATE_LIMIT
+        ),
+        ORGANISER_ACTION_RATE_LIMIT=os.environ.get(
+            "ORGANISER_ACTION_RATE_LIMIT", config_class.ORGANISER_ACTION_RATE_LIMIT
+        ),
         RATELIMIT_STORAGE_URI=os.environ.get(
             "RATELIMIT_STORAGE_URI",
             os.environ.get(
@@ -70,6 +95,8 @@ def create_app(test_config=None):
                 config_class.MAX_CONTENT_LENGTH,
             )
         ),
+        RESEND_API_KEY=os.environ.get("RESEND_API_KEY"),
+        MAIL_FROM=os.environ.get("MAIL_FROM"),
     )
     application.config["EVENT_IMAGE_UPLOAD_FOLDER"] = os.environ.get(
         "UPLOAD_DIRECTORY",
@@ -139,6 +166,21 @@ def create_app(test_config=None):
         # Load the current user once for authorization throughout the request
         user_id = session.get("user_id")
         g.user = db.session.get(User, user_id) if user_id is not None else None
+        if g.user is not None and session.get("auth_version") != g.user.auth_version:
+            session.clear()
+            g.user = None
+        if g.user is not None and session.get("session_token"):
+            token_hash = hashlib.sha256(session["session_token"].encode()).hexdigest()
+            tracked_session = db.session.scalar(
+                select(UserSession).where(
+                    UserSession.token_hash == token_hash,
+                    UserSession.user_id == g.user.user_id,
+                    UserSession.revoked_at.is_(None),
+                )
+            )
+            if tracked_session is None:
+                session.clear()
+                g.user = None
 
     @application.route("/")
     def home():
@@ -191,11 +233,19 @@ def create_app(test_config=None):
             "Content-Security-Policy",
             "default-src 'self'; img-src 'self' data:; style-src 'self'; "
             "script-src 'self'; font-src 'self'; form-action 'self'; "
+            "frame-src https://www.google.com; "
             "frame-ancestors 'none'; base-uri 'self'",
         )
         response.headers.setdefault(
             "Permissions-Policy", "geolocation=(), camera=(), microphone=()"
         )
+        if request.endpoint in {
+            "auth.forgot_password",
+            "auth.reset_password",
+            "auth.verify_email",
+            "auth.settings",
+        }:
+            response.headers["Cache-Control"] = "private, no-store"
         if application.config.get("SESSION_COOKIE_SECURE"):
             response.headers.setdefault(
                 "Strict-Transport-Security", "max-age=31536000; includeSubDomains"
@@ -214,6 +264,41 @@ def create_app(test_config=None):
     @application.errorhandler(429)
     def too_many_requests(_error):
         return render_template("errors/429.html"), 429
+
+    @application.errorhandler(CSRFError)
+    def csrf_error(_error):
+        """Recover safely when a form was left open beyond its session lifetime."""
+
+        message = "Your form expired. Please review it and submit again."
+        if request.endpoint == "auth.login":
+            flash(message, "warning")
+            return (
+                render_template(
+                    "login.html",
+                    next_url=request.args.get("next", ""),
+                    identifier=(
+                        request.form.get("identifier")
+                        or request.form.get("username")
+                        or ""
+                    ).strip(),
+                ),
+                400,
+            )
+        if request.endpoint == "auth.signup":
+            flash(message, "warning")
+            return (
+                render_template(
+                    "signup.html",
+                    form_values={
+                        "first_name": request.form.get("first_name", "").strip(),
+                        "last_name": request.form.get("last_name", "").strip(),
+                        "username": request.form.get("username", "").strip(),
+                        "email": request.form.get("email", "").strip(),
+                    },
+                ),
+                400,
+            )
+        return render_template("errors/400.html", message=message), 400
 
     @application.errorhandler(500)
     def internal_server_error(_error):

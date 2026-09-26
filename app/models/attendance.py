@@ -1,3 +1,4 @@
+import secrets
 from datetime import UTC, datetime
 
 from app.database.db import db
@@ -19,6 +20,16 @@ class Attendance(db.Model):
     )
 
     status = db.Column(db.String(20), nullable=False, default="Going")
+
+    # Give every confirmed registration a private ticket and check-in state.
+    ticket_token = db.Column(
+        db.String(64),
+        unique=True,
+        nullable=False,
+        default=lambda: secrets.token_urlsafe(18),
+    )
+
+    checked_in_at = db.Column(db.DateTime)
 
     # Allow navigation between attendance records, users and events
     user = db.relationship("User", back_populates="attendances")

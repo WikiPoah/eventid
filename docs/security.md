@@ -2,7 +2,7 @@
 
 ## Local configuration
 
-EventID requires `SECRET_KEY` at startup and does not use a fallback. For local
+eventid requires `SECRET_KEY` at startup and does not use a fallback. For local
 development, copy `.env.example` to `.env` and generate a new random value. The
 `.env` file and SQLite databases are ignored by Git.
 
@@ -33,6 +33,21 @@ Recommendations are rendered only for an authenticated user and calculated
 from that user’s existing attendance records at request time. They expose no
 attendee names, private events, raw scores, stored profile, or sensitive
 inference. Popularity is aggregate-only and used as a fallback signal.
+
+## Account and abuse protection
+
+Successful signup and login clear any pre-authentication session state, issue a
+12-hour permanent session, and logout clears the complete session. New passwords
+must contain 12–128 characters, must not be trivially repetitive or commonly
+used, and must not contain the account username or email name. Existing password
+hashes remain valid.
+
+Separate address-based limits protect login, signup, private-event detail access,
+attendance changes, favourites, check-in, event editing, attendance decisions,
+invite regeneration, and deletion. Production must configure shared persistent
+rate-limit storage; in-memory counters are suitable only for a single local
+process. Password recovery and email verification remain deferred until a real
+email delivery provider is configured.
 
 ## Compromised-secret history cleanup
 
@@ -98,7 +113,7 @@ replace any other credential reported by scanning.
 
 ## Attendance concurrency
 
-SQLite has no PostgreSQL-style row lock. EventID therefore starts `BEGIN
+SQLite has no PostgreSQL-style row lock. eventid therefore starts `BEGIN
 IMMEDIATE` before reading an event's attendance count and inserting a row. This
 serializes SQLite writers and makes the capacity decision while the write lock
 is held. A busy timeout lets a competing request wait, then re-check the count.

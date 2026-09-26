@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% block title %}Check In · {{ event.title }} · eventid{% endblock %}
+{% block content %}
+
+<div class="page-heading check-in-heading">
+    <div><span class="eyebrow">Organiser tools</span><h1>Attendee Check-In</h1><p>{{ event.title }}</p></div>
+    <a class="button button-secondary" href="{{ url_for('events.event_details', event_id=event.event_id) }}">Back to Event</a>
+</div>
+
+<section class="check-in-stats" aria-label="Check-in progress">
+    <div class="stat-card"><span class="stat-label">Registered</span><strong class="stat-value">{{ total_attendees }}</strong></div>
+    <div class="stat-card"><span class="stat-label">Checked in</span><strong class="stat-value">{{ checked_in_count }}</strong></div>
+    <div class="stat-card"><span class="stat-label">Still expected</span><strong class="stat-value">{{ total_attendees - checked_in_count }}</strong></div>
+    <div class="stat-card"><span class="stat-label">Progress</span><strong class="stat-value">{{ ((checked_in_count / total_attendees * 100)|round|int) if total_attendees else 0 }}%</strong></div>
+</section>
+
+<div class="check-in-progress" aria-label="{{ checked_in_count }} of {{ total_attendees }} attendees checked in">
+    <span style="width: {{ (checked_in_count / total_attendees * 100) if total_attendees else 0 }}%"></span>
+</div>
+
+<div class="check-in-layout">
+    <section class="panel check-in-search">
+        <h2>Scan or enter a ticket</h2>
+        <p class="help-text">Scanning an attendee's QR code opens this page with their ticket ready to verify.</p>
+        <form method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="action" value="check_in">
+            <label for="ticket">Ticket code</label>
+            <input id="ticket" name="ticket" value="{{ ticket_token }}" required autocomplete="off" placeholder="Paste or enter ticket code">
+            <button class="button button-primary" type="submit">Verify and Check In</button>
+        </form>
+        {% if attendance %}
+        <div class="check-in-ticket-preview">
+            <span class="badge">Valid ticket</span>
+            <h3>{{ attendance.user.first_name }} {{ attendance.user.last_name }}</h3>
+            <p>@{{ attendance.user.username }}</p>
+            <strong>{% if attendance.checked_in_at %}Already checked in{% else %}Ready to check in{% endif %}</strong>
+        </div>
+        {% endif %}
+    </section>
+
+    <section class="panel check-in-attendee-panel">
+        <div class="check-in-list-heading">
+            <div><h2>Attendee list</h2><p class="help-text">Check people in manually or correct an accidental check-in.</p></div>
+            <form class="check-in-filter" method="GET">
+                <label class="visually-hidden" for="attendee-search">Search attendees</label>
+                <input type="search" id="attendee-search" name="search" value="{{ search }}" placeholder="Search name or username">
+                <button class="button button-secondary" type="submit">Search</button>
+            </form>
+        </div>
+
+        {% if attendances %}
+        <ul class="check-in-attendee-list">
+            {% for item in attendances %}
+            <li>
+                <span class="check-in-person-icon" aria-hidden="true">{{ item.user.first_name[0]|upper }}{{ item.user.last_name[0]|upper }}</span>
+                <span class="check-in-person-details">
+                    <strong>{{ item.user.first_name }} {{ item.user.last_name }}</strong>
+                    <small>@{{ item.user.username }} · Registered {{ item.registered_at.strftime("%d %b, %H:%M") }}</small>
+                </span>
+                {% if item.checked_in_at %}
+                <span class="badge badge-status-published">Checked in</span>
+                <form method="POST">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="action" value="undo"><input type="hidden" name="user_id" value="{{ item.user_id }}">
+                    <button class="button button-secondary" type="submit">Undo</button>
+                </form>
+                {% else %}
+                <span class="badge">Expected</span>
+                <form method="POST">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="action" value="check_in"><input type="hidden" name="user_id" value="{{ item.user_id }}">
+                    <button class="button button-primary" type="submit">Check In</button>
+                </form>
+                {% endif %}
+            </li>
+            {% endfor %}
+        </ul>
+        {% elif search %}
+        <div class="empty-state"><p>No attendees match “{{ search }}”.</p></div>
+        {% else %}
+        <div class="empty-state"><p>No confirmed attendees yet.</p></div>
+        {% endif %}
+    </section>
+</div>
+{% endblock %}

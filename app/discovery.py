@@ -21,14 +21,14 @@ def public_homepage_events(limit=12):
     this_week = db.session.scalars(
         select(Event)
         .where(*public_upcoming, Event.start_datetime <= week_end)
-        .options(selectinload(Event.categories))
+        .options(selectinload(Event.categories), selectinload(Event.attendees))
         .order_by(Event.start_datetime, Event.event_id)
         .limit(limit)
     ).all()
     more_upcoming = db.session.scalars(
         select(Event)
         .where(*public_upcoming, Event.start_datetime > week_end)
-        .options(selectinload(Event.categories))
+        .options(selectinload(Event.categories), selectinload(Event.attendees))
         .order_by(Event.start_datetime, Event.event_id)
         .limit(limit)
     ).all()
