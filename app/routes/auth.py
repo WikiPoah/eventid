@@ -226,6 +226,8 @@ def _signup_form_values(
 )
 def signup():
 
+    next_url = _safe_next_url(request.values.get("next"))
+
     # Redirect users who are already logged in
 
     if "user_id" in session:
@@ -273,6 +275,7 @@ def signup():
             return render_template(
                 "signup.html",
                 form_values=form_values,
+                next_url=next_url,
             )
 
         # Prevent the user from registering with mismatched passwords
@@ -287,6 +290,7 @@ def signup():
             return render_template(
                 "signup.html",
                 form_values=form_values,
+                next_url=next_url,
             )
 
         password_error = _password_error(password, username, email)
@@ -295,6 +299,7 @@ def signup():
             return render_template(
                 "signup.html",
                 form_values=form_values,
+                next_url=next_url,
             )
 
         # Keep usernames within the supported length
@@ -309,6 +314,7 @@ def signup():
             return render_template(
                 "signup.html",
                 form_values=form_values,
+                next_url=next_url,
             )
 
         # Retrieve matching usernames and emails
@@ -337,6 +343,7 @@ def signup():
             return render_template(
                 "signup.html",
                 form_values=form_values,
+                next_url=next_url,
             )
 
         # Prevent duplicate email addresses
@@ -351,6 +358,7 @@ def signup():
             return render_template(
                 "signup.html",
                 form_values=form_values,
+                next_url=next_url,
             )
 
         # Securely hash the password
@@ -397,6 +405,7 @@ def signup():
             return render_template(
                 "signup.html",
                 form_values=form_values,
+                next_url=next_url,
             )
 
         send_email(*verification_email)
@@ -414,11 +423,12 @@ def signup():
             "success",
         )
 
-        return redirect(url_for("home"))
+        return redirect(next_url or url_for("home"))
 
     return render_template(
         "signup.html",
         form_values=form_values,
+        next_url=next_url,
     )
 
 
@@ -604,9 +614,7 @@ def reset_password(token):
                     "support and secure your email account immediately.",
                 )
                 session.clear()
-                flash(
-                    "Your password has been reset. You can now log in.", "success"
-                )
+                flash("Your password has been reset. You can now log in.", "success")
                 return redirect(url_for("auth.login"))
     return render_template("reset_password.html", token=token)
 
@@ -639,7 +647,9 @@ def resend_verification():
     elif _send_verification_email(g.user):
         flash("A new verification link has been sent.", "success")
     else:
-        flash("We could not send that email right now. Please try again later.", "error")
+        flash(
+            "We could not send that email right now. Please try again later.", "error"
+        )
     return redirect(url_for("auth.settings"))
 
 
@@ -811,9 +821,9 @@ def settings():
                 g.user.password_hash = generate_password_hash(new_password)
                 g.user.auth_version += 1
                 now = datetime.now(UTC)
-                db.session.query(UserSession).filter_by(
-                    user_id=g.user.user_id
-                ).update({"revoked_at": now})
+                db.session.query(UserSession).filter_by(user_id=g.user.user_id).update(
+                    {"revoked_at": now}
+                )
                 _record_security_event(
                     g.user, "password_changed", "Password changed in Settings"
                 )

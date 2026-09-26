@@ -464,7 +464,7 @@
                 Log In to Attend
             </a>
 
-            <a class="button button-secondary" href="{{ url_for('auth.signup') }}">
+            <a class="button button-secondary" href="{{ url_for('auth.signup', next=url_for('events.event_details', event_id=event.event_id)) }}">
                 Create an Account
             </a>
 

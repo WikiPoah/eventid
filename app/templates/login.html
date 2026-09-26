@@ -194,7 +194,7 @@
 
                     New to eventid?
 
-                    <a href="{{ url_for('auth.signup') }}">
+                    <a href="{{ url_for('auth.signup', next=next_url) if next_url else url_for('auth.signup') }}">
                         Create an account
                     </a>
 

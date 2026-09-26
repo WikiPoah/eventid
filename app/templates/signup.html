@@ -126,6 +126,10 @@
 
                 <!-- Display the first name field -->
 
+                {% if next_url %}
+                <input type="hidden" name="next" value="{{ next_url }}">
+                {% endif %}
+
                 <div class="form-field">
 
                     <label for="first_name">
@@ -261,7 +265,7 @@
 
                     Already have an account?
 
-                    <a href="{{ url_for('auth.login') }}">
+                    <a href="{{ url_for('auth.login', next=next_url) if next_url else url_for('auth.login') }}">
                         Log in
                     </a>
 

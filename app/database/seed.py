@@ -1,3 +1,4 @@
+import secrets
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from shutil import copyfile
@@ -133,9 +134,12 @@ def _demo_event(organiser, now, event_data, categories_by_name):
         )
     )
     if existing is not None:
-        # Refresh only demo schedule fields so seeded timelines stay useful
+        # Refresh demo dates and private-link expiry without rotating invitations.
         existing.start_datetime = now + event_data["start_offset"]
         existing.end_datetime = now + event_data["end_offset"]
+        if existing.privacy == "Private":
+            existing.invite_token = existing.invite_token or secrets.token_urlsafe(32)
+            existing.invite_expires_at = existing.end_datetime
         if event_data.get("image_path"):
             existing.image_path = event_data["image_path"]
         return existing, False
@@ -153,6 +157,14 @@ def _demo_event(organiser, now, event_data, categories_by_name):
         end_datetime=now + event_data["end_offset"],
         capacity=event_data["capacity"],
         privacy=event_data["privacy"],
+        invite_token=(
+            secrets.token_urlsafe(32) if event_data["privacy"] == "Private" else None
+        ),
+        invite_expires_at=(
+            now + event_data["end_offset"]
+            if event_data["privacy"] == "Private"
+            else None
+        ),
         status=event_data["status"],
         organiser_id=organiser.user_id,
         image_path=event_data.get("image_path"),

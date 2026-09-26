@@ -921,6 +921,7 @@ def event_details(event_id):
             ),
             registration_closed=(
                 not event.requests_open
+                or event.end_datetime <= datetime.now()
                 or (
                     event.registration_deadline is not None
                     and event.registration_deadline <= datetime.now()
@@ -1180,9 +1181,13 @@ def attend_event(event_id):
 
             return redirect(destination)
 
-        if not event.requests_open or (
-            event.registration_deadline is not None
-            and event.registration_deadline <= datetime.now()
+        if (
+            event.end_datetime <= datetime.now()
+            or not event.requests_open
+            or (
+                event.registration_deadline is not None
+                and event.registration_deadline <= datetime.now()
+            )
         ):
             db.session.rollback()
             flash("Registration for this event has closed.", "warning")
