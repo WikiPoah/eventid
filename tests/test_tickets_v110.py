@@ -1,3 +1,8 @@
+from datetime import UTC, datetime
+from html.parser import HTMLParser
+
+import pytest
+
 from app.database.db import db
 from app.models.attendance import Attendance
 from tests.conftest import login
@@ -137,3 +142,38 @@ def test_check_in_dashboard_searches_attendees(app, client, users, event_factory
 
     assert b"Alice Attendee" in response.data
     assert b"Oscar Other" not in response.data
+
+
+@pytest.mark.parametrize(("total", "checked"), [(0, 0), (2, 0), (2, 1), (2, 2)])
+def test_check_in_progress_works_under_strict_csp(
+    app, client, users, event_factory, total, checked
+):
+    event_id = event_factory()
+    with app.app_context():
+        for index, user_id in enumerate(users[1:][:total]):
+            db.session.add(
+                Attendance(
+                    user_id=user_id,
+                    event_id=event_id,
+                    status="Going",
+                    checked_in_at=datetime.now(UTC) if index < checked else None,
+                )
+            )
+        db.session.commit()
+    login(client, users[0])
+    response = client.get(f"/events/{event_id}/check-in")
+
+    class ProgressParser(HTMLParser):
+        progress = []
+
+        def handle_starttag(self, tag, attrs):
+            assert "style" not in dict(attrs)
+            if tag == "progress":
+                self.progress.append(dict(attrs))
+
+    parser = ProgressParser()
+    parser.feed(response.get_data(as_text=True))
+    assert len(parser.progress) == 1
+    assert parser.progress[0]["value"] == str(checked)
+    assert parser.progress[0]["max"] == str(total or 1)
+    assert "style-src 'self';" in response.headers["Content-Security-Policy"]

@@ -830,21 +830,31 @@
 }
 
 .check-in-progress {
+    display: block;
+    width: 100%;
+    appearance: none;
     overflow: hidden;
     height: 8px;
     margin: -10px 0 24px;
 
+    border: 0;
     border-radius: 999px;
     background: #e5ebf5;
 }
 
-.check-in-progress span {
-    display: block;
-    height: 100%;
+.check-in-progress::-webkit-progress-bar {
+    border-radius: 999px;
+    background: #e5ebf5;
+}
 
+.check-in-progress::-webkit-progress-value {
     border-radius: inherit;
     background: linear-gradient(90deg, var(--navy), #6689d7);
-    transition: width 180ms ease;
+}
+
+.check-in-progress::-moz-progress-bar {
+    border-radius: inherit;
+    background: linear-gradient(90deg, var(--navy), #6689d7);
 }
 
 .check-in-search,

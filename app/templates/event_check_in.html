@@ -14,9 +14,8 @@
     <div class="stat-card"><span class="stat-label">Progress</span><strong class="stat-value">{{ ((checked_in_count / total_attendees * 100)|round|int) if total_attendees else 0 }}%</strong></div>
 </section>
 
-<div class="check-in-progress" aria-label="{{ checked_in_count }} of {{ total_attendees }} attendees checked in">
-    <span style="width: {{ (checked_in_count / total_attendees * 100) if total_attendees else 0 }}%"></span>
-</div>
+<progress class="check-in-progress" value="{{ checked_in_count }}" max="{{ total_attendees or 1 }}"
+    aria-label="{{ checked_in_count }} of {{ total_attendees }} attendees checked in"></progress>
 
 <div class="check-in-layout">
     <section class="panel check-in-search">
