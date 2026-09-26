@@ -30,7 +30,9 @@ def test_forgot_password_is_private_and_sends_reset_link(app, client):
         "/forgot-password", data={"email": "reset@example.test"}, follow_redirects=True
     )
     unknown = client.post(
-        "/forgot-password", data={"email": "missing@example.test"}, follow_redirects=True
+        "/forgot-password",
+        data={"email": "missing@example.test"},
+        follow_redirects=True,
     )
 
     assert known.status_code == unknown.status_code == 200
