@@ -21,7 +21,7 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 # Load local development variables before reading the application configuration
 load_dotenv()
 
-from app.config import DevelopmentConfig, ProductionConfig, TestingConfig
+from app.config import DevelopmentConfig, ProductionConfig, TestingConfig, database_url
 from app.database.db import csrf, db
 from app.database.seed import DEMO_PASSWORD, seed_categories, seed_demo_data
 from app.discovery import public_homepage_events
@@ -54,10 +54,7 @@ def create_app(test_config=None):
     # Allow environment variables to override development-safe defaults
     application.config.update(
         SECRET_KEY=os.environ.get("SECRET_KEY"),
-        SQLALCHEMY_DATABASE_URI=os.environ.get(
-            "DATABASE_URL",
-            config_class.SQLALCHEMY_DATABASE_URI,
-        ),
+        SQLALCHEMY_DATABASE_URI=database_url(config_class.SQLALCHEMY_DATABASE_URI),
         LOGIN_RATE_LIMIT=os.environ.get(
             "LOGIN_RATE_LIMIT",
             config_class.LOGIN_RATE_LIMIT,
@@ -97,6 +94,8 @@ def create_app(test_config=None):
         ),
         RESEND_API_KEY=os.environ.get("RESEND_API_KEY"),
         MAIL_FROM=os.environ.get("MAIL_FROM"),
+        ALLOW_DEMO_SEED=os.environ.get("ALLOW_DEMO_SEED", "false").lower()
+        in {"1", "true", "yes", "on"},
     )
     application.config["EVENT_IMAGE_UPLOAD_FOLDER"] = os.environ.get(
         "UPLOAD_DIRECTORY",
@@ -112,6 +111,13 @@ def create_app(test_config=None):
         raise RuntimeError(
             "SECRET_KEY is required. Set it in the environment or a local .env file."
         )
+
+    if (
+        environment == "production"
+        and not application.testing
+        and not os.environ.get("DATABASE_URL")
+    ):
+        raise RuntimeError("DATABASE_URL is required in production.")
 
     if (
         environment == "production"

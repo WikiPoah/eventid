@@ -1,5 +1,6 @@
 from datetime import datetime
 
+import pytest
 from sqlalchemy import func, select
 from werkzeug.security import check_password_hash
 
@@ -18,6 +19,22 @@ def test_demo_seed_cli_runs_successfully(app):
     assert result.exit_code == 0
     assert "Development demo data is ready" in result.output
     assert "demo_organiser" in result.output
+
+
+def test_demo_seed_is_blocked_outside_development_before_writes(app):
+    app.config.update(TESTING=False, DEBUG=False, ALLOW_DEMO_SEED=False)
+    with app.app_context():
+        with pytest.raises(RuntimeError, match="Demo seeding is disabled"):
+            seed_demo_data()
+        assert db.session.scalar(select(func.count()).select_from(User)) == 0
+        assert db.session.scalar(select(func.count()).select_from(Category)) == 0
+
+
+def test_dedicated_demo_instance_can_explicitly_allow_seeding(app):
+    app.config.update(TESTING=False, DEBUG=False, ALLOW_DEMO_SEED=True)
+    with app.app_context():
+        result = seed_demo_data()
+    assert result["users_created"] > 0
 
 
 def test_demo_seeder_is_idempotent(app):

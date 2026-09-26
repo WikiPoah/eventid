@@ -1,4 +1,7 @@
+import pytest
+
 from app.config import database_url
+from app.database.db import db
 from main import create_app
 
 
@@ -27,7 +30,53 @@ def test_legacy_postgres_url_is_normalized(monkeypatch):
     assert database_url() == "postgresql+psycopg://user:pass@db/eventid"
 
 
+@pytest.mark.parametrize("scheme", ["postgres", "postgresql", "postgresql+psycopg"])
+def test_production_factory_uses_psycopg_for_provider_urls(monkeypatch, scheme):
+    monkeypatch.setenv("FLASK_ENV", "production")
+    monkeypatch.setenv("SECRET_KEY", "production-config-test")
+    monkeypatch.setenv("DATABASE_URL", f"{scheme}://user:pass@localhost/eventid")
+
+    application = create_app()
+
+    assert application.config["SQLALCHEMY_DATABASE_URI"] == (
+        "postgresql+psycopg://user:pass@localhost/eventid"
+    )
+    with application.app_context():
+        assert db.engine.dialect.name == "postgresql"
+        assert db.engine.dialect.driver == "psycopg"
+        assert db.engine.pool._pre_ping is True
+        db.engine.dispose()
+
+
+def test_factory_reads_database_environment_at_creation_time(monkeypatch):
+    monkeypatch.setenv("FLASK_ENV", "development")
+    monkeypatch.setenv("DATABASE_URL", "sqlite:///:memory:")
+    assert create_app().config["SQLALCHEMY_DATABASE_URI"] == "sqlite:///:memory:"
+
+    monkeypatch.delenv("DATABASE_URL")
+    assert create_app().config["SQLALCHEMY_DATABASE_URI"] == "sqlite:///eventid.db"
+
+
+def test_sqlite_test_override_wins_over_production_database(monkeypatch):
+    monkeypatch.setenv("DATABASE_URL", "postgres://user:pass@localhost/eventid")
+    application = create_app(
+        {"TESTING": True, "SQLALCHEMY_DATABASE_URI": "sqlite:///:memory:"}
+    )
+    with application.app_context():
+        assert db.engine.dialect.name == "sqlite"
+
+
+def test_production_requires_explicit_database_configuration(monkeypatch):
+    monkeypatch.setenv("FLASK_ENV", "production")
+    monkeypatch.setenv("SECRET_KEY", "production-config-test")
+    monkeypatch.delenv("DATABASE_URL")
+
+    with pytest.raises(RuntimeError, match="DATABASE_URL is required"):
+        create_app()
+
+
 def test_production_keeps_secure_cookie_default(monkeypatch):
+    monkeypatch.setenv("DATABASE_URL", "sqlite:///:memory:")
     monkeypatch.setenv(
         "FLASK_ENV",
         "production",

@@ -172,6 +172,15 @@ def _demo_event(organiser, now, event_data, categories_by_name):
 def seed_demo_data():
     """Create safe, repeatable users, events, and attendance for development."""
 
+    if not (
+        current_app.debug
+        or current_app.testing
+        or current_app.config.get("ALLOW_DEMO_SEED")
+    ):
+        raise RuntimeError(
+            "Demo seeding is disabled. Set ALLOW_DEMO_SEED=true only for a dedicated demo instance."
+        )
+
     seed_categories()
 
     demo_image_directory = Path(current_app.static_folder) / "images" / "demo-events"

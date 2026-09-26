@@ -20,7 +20,7 @@ class Config:
     SECRET_KEY = None
 
     # Store the development database in Flask's ignored instance directory
-    SQLALCHEMY_DATABASE_URI = database_url()
+    SQLALCHEMY_DATABASE_URI = "sqlite:///eventid.db"
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
     # Protect session cookies while allowing local development over HTTP
@@ -58,6 +58,7 @@ class Config:
     EMAIL_VERIFICATION_MAX_AGE = 24 * 60 * 60
     RESEND_API_KEY = None
     MAIL_FROM = None
+    ALLOW_DEMO_SEED = False
 
     LOG_LEVEL = os.environ.get("LOG_LEVEL", "INFO").upper()
     TRUST_PROXY = False
@@ -83,3 +84,4 @@ class ProductionConfig(Config):
     DEBUG = False
     PREFERRED_URL_SCHEME = "https"
     TRUST_PROXY = True
+    SQLALCHEMY_ENGINE_OPTIONS = {"pool_pre_ping": True}
