@@ -1,5 +1,9 @@
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timedelta
+from threading import Barrier
+from time import sleep
+
+from sqlalchemy import event as sqlalchemy_event
 
 from app.database.db import db
 from app.models.attendance import Attendance
@@ -450,3 +454,63 @@ def test_simultaneous_final_place_attempts_do_not_overbook(app, users, event_fac
 
     assert statuses == [302, 302]
     assert attendance_count(app, event_id) == 1
+
+
+def test_simultaneous_private_approvals_preserve_final_place(app, users, event_factory):
+    event_id = event_factory(privacy="Private", capacity=1)
+    with app.app_context():
+        db.session.add_all(
+            Attendance(user_id=user_id, event_id=event_id, status="Pending")
+            for user_id in users[1:]
+        )
+        db.session.commit()
+        engine = db.engine
+
+    clients = [app.test_client(), app.test_client()]
+    for client in clients:
+        login(client, users[0])
+    start = Barrier(2)
+
+    def delay_capacity_read(_connection, _cursor, statement, *_args):
+        # Keep the first capacity read open long enough for the other request.
+        if "count(" in statement.lower() and "attendance" in statement.lower():
+            sleep(0.05)
+
+    def approve(item):
+        client, user_id = item
+        start.wait(timeout=5)
+        return client.post(
+            f"/events/{event_id}/requests/{user_id}/approve",
+            headers={"Accept": "application/json"},
+        ).status_code
+
+    sqlalchemy_event.listen(engine, "after_cursor_execute", delay_capacity_read)
+    try:
+        with ThreadPoolExecutor(max_workers=2) as executor:
+            statuses = list(executor.map(approve, zip(clients, users[1:], strict=True)))
+    finally:
+        sqlalchemy_event.remove(engine, "after_cursor_execute", delay_capacity_read)
+
+    assert sorted(statuses) == [200, 409]
+    with app.app_context():
+        records = Attendance.query.filter_by(event_id=event_id).all()
+        assert sorted(item.status for item in records) == ["Going", "Pending"]
+
+
+def test_private_approval_rejects_non_owner_and_missing_event(
+    app, client, users, event_factory
+):
+    event_id = event_factory(privacy="Private")
+    with app.app_context():
+        db.session.add(
+            Attendance(user_id=users[1], event_id=event_id, status="Pending")
+        )
+        db.session.commit()
+    login(client, users[2])
+    assert (
+        client.post(f"/events/{event_id}/requests/{users[1]}/approve").status_code
+        == 403
+    )
+    assert client.post(f"/events/999999/requests/{users[1]}/approve").status_code == 404
+    with app.app_context():
+        assert db.session.get(Attendance, (users[1], event_id)).status == "Pending"

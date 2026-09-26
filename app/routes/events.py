@@ -149,10 +149,12 @@ def _event_map_destination(event):
     return _event_calendar_location(event)
 
 
-def _owned_event_or_404(event_id):
+def _owned_event_or_404(event_id, *, lock=False):
     """Return an event owned by the current user or reject access."""
 
-    event = db.get_or_404(Event, event_id)
+    event = _locked_event(event_id) if lock else db.get_or_404(Event, event_id)
+    if event is None:
+        abort(404)
 
     # Enforce organiser ownership independently of displayed actions
     if event.organiser_id != g.user.user_id:
@@ -1110,7 +1112,10 @@ def _locked_event(event_id):
 
     # Serialize registrations for this event using a database row lock
     return db.session.scalar(
-        select(Event).where(Event.event_id == event_id).with_for_update()
+        select(Event)
+        .where(Event.event_id == event_id)
+        .with_for_update()
+        .execution_options(populate_existing=True)
     )
 
 
@@ -1773,9 +1778,11 @@ def change_event_status(event_id):
 def decide_attendance_request(event_id, user_id, decision):
     """Approve or decline one pending private-event request."""
 
-    event = _owned_event_or_404(event_id)
     if decision not in {"approve", "decline"}:
         abort(400)
+
+    # Serialize approval/decline with ordinary registration for this event.
+    event = _owned_event_or_404(event_id, lock=True)
 
     attendance = db.session.get(Attendance, (user_id, event_id))
     if attendance is None or attendance.status != "Pending":
@@ -1791,6 +1798,7 @@ def decide_attendance_request(event_id, user_id, decision):
             )
         )
         if event.capacity is not None and confirmed_count >= event.capacity:
+            db.session.rollback()
             if request.accept_mimetypes.best == "application/json":
                 return jsonify(error="This event is already full."), 409
             flash(
