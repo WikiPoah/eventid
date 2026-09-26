@@ -9,6 +9,7 @@ from app.database.seed import DEMO_PASSWORD, seed_demo_data
 from app.models.attendance import Attendance
 from app.models.category import Category
 from app.models.event import Event
+from app.models.favourite import Favourite
 from app.models.user import User
 from tests.conftest import login
 
@@ -45,6 +46,7 @@ def test_demo_seeder_is_idempotent(app):
             Event.query.count(),
             Category.query.count(),
             Attendance.query.count(),
+            Favourite.query.count(),
         )
         second = seed_demo_data()
         second_counts = (
@@ -52,6 +54,7 @@ def test_demo_seeder_is_idempotent(app):
             Event.query.count(),
             Category.query.count(),
             Attendance.query.count(),
+            Favourite.query.count(),
         )
 
     assert first == {
@@ -64,7 +67,7 @@ def test_demo_seeder_is_idempotent(app):
         "events_created": 0,
         "attendances_created": 0,
     }
-    assert second_counts == first_counts == (5, 14, 10, 15)
+    assert second_counts == first_counts == (5, 14, 10, 15, 2)
 
 
 def test_default_categories_include_fallback_and_expanded_technology(app):
@@ -158,7 +161,17 @@ def test_seeded_demo_pages_show_expected_data(app, client):
     browse_response = client.get("/events")
     assert b"Bremen Technology Meetup" in browse_response.data
     assert b"Bremen Makers Day Archive" not in browse_response.data
-    assert b"Berlin Indie Music Night" in client.get("/my-events").data
+    registrations = client.get("/my-events").data
+    assert b"Berlin Indie Music Night" in registrations
+    assert registrations.index(b"Hamburg Community Workshop") < registrations.index(
+        b"Bremen Makers Day Archive"
+    )
+    assert registrations.index(b"Hamburg Community Workshop") < registrations.index(
+        b"Cologne Riverside Run"
+    )
+    saved = client.get("/favourites").data
+    assert b"Hamburg Street Food Social" in saved
+    assert b"Berlin Local Art Walk" in saved
 
     login(client, organiser_id)
     manage_response = client.get("/manage-events")

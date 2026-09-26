@@ -400,7 +400,11 @@ def my_events():
             Event.status.in_(("Published", "Cancelled")),
         )
         .options(selectinload(Event.categories), selectinload(Event.attendees))
-        .order_by(Event.start_datetime)
+        .order_by(
+            Event.end_datetime < datetime.now(),
+            Event.status == "Cancelled",
+            Event.start_datetime,
+        )
     ).all()
 
     favourite_events = db.session.scalars(

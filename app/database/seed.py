@@ -12,6 +12,7 @@ from app.models.attendance import Attendance
 from app.models.category import Category
 from app.models.event import Event
 from app.models.event_category import EventCategory
+from app.models.favourite import Favourite
 from app.models.user import User
 
 # Define the default event categories available in the application
@@ -481,6 +482,13 @@ def seed_demo_data():
                     )
                 )
                 attendances_created += 1
+
+    # Give the attendee's saved-events view a useful, repeatable starting state.
+    for title in ("Hamburg Street Food Social", "Berlin Local Art Walk"):
+        user_id = users["demo_attendee"].user_id
+        event_id = events[title].event_id
+        if db.session.get(Favourite, (user_id, event_id)) is None:
+            db.session.add(Favourite(user_id=user_id, event_id=event_id))
 
     db.session.commit()
     return {
