@@ -14,6 +14,8 @@ from main import create_app
 
 @pytest.fixture
 def app(tmp_path):
+    """Isolate data/uploads per test; migration tests validate schema separately."""
+
     database_path = (tmp_path / "eventid-test.db").as_posix()
     application = create_app(
         {
@@ -100,6 +102,12 @@ def event_factory(app, users):
 
 
 def login(client, user_id):
+    """Set identity for focused route tests, bypassing the login form.
+
+    Authentication and seeded journey tests exercise real login/CSRF/session
+    tracking; this helper deliberately does not prove those behaviors.
+    """
+
     with client.application.app_context():
         auth_version = db.session.get(User, user_id).auth_version
     with client.session_transaction() as session:

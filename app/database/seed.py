@@ -1,3 +1,5 @@
+"""Idempotent categories and explicitly permitted, fictional demo records."""
+
 import secrets
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
@@ -126,7 +128,11 @@ def _demo_user(user_data):
 
 
 def _demo_event(organiser, now, event_data, categories_by_name):
-    """Create one deterministic demo event without modifying an existing one."""
+    """Reuse demo identities, refreshing dates, invitation expiry and seed images.
+
+    Preserve tokens and attendance so re-seeding does not break existing demo
+    links or tickets; it refreshes selected fields rather than resetting all edits.
+    """
 
     existing = db.session.scalar(
         select(Event).where(
@@ -185,6 +191,8 @@ def _demo_event(organiser, now, event_data, categories_by_name):
 def seed_demo_data():
     """Create safe, repeatable users, events, and attendance for development."""
 
+    # Publicly documented passwords must never be introduced into a real-user
+    # service by accident. Reject before category, account or file writes.
     if not (
         current_app.debug
         or current_app.testing

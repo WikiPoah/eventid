@@ -1,3 +1,5 @@
+"""Account forms, signed email links and revocable browser sessions."""
+
 import hashlib
 import re
 import secrets
@@ -70,6 +72,8 @@ def _record_security_event(user, event_type, description):
 
 
 def _start_user_session(user):
+    """Track a browser token by hash; the caller commits with the login change."""
+
     token = secrets.token_urlsafe(32)
     session["session_token"] = token
     db.session.add(
@@ -94,6 +98,12 @@ def _ensure_user_session(user):
 
 
 def _account_token(user, purpose):
+    """Bind email links to identity/version and separate purposes with salts.
+
+    Changing email or auth_version invalidates prior links even before expiry;
+    a verification token cannot be substituted for a password-reset token.
+    """
+
     return URLSafeTimedSerializer(current_app.config["SECRET_KEY"]).dumps(
         {
             "user_id": user.user_id,
@@ -177,8 +187,11 @@ def _password_error(password, username, email):
 
 
 def _safe_next_url(candidate):
+    """Preserve local return paths without enabling an open redirect.
 
-    # Only allow redirects to local application paths
+    Browsers can interpret protocol-relative URLs or backslashes as hosts, so
+    a leading slash alone is insufficient. Keep queries for private invitations.
+    """
 
     if not candidate:
         return None
@@ -519,7 +532,8 @@ def login():
                 identifier=identifier,
             )
 
-        # Store the user's ID to keep them logged in
+        # Discard pre-login state so authenticated identity cannot inherit an
+        # attacker-controlled session; the sanitized return URL was saved above.
 
         session.clear()
         session.permanent = True

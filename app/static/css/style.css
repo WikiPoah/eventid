@@ -1,3 +1,5 @@
+/* Import order is the cascade: shared primitives first, page overrides later.
+   Keep the order stable; responsive rules precede final auth-specific layouts. */
 @import url("base.css?v=8");
 @import url("components.css?v=6");
 @import url("events.css?v=25");

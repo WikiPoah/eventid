@@ -276,6 +276,8 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         });
 
+        // Preview positioning and hidden percentages share the server crop
+        // convention; Pillow remains responsible for validation and final output.
         const updatePosition = () => {
             const x = Number(horizontal?.value || 50);
             const y = Number(vertical?.value || 50);
@@ -739,7 +741,8 @@ document.addEventListener("DOMContentLoaded", () => {
         };
 
 
-        // Rotate by one card while keeping a continuous three-card window.
+        // Reuse existing slides for wraparound rather than cloning forms/IDs.
+        // Scroll the viewport; transforms would conflict with reveal animations.
 
         let isMoving = false;
 

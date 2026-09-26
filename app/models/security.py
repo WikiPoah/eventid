@@ -4,6 +4,8 @@ from app.database.db import db
 
 
 class UserSession(db.Model):
+    """Revocable browser session; store a hash rather than the cookie token."""
+
     __tablename__ = "user_sessions"
     __table_args__ = (db.Index("ix_user_sessions_token_hash", "token_hash"),)
 
@@ -24,6 +26,8 @@ class UserSession(db.Model):
 
 
 class SecurityEvent(db.Model):
+    """Account activity shown in Settings, separate from operational logs."""
+
     __tablename__ = "security_events"
 
     security_event_id = db.Column(db.Integer, primary_key=True)

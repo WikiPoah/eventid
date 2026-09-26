@@ -1,3 +1,9 @@
+"""Discovery, event ownership, registration and attendee-facing lifecycles.
+
+Visibility is shared by details/images/exports to calendar providers; ownership
+is enforced separately for management. Registration and approval share a lock.
+"""
+
 import csv
 import re
 import secrets
@@ -179,7 +185,12 @@ def _category_ids(categories):
 
 
 def _can_view_event(event):
-    """Apply event lifecycle and privacy rules to detail and image access."""
+    """Apply visibility independently of registration/ticket eligibility.
+
+    Existing non-revoked requests retain private-page access without a live
+    invitation. Revocation overrides invitation access; cancellation stays
+    visible to existing registrants so they can discover the change.
+    """
 
     if g.user is None:
         return event.status == "Published" and event.privacy == "Public"
@@ -524,6 +535,8 @@ def check_in_attendee(event_id):
                 attendance.checked_in_at = None
                 db.session.commit()
                 flash("Attendee check-in was undone.", "success")
+        # Repeated sequential scans report the existing check-in rather than
+        # replacing its timestamp. GET verification never checks anyone in.
         elif attendance.checked_in_at is not None:
             flash("This ticket has already been checked in.", "warning")
         else:
@@ -1098,7 +1111,13 @@ def open_event_calendar(event_id, provider):
 
 
 def _locked_event(event_id):
-    """Lock attendance writes for an event before capacity is checked."""
+    """Serialize registration/approval from capacity read through commit.
+
+    Call before staging changes: SQLite rolls back the earlier read transaction
+    to acquire its database-wide writer lock. PostgreSQL locks only this event.
+    The caller must finish with commit/rollback; a count alone cannot reserve
+    the last place against a concurrent request.
+    """
 
     dialect = db.session.get_bind().dialect.name
 
@@ -1115,7 +1134,8 @@ def _locked_event(event_id):
             event_id,
         )
 
-    # Serialize registrations for this event using a database row lock
+    # Refresh any cached Event after acquiring the row lock; the identity map
+    # must not supply pre-lock values for the capacity decision.
     return db.session.scalar(
         select(Event)
         .where(Event.event_id == event_id)
@@ -1849,6 +1869,7 @@ def manage_private_access(event_id, user_id, action):
     else:
         if attendance.status != "Revoked":
             abort(404)
+        # Restore access without claiming a seat; approval must recheck capacity.
         attendance.status = "Pending"
         message = "Access restored as a pending request."
 
@@ -1866,6 +1887,8 @@ def regenerate_invite_link(event_id):
     event = _owned_event_or_404(event_id)
     if event.privacy != "Private":
         abort(400)
+    # Session-held links must match the current token, so rotation invalidates
+    # link-only access while existing non-revoked attendance remains visible.
     event.invite_token = secrets.token_urlsafe(32)
     db.session.commit()
     flash("The previous private link has been disabled.", "success")

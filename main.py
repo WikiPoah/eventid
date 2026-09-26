@@ -35,7 +35,11 @@ migrate = Migrate()
 
 
 def create_app(test_config=None):
-    """Create and configure an eventid application instance."""
+    """Bind extensions and routes after applying environment and test overrides.
+
+    Normalize database URLs here, before SQLAlchemy sees them. Explicit test
+    configuration wins so a production environment cannot redirect test writes.
+    """
 
     application = Flask(
         __name__,
@@ -147,6 +151,8 @@ def create_app(test_config=None):
         }
     )
 
+    # Trust exactly one forwarding proxy, as in the Render deployment. Do not
+    # expose this production configuration directly to untrusted client headers.
     if application.config.get("TRUST_PROXY"):
         application.wsgi_app = ProxyFix(
             application.wsgi_app, x_for=1, x_proto=1, x_host=1
@@ -169,7 +175,8 @@ def create_app(test_config=None):
 
     @application.before_request
     def load_logged_in_user():
-        # Load the current user once for authorization throughout the request
+        # auth_version invalidates all old cookies after a password change;
+        # tracked token hashes additionally allow revoking one device at a time.
         user_id = session.get("user_id")
         g.user = db.session.get(User, user_id) if user_id is not None else None
         if g.user is not None and session.get("auth_version") != g.user.auth_version:

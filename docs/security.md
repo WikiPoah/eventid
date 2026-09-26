@@ -26,7 +26,9 @@ contents, or attendee exports.
 ## Authentication destinations and recommendations
 
 Public discovery never grants access to private, Draft, or Cancelled events.
-State-changing and personal routes remain authenticated and CSRF-protected.
+Personal and organiser actions require authentication; form writes are
+CSRF-protected. Signup/login and signed email recovery/verification links are
+accessible before login; email verification is an expiring signed-link GET.
 Post-login destinations accept only local absolute paths; external URLs,
 protocol-relative paths, schemes, hosts, and backslash variants are discarded.
 

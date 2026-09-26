@@ -13,9 +13,11 @@ flowchart LR
     Events --> Images[(Persistent event images)]
 ```
 
-Blueprint routes enforce authorization server-side; templates only decide which valid actions to display. Private, Draft, and Cancelled events pass through the shared visibility policy. All state changes use POST and CSRF protection.
+Blueprint routes enforce authorization server-side; templates only decide which valid actions to display. Private, Draft, and Cancelled events pass through the shared visibility policy. Form mutations use POST and CSRF protection. Email verification is the explicit
+signed, expiring-link GET exception.
 
-Anonymous visitors may use discovery routes and view Published public events. Personal pages and every state-changing or organiser route retain authentication. Login destinations are limited to absolute internal paths; schemes, hosts, protocol-relative paths, and backslashes are rejected.
+Anonymous visitors may use discovery routes and view Published public events. Personal pages and organiser management require authentication; signup/login and
+emailed account recovery/verification are deliberately accessible before login. Login destinations are limited to absolute internal paths; schemes, hosts, protocol-relative paths, and backslashes are rejected.
 
 ## Lifecycle and relationships
 
@@ -31,7 +33,7 @@ The authenticated landing page calculates recommendations without storing a prof
 
 Public homepage discovery is queried separately from recommendations and includes only public, Published, non-expired events. A reusable carousel partial renders each section with a unique viewport and local controls. JavaScript measures the current card and CSS gap for each movement and maintains state within that carousel; native horizontal scrolling remains usable without JavaScript. Entrance animation is applied to slide wrappers, while carousel movement uses viewport scrolling, so transforms cannot conflict.
 
-Calendar uses one authorised outer-join query for the current user’s attendance and ownership, then deduplicates naturally by event primary key. Ownership permits Draft visibility; attendance permits Published and Cancelled visibility. Events are split by end time into upcoming and past schedule sections.
+Calendar uses one authorised outer-join query for the current user’s attendance and ownership, then deduplicates naturally by event primary key. Ownership permits Draft visibility; attendance permits Published and Cancelled visibility. Events are grouped by start date into the requested monthly grid.
 
 Category overlap scores highest, city overlap follows, attendance popularity supports cold starts, and start time plus event ID provide deterministic tie-breaking. No profile attributes or another user’s private history are used.
 

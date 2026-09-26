@@ -18,6 +18,7 @@ class User(db.Model):
     username = db.Column(db.String(20), unique=True, nullable=False)
     email = db.Column(db.String(255), unique=True, nullable=False)
     password_hash = db.Column(db.String(255), nullable=False)
+    # Bumping this version invalidates existing cookies and signed email links.
     auth_version = db.Column(db.Integer, nullable=False, default=0, server_default="0")
     username_changed_at = db.Column(db.DateTime)
     email_changed_at = db.Column(db.DateTime)
@@ -33,7 +34,7 @@ class User(db.Model):
     country = db.Column(db.String(100))
     city = db.Column(db.String(100))
 
-    # Track organiser permissions and account creation date
+    # Organiser is a profile label, not a role gate: management checks ownership.
     is_organiser = db.Column(db.Boolean, default=False, nullable=False)
     created_at = db.Column(
         db.DateTime,

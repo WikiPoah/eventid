@@ -95,7 +95,7 @@ flask --app main:app seed-demo-data
 flask --app main:app run
 ```
 
-The seed provides five fictional users, fourteen events, categories, confirmed/pending registrations, favourites, demo images and relative event dates. Re-running it preserves record identities rather than creating duplicates.
+The seed provides five fictional users, fourteen events, categories, confirmed registrations, favourites, demo images and relative event dates. Re-running it preserves record identities rather than creating duplicates.
 
 | Account | Username | Password |
 | --- | --- | --- |
