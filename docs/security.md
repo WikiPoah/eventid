@@ -15,7 +15,8 @@ Every response receives `nosniff`, clickjacking protection, a strict-origin
 referrer policy, a restrictive permissions policy, and a self-hosted Content
 Security Policy. Production HTTPS responses also receive HSTS. The CSP allows
 only same-origin scripts, styles, fonts, forms, and images (plus data images),
-so inline scripts and unreviewed third-party assets are not permitted.
+so inline scripts and unreviewed third-party assets are not permitted. Google
+Maps frames are the explicit exception to the same-origin resource policy.
 
 Uploaded images are authorized through their owning event, validated by file
 signature and size, stored under generated names, and served with `nosniff` and
@@ -44,10 +45,10 @@ hashes remain valid.
 
 Separate address-based limits protect login, signup, private-event detail access,
 attendance changes, favourites, check-in, event editing, attendance decisions,
-invite regeneration, and deletion. Production must configure shared persistent
-rate-limit storage; in-memory counters are suitable only for a single local
-process. Password recovery and email verification remain deferred until a real
-email delivery provider is configured.
+invite regeneration, and deletion. The reference single-process deployment uses
+in-memory counters, which reset on restart. Configure shared persistent rate-limit storage before adding
+processes or instances. Password recovery and email verification are implemented;
+actual delivery requires a configured Resend API key and verified sender.
 
 ## Compromised-secret history cleanup
 

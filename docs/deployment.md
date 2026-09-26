@@ -33,3 +33,27 @@ Use Render PostgreSQL recovery/export features or `pg_dump` with a short-lived c
 For local SQLite, stop the app and copy `instance/eventid.db` plus `instance/event_images`. Restore both together, then run migrations. Preserve environment secrets independently; database backups do not contain the Flask secret.
 
 Test downgrade/upgrade compatibility on a disposable copy, never directly on the only production database. The health endpoint reports only `{"status":"ok"}` or `{"status":"unhealthy"}`.
+
+## Hosted acceptance check
+
+Local production-like validation does not establish that a hosted service works.
+Before sharing a hosted demo:
+
+1. Deploy the reviewed `main` revision and confirm the build, migration and
+   Waitress startup logs succeed; `/health` must return HTTP 200 with `status=ok`.
+2. Confirm HTTPS, secure session cookies and the expected service/database/disk
+   configuration. Use a newly generated secret; never reuse a historically
+   exposed development key.
+3. On a dedicated demo service, enable `ALLOW_DEMO_SEED`, seed through the runtime
+   Shell, then disable it. Check the attendee and organiser journeys documented
+   in the README from separate browser sessions.
+4. Upload an event image and verify it survives a service restart/redeploy.
+5. If demonstrating account emails, configure a verified sender and test real
+   verification and password recovery delivery. Otherwise state clearly that
+   the hosted demo does not deliver account emails.
+
+The release preparation was checked locally against disposable PostgreSQL 16:
+provider URL normalization, a fresh and repeated migration upgrade, schema drift,
+category seeding, guarded/idempotent demo seeding, upload-file creation, production
+settings, actual Waitress startup and database-backed health/public routes. Disk
+survival across Render deploys and external mail delivery were not verified.
