@@ -23,10 +23,9 @@ from wtforms.validators import (
 from wtforms.widgets import HiddenInput
 
 
-# Collect and validate information when creating or editing an event
 class EventForm(FlaskForm):
+    """Shared create/edit contract, including cross-field lifecycle rules."""
 
-    # Collect the event's main details
     title = StringField(
         "Event Title",
         validators=[
@@ -43,7 +42,6 @@ class EventForm(FlaskForm):
         ],
     )
 
-    # Collect the event's location information
     venue_name = StringField(
         "Venue Name",
         validators=[
@@ -110,7 +108,6 @@ class EventForm(FlaskForm):
         places=6,
     )
 
-    # Collect the event's schedule and availability information
     start_datetime = DateTimeLocalField(
         "Start Date & Time",
         validators=[
@@ -177,7 +174,6 @@ class EventForm(FlaskForm):
         ],
     )
 
-    # Allow the organiser to upload or remove an optional event image
     image = FileField(
         "Event Image",
         validators=[
@@ -206,7 +202,6 @@ class EventForm(FlaskForm):
 
     submit = SubmitField("Save Event")
 
-    # Ensure the event ends after it begins
     def validate_end_datetime(
         self,
         field,

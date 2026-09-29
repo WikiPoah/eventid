@@ -17,7 +17,6 @@ from app.models.event_category import EventCategory
 from app.models.favourite import Favourite
 from app.models.user import User
 
-# Define the default event categories available in the application
 EVENT_CATEGORIES = [
     "Arts & Culture",
     "Community & Charity",
@@ -33,6 +32,7 @@ EVENT_CATEGORIES = [
 
 
 def seed_categories():
+    """Add missing defaults without replacing linked category records."""
 
     # Preserve existing event links when upgrading the former category name.
     technology = Category.query.filter_by(name="Technology").first()
@@ -40,16 +40,11 @@ def seed_categories():
     if technology is not None and technology_and_gaming is None:
         technology.name = "Technology & Gaming"
 
-    # Insert each predefined category if it doesn't already exist
     for category_name in EVENT_CATEGORIES:
-
         existing_category = Category.query.filter_by(name=category_name).first()
-
         if existing_category is None:
-
             db.session.add(Category(name=category_name))
 
-    # Save any newly added categories to the database
     db.session.commit()
 
 

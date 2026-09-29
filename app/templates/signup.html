@@ -8,7 +8,7 @@
 
     <div class="auth-layout">
 
-        <!-- Display the eventid branding panel -->
+        <!-- EventID branding -->
 
         <aside class="auth-brand">
 
@@ -97,7 +97,7 @@
 
         </aside>
 
-        <!-- Display the account creation form -->
+        <!-- Account creation form -->
 
         <section class="auth-card">
 
@@ -124,7 +124,6 @@
                     value="{{ csrf_token() }}"
                 >
 
-                <!-- Display the first name field -->
 
                 {% if next_url %}
                 <input type="hidden" name="next" value="{{ next_url }}">
@@ -147,7 +146,6 @@
 
                 </div>
 
-                <!-- Display the last name field -->
 
                 <div class="form-field">
 
@@ -166,7 +164,6 @@
 
                 </div>
 
-                <!-- Display the username field -->
 
                 <div class="form-field">
 
@@ -187,7 +184,6 @@
 
                 </div>
 
-                <!-- Display the email field -->
 
                 <div class="form-field">
 
@@ -206,7 +202,6 @@
 
                 </div>
 
-                <!-- Display the password field -->
 
                 <div class="form-field">
 
@@ -228,7 +223,6 @@
 
                 </div>
 
-                <!-- Display the password confirmation field -->
 
                 <div class="form-field">
 
@@ -248,7 +242,6 @@
 
                 </div>
 
-                <!-- Display the account creation button -->
 
                 <button
                     type="submit"

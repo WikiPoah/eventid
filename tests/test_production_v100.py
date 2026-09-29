@@ -69,7 +69,7 @@ def test_sqlite_test_override_wins_over_production_database(monkeypatch):
 def test_production_requires_explicit_database_configuration(monkeypatch):
     monkeypatch.setenv("FLASK_ENV", "production")
     monkeypatch.setenv("SECRET_KEY", "production-config-test")
-    monkeypatch.delenv("DATABASE_URL")
+    monkeypatch.delenv("DATABASE_URL", raising=False)
 
     with pytest.raises(RuntimeError, match="DATABASE_URL is required"):
         create_app()

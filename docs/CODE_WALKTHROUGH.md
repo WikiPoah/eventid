@@ -19,29 +19,34 @@ validate visibility/lifecycle/deadline/ownership → reject duplicate/full →
 insert attendance → commit → redirect with feedback. Compare this with owner
 approval: it promotes Pending to Going under the same event lock.
 
-## Where to read
+## File Map
 
 Paths below are relative to the repository root.
 
-| File/module | Responsibility and useful entry points |
-| --- | --- |
-| [main.py](../main.py) | Factory, identity loading, headers/errors, health and seed CLI commands |
-| [app/config.py](../app/config.py) | Local/test/production defaults and `database_url()` |
-| [app/database/db.py](../app/database/db.py), [app/rate_limit.py](../app/rate_limit.py) | Unbound extension objects; initialize per application |
-| [app/decorators.py](../app/decorators.py) | `login_required`, including preserving the intended return destination |
-| [app/routes/auth.py](../app/routes/auth.py) | Signup/login, safe redirects, signed email tokens, profile/settings, session revocation |
-| [app/routes/events.py](../app/routes/events.py) | Discovery, visibility/ownership helpers, registration, private decisions, tickets/check-in, calendar, management/export |
-| [app/forms/event_forms.py](../app/forms/event_forms.py) | WTForms fields and cross-field date/invitation validation |
-| [app/models](../app/models) | Relational identities, constraints, association records and security history |
-| [app/event_images.py](../app/event_images.py) | Signature/size/pixel checks, normalized crop, generated names and file cleanup |
-| [app/email_delivery.py](../app/email_delivery.py) | Optional Resend delivery, test outbox and graceful missing-provider behavior |
-| [app/discovery.py](../app/discovery.py), [app/recommendations.py](../app/recommendations.py) | Public homepage groups and bounded deterministic attendance-based ranking |
-| [app/database/seed.py](../app/database/seed.py) | Categories and guarded, repeatable demo content |
-| [app/templates](../app/templates) | Base navigation/feedback, shared cards/carousels and page-specific forms/states |
-| [app/static/js/script.js](../app/static/js/script.js) | Form enhancements, menu/filter behavior, image preview, reveal and carousel controls |
-| [app/static/css/style.css](../app/static/css/style.css) | Ordered stylesheet imports; shared/page/responsive rules depend on the cascade |
-| [migrations](../migrations), [tests](../tests) | Schema history and behavioral/regression evidence |
-| [.github/workflows/ci.yml](../.github/workflows/ci.yml), [render.yaml](../render.yaml) | CI quality gates and the reference deployment |
+| File/module | Responsibility | Important concepts | Understand before an interview |
+| --- | --- | --- | --- |
+| [main.py](../main.py) | Application factory, request hooks, response headers, errors, health and CLI commands | Extension/blueprint setup, tracked-session validation, production proxy handling | Why settings are resolved before extensions and why authorization still happens in routes |
+| [app/config.py](../app/config.py) | Local, test and production defaults | Environment boundaries, PostgreSQL URL normalization, SQLite engine options | Which values production requires and why explicit test overrides win |
+| [app/database/db.py](../app/database/db.py), [app/rate_limit.py](../app/rate_limit.py) | Unbound SQLAlchemy/Migrate/Limiter objects | Per-application initialization | Why extension objects exist outside the factory without binding global app state |
+| [app/models/event.py](../app/models/event.py), [app/models/attendance.py](../app/models/attendance.py) | Event lifecycle/access data and user registration state | Query indexes, pair-level uniqueness, capacity-counting status, ticket/check-in state | Why Attendance is an explicit association model rather than a plain many-to-many table |
+| [app/models/user.py](../app/models/user.py), [app/models/security.py](../app/models/security.py) | Account identity, event ownership, revocable sessions and security history | `auth_version`, hashed session tokens, profile label versus authorization | How password changes invalidate cookies and email links |
+| [app/models/category.py](../app/models/category.py), [app/models/event_category.py](../app/models/event_category.py), [app/models/favourite.py](../app/models/favourite.py) | Category and saved-event associations | Composite primary keys and view-only convenience relationships | Which constraints prevent duplicate associations |
+| [app/routes/auth.py](../app/routes/auth.py) | Signup/login, profile/settings, email flows and session revocation | Password hashing/policy, safe redirects, purpose-separated signed tokens | Trace login and password reset through cookie/session invalidation |
+| [app/routes/events.py](../app/routes/events.py) | Discovery, visibility, management, registration, private decisions, calendar, tickets/check-in and exports | Server authorization, lifecycle rules, capacity lock, token validation, ICS/CSV escaping | Trace one public registration and one private approval from request to commit |
+| [app/decorators.py](../app/decorators.py), [app/forms/event_forms.py](../app/forms/event_forms.py) | Authentication redirect and event input contract | Local return destinations and cross-field date/invitation validation | Why route authorization cannot be replaced by form or template checks |
+| [app/event_images.py](../app/event_images.py) | Validate, crop and persist event images | Byte/pixel limits, generated WebP names, atomic replace and cleanup | Which checks distrust the filename and how database/file failures are handled |
+| [app/email_delivery.py](../app/email_delivery.py) | Optional transactional email adapter | Test outbox and graceful missing-provider behavior | Which account flows still work when Resend is absent |
+| [app/discovery.py](../app/discovery.py), [app/recommendations.py](../app/recommendations.py) | Public homepage groups and personalized ranking | Bounded query set, aggregate popularity, deterministic tie-breaks | Why this is a small heuristic rather than an ML claim |
+| [app/database/seed.py](../app/database/seed.py) | Default categories and fictional demo data | Environment guard, stable demo identities, repeatable refresh behavior | What re-seeding preserves and why it is unsafe on a real-user service |
+| [app/templates](../app/templates) | Base navigation/feedback, reusable event UI and page-specific states | Server-rendered authorization state, POST fallbacks and accessible controls | Which interactions still work without JavaScript |
+| [app/static/js/script.js](../app/static/js/script.js) | Progressive form, navigation, image, reveal and carousel behavior | Data attributes, CSRF-carrying `FormData`, focus/motion/history handling | Why JavaScript enhances rather than owns application state |
+| [app/static/css](../app/static/css) | Tokens, shared components, page modules and responsive rules | Explicit import order, focus states, motion preference and mobile overflow | How the cascade is organized without a build framework |
+| [migrations](../migrations) | Ordered schema evolution | Single revision chain, data backfills and SQLite batch operations | Why a model edit alone cannot safely update deployed databases |
+| [tests/conftest.py](../tests/conftest.py), [tests/test_demo_journeys.py](../tests/test_demo_journeys.py) | Isolated fixtures and realistic attendee/organiser flows | Temporary databases/uploads, real forms, CSRF, authentication and persisted transitions | What these tests prove beyond a route returning HTTP 200 |
+| [tests/test_attendance.py](../tests/test_attendance.py), [tests/test_production_v100.py](../tests/test_production_v100.py), [tests/test_migrations.py](../tests/test_migrations.py) | Capacity races, production configuration and schema verification | Competing requests, URL normalization, migration drift | Which production claims also received PostgreSQL verification outside CI |
+| [tests](../tests) | Focused route, security, image, calendar, email and UI regression coverage | Authorization and state-transition assertions | What is covered and why browser/PostgreSQL checks remain separate |
+| [.github/workflows/ci.yml](../.github/workflows/ci.yml), [pyproject.toml](../pyproject.toml) | Automated quality gates and tool policy | Python 3.12, Black, Ruff, coverage floor, migration and hygiene checks | What a green pull request does and does not establish |
+| [render.yaml](../render.yaml), [docs/deployment.md](deployment.md) | Reference Render/PostgreSQL deployment and acceptance procedure | Pre-deploy migrations, Waitress, health check, disk and memory-limiter limits | Which checks still require a real hosted environment |
 
 ## Data and authentication
 
@@ -74,6 +79,12 @@ purposes. Password reset increments the version, making that link unusable
 again. Email verification records a timestamp but is not a signup/registration
 gate. `send_email()` captures a test outbox in tests and returns failure without
 blocking ordinary signup if no provider is configured.
+
+Email reset/verification links are cryptographically signed and timed. Private
+invitation and ticket tokens use a different design: they are high-entropy,
+opaque random values stored in the database, not self-contained signed tokens.
+Invitation possession grants only the access checked by the private-event flow;
+ticket routes also require the attendee or owning organiser identity.
 
 ## Registration, privacy and capacity
 
@@ -222,3 +233,22 @@ For an interview, demonstrate one invariant with code and a regression test:
 last-seat approval, safe signup return, revoked-session rejection or pending
 request → usable ticket → check-in. Explain the local SQLite tradeoff and what
 was verified on PostgreSQL without claiming a production-scale deployment.
+
+## Questions I should be able to answer
+
+- Why use an application factory, and when are configuration and extensions bound? See [Start with one request](#start-with-one-request) and `main.py`.
+- How do public registration and private approval prevent oversubscription? What happens when two users compete for the last place? See [Registration, privacy and capacity](#registration-privacy-and-capacity) and `_locked_event()`.
+- Why does PostgreSQL matter for capacity locking, and how is the SQLite behavior different? See [Registration, privacy and capacity](#registration-privacy-and-capacity).
+- Which states consume capacity, and why do Pending requests not reserve seats? See `Attendance` and [Registration, privacy and capacity](#registration-privacy-and-capacity).
+- How do private links, email allowlists, rotation, revocation and restoration interact? See `event_details()` and the private-attendance decision routes.
+- Which tokens are signed, which are opaque bearer values, and what extra authorization protects tickets? See [Data and authentication](#data-and-authentication) and [Tickets, check-in, calendar and saved events](#tickets-check-in-calendar-and-saved-events).
+- What makes sequential check-in idempotent, and what concurrent guarantee is deliberately not claimed? See [Tickets, check-in, calendar and saved events](#tickets-check-in-calendar-and-saved-events).
+- How are browser sessions revoked after a password change or reset? See [Data and authentication](#data-and-authentication) and `load_logged_in_user()`.
+- How are open redirects prevented while preserving an invitation return URL? See `_safe_next_url()` and `login_required`.
+- What do CSRF and CSP each protect, and why does the check-in progress use native `<progress>`? See [Security and frontend decisions](#security-and-frontend-decisions).
+- Why use Alembic migrations, and which revisions required data backfills? See [Schema, configuration, demo and verification](#schema-configuration-demo-and-verification).
+- How does image upload processing handle untrusted content and partial failure? See `app/event_images.py` and the create/edit routes.
+- How are recommendations calculated, bounded and tested? See `app/recommendations.py` and the recommendation tests.
+- What does CI verify, and which browser, PostgreSQL, email and hosted checks remain outside it? See [Schema, configuration, demo and verification](#schema-configuration-demo-and-verification).
+- Why is demo seeding guarded, and what does a repeated seed preserve versus refresh? See `app/database/seed.py`.
+- What limits a single-instance Render deployment, and what would change for thousands of users? Shared rate-limit storage, object storage, background email work and database-backed search/pagination are the first scaling boundaries to discuss.

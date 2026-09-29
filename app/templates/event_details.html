@@ -4,7 +4,7 @@
 
 {% block content %}
 
-<!-- Display the page heading -->
+<!-- Page heading -->
 
 <div class="page-heading event-details-heading">
 
@@ -70,7 +70,7 @@
 </p>
 {% endif %}
 
-<!-- Display the event banner -->
+<!-- Event banner -->
 
 {% if event.image_path %}
 
@@ -86,7 +86,7 @@
 
 {% endif %}
 
-<!-- Display important event notices -->
+<!-- Event notices -->
 
 {% if event.status == "Cancelled" %}
 
@@ -114,7 +114,7 @@
 
 {% endif %}
 
-<!-- Display the event content -->
+<!-- Event content -->
 
 <p class="back-link event-details-back-link">
     <a href="{{ url_for('events.browse_events') }}">← Back to Browse Events</a>
@@ -122,7 +122,7 @@
 
 <div class="details-grid event-details-grid{% if g.user and event.organiser_id == g.user.user_id and event.privacy == 'Private' and not preview_mode %} private-organiser-layout{% endif %}">
 
-    <!-- Display the event information -->
+    <!-- Event information -->
 
     <section class="panel event-about-panel">
 
@@ -272,7 +272,7 @@
 
     </section>
 
-    <!-- Display the attendance panel -->
+    <!-- Attendance panel -->
 
     <aside class="panel attendance-panel event-attendance-panel{% if g.user and event.organiser_id == g.user.user_id and event.privacy == 'Private' and not preview_mode %} private-management-panel{% endif %}" id="attendees">
 

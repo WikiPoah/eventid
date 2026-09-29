@@ -308,6 +308,7 @@ def _private_attendance_response(event_id, attendance, message):
 @events.route("/manage-events")
 @login_required
 def manage_events():
+    """Render owner event summaries without per-event attendance queries."""
 
     # Count registrations once and join the totals to every organised event
     attendance_counts = (
@@ -386,7 +387,6 @@ def manage_events():
         "nearly_full_events": len(nearly_full_events),
     }
 
-    # Display the organiser dashboard using the aggregated event information
     return render_template(
         "manage_events.html",
         upcoming_events=upcoming_events,
@@ -712,17 +712,11 @@ def calendar():
 
 @events.route("/events")
 def browse_events():
+    """List eligible public events with filters and typo-tolerant search."""
 
-    # Retrieve the user's search and filter selections
     search = request.args.get("search", "").strip()
-
-    # Retrieve all valid selected category identifiers.
     selected_category_ids = set(request.args.getlist("category", type=int))
-
-    # Retrieve the selected city
     selected_city = request.args.get("city", "").strip()
-
-    # Retrieve all categories for the filter dropdown
     categories = Category.query.order_by(Category.name).all()
 
     # Retrieve all unique cities that have public events
@@ -756,7 +750,6 @@ def browse_events():
             .distinct()
         )
 
-    # Filter events by city
     if selected_city:
         statement = statement.where(Event.city == selected_city)
 
@@ -822,7 +815,6 @@ def browse_events():
             }
         )
 
-    # Display the public events page
     return render_template(
         "browse_events.html",
         events=pagination.items,
@@ -839,8 +831,8 @@ def browse_events():
 @events.route("/events/<int:event_id>")
 @limiter.limit(lambda: current_app.config["PRIVATE_LINK_RATE_LIMIT"])
 def event_details(event_id):
+    """Render an authorized event and consume a valid private invitation."""
 
-    # Retrieve the event and relationships required by the details page
     event = db.first_or_404(
         select(Event)
         .where(Event.event_id == event_id)
@@ -1147,6 +1139,7 @@ def _locked_event(event_id):
 @events.route("/events/<int:event_id>/attend", methods=["POST"])
 @limiter.limit(lambda: current_app.config["ATTENDANCE_RATE_LIMIT"])
 def attend_event(event_id):
+    """Create a public Going or private Pending registration under the lock."""
 
     if g.user is None:
 
@@ -1329,8 +1322,8 @@ def attend_event(event_id):
 @limiter.limit(lambda: current_app.config["ATTENDANCE_RATE_LIMIT"])
 @login_required
 def leave_event(event_id):
+    """Remove the current user's accessible registration record."""
 
-    # Retrieve the selected event or return a 404 error if it does not exist
     event = db.get_or_404(
         Event,
         event_id,
@@ -1388,8 +1381,8 @@ def leave_event(event_id):
 @events.route("/my-attending-events")
 @login_required
 def my_attending_events():
+    """Keep the former attendance URL as a stable bookmark."""
 
-    # Preserve existing bookmarks while keeping one attendance-page query
     return redirect(url_for("events.my_events"))
 
 
@@ -1399,6 +1392,7 @@ def my_attending_events():
 )
 @login_required
 def create_event():
+    """Create an owner event and clean up an uploaded image if commit fails."""
 
     form = EventForm()
 
@@ -1541,6 +1535,7 @@ def create_event():
 )
 @login_required
 def edit_event(event_id):
+    """Update an owner event, categories and optional image transactionally."""
 
     event = _owned_event_or_404(event_id)
 
@@ -1949,6 +1944,7 @@ def delete_event(event_id):
 @events.route("/events/<int:event_id>/attendees/export")
 @login_required
 def export_attendees(event_id):
+    """Export owner-visible attendance while neutralizing CSV formulas."""
 
     event = _owned_event_or_404(event_id)
 

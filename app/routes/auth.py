@@ -221,8 +221,7 @@ def _signup_form_values(
     username="",
     email="",
 ):
-
-    # Keep non-sensitive signup values after validation errors
+    """Return only non-sensitive values that may be repopulated after an error."""
 
     return {
         "first_name": first_name,
@@ -238,10 +237,9 @@ def _signup_form_values(
     methods=["POST"],
 )
 def signup():
+    """Create an account and preserve only a validated local return journey."""
 
     next_url = _safe_next_url(request.values.get("next"))
-
-    # Redirect users who are already logged in
 
     if "user_id" in session:
 
@@ -250,9 +248,6 @@ def signup():
     form_values = _signup_form_values()
 
     if request.method == "POST":
-
-        # Retrieve and clean the information entered by the user
-
         first_name = request.form.get("first_name", "").strip()
         last_name = request.form.get("last_name", "").strip()
         username = request.form.get("username", "").strip().lower()
@@ -260,16 +255,12 @@ def signup():
         password = request.form.get("password", "")
         confirm_password = request.form.get("confirm_password", "")
 
-        # Keep non-sensitive information available after validation errors
-
         form_values = _signup_form_values(
             first_name=first_name,
             last_name=last_name,
             username=username,
             email=email,
         )
-
-        # Ensure all required fields have been completed
 
         if (
             not first_name
@@ -290,8 +281,6 @@ def signup():
                 form_values=form_values,
                 next_url=next_url,
             )
-
-        # Prevent the user from registering with mismatched passwords
 
         if password != confirm_password:
 
@@ -315,8 +304,6 @@ def signup():
                 next_url=next_url,
             )
 
-        # Keep usernames within the supported length
-
         if not 3 <= len(username) <= 20:
 
             flash(
@@ -330,8 +317,6 @@ def signup():
                 next_url=next_url,
             )
 
-        # Retrieve matching usernames and emails
-
         existing_credentials = db.session.execute(
             select(
                 User.username,
@@ -343,8 +328,6 @@ def signup():
                 )
             )
         ).all()
-
-        # Prevent duplicate usernames
 
         if any(row.username == username for row in existing_credentials):
 
@@ -359,8 +342,6 @@ def signup():
                 next_url=next_url,
             )
 
-        # Prevent duplicate email addresses
-
         if any(row.email == email for row in existing_credentials):
 
             flash(
@@ -374,11 +355,7 @@ def signup():
                 next_url=next_url,
             )
 
-        # Securely hash the password
-
         password_hash = generate_password_hash(password)
-
-        # Create the new user
 
         new_user = User(
             first_name=first_name,
@@ -387,8 +364,6 @@ def signup():
             email=email,
             password_hash=password_hash,
         )
-
-        # Save the new user
 
         db.session.add(new_user)
 
@@ -423,8 +398,6 @@ def signup():
 
         send_email(*verification_email)
 
-        # Automatically log the new user in
-
         session.clear()
         session.permanent = True
         session["user_id"] = new_user_id
@@ -451,8 +424,7 @@ def signup():
     methods=["POST"],
 )
 def login():
-
-    # Redirect users who are already logged in
+    """Authenticate and replace pre-login state with a tracked session."""
 
     if "user_id" in session:
 
@@ -461,9 +433,6 @@ def login():
     next_url = _safe_next_url(request.values.get("next"))
 
     if request.method == "POST":
-
-        # Retrieve the login credentials entered by the user
-
         identifier = (
             request.form.get("identifier") or request.form.get("username") or ""
         ).strip()
@@ -474,8 +443,6 @@ def login():
         )
 
         normalized_identifier = identifier.lower()
-
-        # Ensure both login fields have been completed
 
         if not identifier or not password:
 
@@ -489,8 +456,6 @@ def login():
                 next_url=next_url,
                 identifier=identifier,
             )
-
-        # Look up the account associated with the entered username or email
 
         user = db.session.execute(
             select(User).where(
@@ -513,8 +478,6 @@ def login():
                 next_url=next_url,
                 identifier=identifier,
             )
-
-        # Verify that the entered password matches the stored password hash
 
         if not check_password_hash(
             user.password_hash,
@@ -669,8 +632,7 @@ def resend_verification():
 
 @auth.errorhandler(429)
 def login_rate_limit_exceeded(_error):
-
-    # Display a helpful response when login attempts exceed the limit
+    """Render the account-specific response when an auth limit is exceeded."""
 
     flash(
         "Too many login attempts. Please wait before trying again.",
@@ -687,8 +649,7 @@ def login_rate_limit_exceeded(_error):
 
 @auth.route("/logout", methods=["POST"])
 def logout():
-
-    # Remove the current user's session information
+    """Revoke the tracked browser session before clearing its signed cookie."""
 
     token = session.get("session_token")
     if g.user is not None and token:
