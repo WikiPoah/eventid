@@ -2,6 +2,7 @@ from pathlib import Path
 from uuid import uuid4
 
 from flask import current_app
+from PIL import Image, ImageOps, UnidentifiedImageError
 
 
 def _detected_extension(content):
@@ -43,23 +44,64 @@ def validate_event_image(file_storage):
     if detected_extension is None or detected_extension != supplied_extension:
         return None, "The uploaded file is not a valid supported image."
 
+    try:
+        with Image.open(file_storage.stream) as image:
+            width, height = image.size
+            if width * height > current_app.config["EVENT_IMAGE_MAX_PIXELS"]:
+                return None, "The event image dimensions are too large."
+            image.verify()
+    except (Image.DecompressionBombError, UnidentifiedImageError, OSError, SyntaxError):
+        return None, "The uploaded file is not a valid supported image."
+    finally:
+        file_storage.stream.seek(0)
+
     return detected_extension, None
 
 
-def save_event_image(file_storage, extension):
-    """Save an image under a generated filename in the instance directory."""
+def save_event_image(file_storage, _extension, crop_x=50, crop_y=50):
+    """Normalize, crop and save an image without retaining uploaded metadata."""
 
     upload_directory = Path(current_app.config["EVENT_IMAGE_UPLOAD_FOLDER"])
     upload_directory.mkdir(parents=True, exist_ok=True)
-    filename = f"{uuid4().hex}.{extension}"
+    filename = f"{uuid4().hex}.webp"
     target = upload_directory / filename
+    temporary = upload_directory / f".{uuid4().hex}.tmp"
     try:
-        file_storage.save(target)
+        with Image.open(file_storage.stream) as source:
+            image = ImageOps.exif_transpose(source)
+            if image.mode in {"RGBA", "LA"}:
+                canvas = Image.new("RGB", image.size, "white")
+                alpha = image.getchannel("A")
+                canvas.paste(image.convert("RGB"), mask=alpha)
+                image = canvas
+            else:
+                image = image.convert("RGB")
+
+            width, height = image.size
+            target_ratio = 16 / 9
+            if width / height > target_ratio:
+                crop_width = round(height * target_ratio)
+                left = round((width - crop_width) * (crop_x / 100))
+                box = (left, 0, left + crop_width, height)
+            else:
+                crop_height = round(width / target_ratio)
+                top = round((height - crop_height) * (crop_y / 100))
+                box = (0, top, width, top + crop_height)
+
+            image = image.crop(box).resize(
+                current_app.config["EVENT_IMAGE_OUTPUT_SIZE"], Image.Resampling.LANCZOS
+            )
+            image.save(temporary, format="WEBP", quality=85, method=6)
+        temporary.chmod(0o600)
+        temporary.replace(target)
     except OSError:
         # Remove a partial upload before returning control to the transaction
-        if target.is_file():
-            target.unlink()
+        for path in (temporary, target):
+            if path.is_file():
+                path.unlink()
         raise
+    finally:
+        file_storage.stream.seek(0)
     return filename
 
 

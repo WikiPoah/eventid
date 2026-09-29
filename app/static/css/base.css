@@ -6,6 +6,7 @@
     --ink: #17233d;
     --muted: #5f6d85;
     --canvas: #f4f7fc;
+    --border: #dde3ee;
     --focus: #f59e0b;
 }
 
@@ -71,6 +72,23 @@ textarea {
 :focus-visible {
     outline: 3px solid var(--focus);
     outline-offset: 3px;
+}
+
+.form-field input:focus-visible,
+.form-field select:focus-visible,
+.form-field textarea:focus-visible,
+.nav-search input:focus-visible,
+.filter-field input:focus-visible,
+.filter-field select:focus-visible {
+    outline: 3px solid var(--focus);
+    outline-offset: 2px;
+}
+
+[aria-current="page"] {
+    text-decoration: underline;
+    text-decoration-color: currentColor;
+    text-decoration-thickness: 2px;
+    text-underline-offset: 7px;
 }
 
 
@@ -167,4 +185,19 @@ textarea {
         transform: none;
     }
 
+}
+
+@media (forced-colors: active) {
+    :focus-visible {
+        outline: 3px solid Highlight;
+    }
+
+    .button,
+    .badge,
+    .panel,
+    input,
+    select,
+    textarea {
+        border: 1px solid CanvasText;
+    }
 }

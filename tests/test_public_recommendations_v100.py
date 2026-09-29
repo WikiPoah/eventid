@@ -125,6 +125,79 @@ def test_anonymous_visibility_excludes_non_public_events(
     assert client.get(f"/events/{cancelled_id}").status_code == 403
 
 
+def test_browse_search_matches_title_fragments_and_small_typos(client, event_factory):
+    event_factory(title="Berlin Indie Music Night")
+    event_factory(title="Community Gardening Workshop")
+
+    partial_response = client.get("/events?search=music")
+    typo_response = client.get("/events?search=muisc+nigt")
+
+    assert b"Berlin Indie Music Night" in partial_response.data
+    assert b"Berlin Indie Music Night" in typo_response.data
+    assert b"Community Gardening Workshop" not in typo_response.data
+
+
+def test_browse_search_explains_supported_input(client):
+    response = client.get("/events")
+
+    assert b"Title, description, venue or category..." in response.data
+
+
+def test_browse_searches_description_venue_city_and_category(
+    app, client, event_factory
+):
+    category_id = add_category(app, "Creative Coding")
+    event_id = event_factory(
+        title="A Different Name",
+        description="Learn experimental projection techniques.",
+        venue_name="Riverside Studio",
+        city="Potsdam",
+    )
+    categorise(app, event_id, category_id)
+
+    for search_term in ["projection", "Riverside", "Potsdam", "Creative Coding"]:
+        response = client.get("/events", query_string={"search": search_term})
+        assert b"A Different Name" in response.data
+
+    typo_response = client.get("/events?search=projetcion")
+    assert b"A Different Name" in typo_response.data
+
+
+def test_browse_shows_result_count_and_removable_active_filters(
+    app, client, event_factory
+):
+    category_id = add_category(app, "Filter Summary")
+    event_id = event_factory(title="Summary Match", city="Hamburg")
+    categorise(app, event_id, category_id)
+
+    response = client.get(f"/events?search=Summary&category={category_id}&city=Hamburg")
+
+    assert b"1</strong> event found" in response.data
+    assert b"Search:" in response.data
+    assert b"#Filter Summary" in response.data
+    assert b"Hamburg" in response.data
+    assert b"Clear all" in response.data
+
+
+def test_browse_can_match_any_of_multiple_categories(app, client, event_factory):
+    music_id = add_category(app, "Music Filter")
+    gaming_id = add_category(app, "Gaming Filter")
+    other_id = add_category(app, "Other Filter")
+    music_event = event_factory(title="Music Choice")
+    gaming_event = event_factory(title="Gaming Choice")
+    other_event = event_factory(title="Other Choice")
+    categorise(app, music_event, music_id)
+    categorise(app, gaming_event, gaming_id)
+    categorise(app, other_event, other_id)
+
+    response = client.get(f"/events?category={music_id}&category={gaming_id}")
+
+    assert b"Music Choice" in response.data
+    assert b"Gaming Choice" in response.data
+    assert b"Other Choice" not in response.data
+    assert response.data.count(b'name="category"') >= 3
+
+
 def test_anonymous_navigation_and_attend_return_flow(
     app,
     client,

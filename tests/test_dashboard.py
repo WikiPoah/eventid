@@ -277,6 +277,7 @@ def test_navigation_links_to_each_page_responsibility(
     assert b"/my-attending-events" not in response.data
     assert b">Attending</a>" not in response.data
 
-    # Calendar remains intentionally unavailable in the portfolio preview
+    # The account menu links to the implemented calendar, without placeholders.
     assert b"Calendar" in response.data
-    assert b"Coming soon" in response.data
+    assert b'href="/calendar"' in response.data
+    assert b"Coming soon" not in response.data

@@ -1,5 +1,6 @@
 from datetime import datetime
 
+import pytest
 from sqlalchemy import func, select
 from werkzeug.security import check_password_hash
 
@@ -8,6 +9,7 @@ from app.database.seed import DEMO_PASSWORD, seed_demo_data
 from app.models.attendance import Attendance
 from app.models.category import Category
 from app.models.event import Event
+from app.models.favourite import Favourite
 from app.models.user import User
 from tests.conftest import login
 
@@ -20,6 +22,22 @@ def test_demo_seed_cli_runs_successfully(app):
     assert "demo_organiser" in result.output
 
 
+def test_demo_seed_is_blocked_outside_development_before_writes(app):
+    app.config.update(TESTING=False, DEBUG=False, ALLOW_DEMO_SEED=False)
+    with app.app_context():
+        with pytest.raises(RuntimeError, match="Demo seeding is disabled"):
+            seed_demo_data()
+        assert db.session.scalar(select(func.count()).select_from(User)) == 0
+        assert db.session.scalar(select(func.count()).select_from(Category)) == 0
+
+
+def test_dedicated_demo_instance_can_explicitly_allow_seeding(app):
+    app.config.update(TESTING=False, DEBUG=False, ALLOW_DEMO_SEED=True)
+    with app.app_context():
+        result = seed_demo_data()
+    assert result["users_created"] > 0
+
+
 def test_demo_seeder_is_idempotent(app):
     with app.app_context():
         first = seed_demo_data()
@@ -28,6 +46,7 @@ def test_demo_seeder_is_idempotent(app):
             Event.query.count(),
             Category.query.count(),
             Attendance.query.count(),
+            Favourite.query.count(),
         )
         second = seed_demo_data()
         second_counts = (
@@ -35,11 +54,12 @@ def test_demo_seeder_is_idempotent(app):
             Event.query.count(),
             Category.query.count(),
             Attendance.query.count(),
+            Favourite.query.count(),
         )
 
     assert first == {
         "users_created": 5,
-        "events_created": 10,
+        "events_created": 14,
         "attendances_created": 15,
     }
     assert second == {
@@ -47,7 +67,17 @@ def test_demo_seeder_is_idempotent(app):
         "events_created": 0,
         "attendances_created": 0,
     }
-    assert second_counts == first_counts == (5, 10, 9, 15)
+    assert second_counts == first_counts == (5, 14, 10, 15, 2)
+
+
+def test_default_categories_include_fallback_and_expanded_technology(app):
+    with app.app_context():
+        seed_demo_data()
+        category_names = {category.name for category in Category.query.all()}
+
+    assert "Other" in category_names
+    assert "Technology & Gaming" in category_names
+    assert "Technology" not in category_names
 
 
 def test_seeded_users_use_hashed_development_password(app):
@@ -74,8 +104,8 @@ def test_seeded_statuses_and_relative_dates_are_correct(app):
         upcoming_count = Event.query.filter(Event.start_datetime >= now).count()
         past_count = Event.query.filter(Event.start_datetime < now).count()
 
-    assert status_counts == {"Cancelled": 1, "Draft": 1, "Published": 8}
-    assert upcoming_count == 8
+    assert status_counts == {"Cancelled": 1, "Draft": 1, "Published": 12}
+    assert upcoming_count == 12
     assert past_count == 2
 
 
@@ -131,7 +161,17 @@ def test_seeded_demo_pages_show_expected_data(app, client):
     browse_response = client.get("/events")
     assert b"Bremen Technology Meetup" in browse_response.data
     assert b"Bremen Makers Day Archive" not in browse_response.data
-    assert b"Berlin Indie Music Night" in client.get("/my-events").data
+    registrations = client.get("/my-events").data
+    assert b"Berlin Indie Music Night" in registrations
+    assert registrations.index(b"Hamburg Community Workshop") < registrations.index(
+        b"Bremen Makers Day Archive"
+    )
+    assert registrations.index(b"Hamburg Community Workshop") < registrations.index(
+        b"Cologne Riverside Run"
+    )
+    saved = client.get("/favourites").data
+    assert b"Hamburg Street Food Social" in saved
+    assert b"Berlin Local Art Walk" in saved
 
     login(client, organiser_id)
     manage_response = client.get("/manage-events")

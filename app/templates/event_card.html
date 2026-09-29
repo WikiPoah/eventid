@@ -1,5 +1,22 @@
 <article class="event-card stagger-item {% if event.status == 'Cancelled' %}event-card-cancelled{% endif %}">
 
+    {% if not show_organiser_details and event.privacy == "Public" and event.status in ("Published", "Cancelled") %}
+        {% if g.user %}
+            {% set is_favourite = event.event_id in g.user.favourites|map(attribute="event_id")|list %}
+            <form class="favourite-form" method="POST" action="{{ url_for('events.toggle_favourite', event_id=event.event_id) }}" data-favourite-form data-event-id="{{ event.event_id }}" data-event-title="{{ event.title }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="next" value="{{ request.full_path.rstrip('?') }}">
+                <button class="favourite-button{% if is_favourite %} is-favourite{% endif %}" type="submit" aria-label="{% if is_favourite %}Remove {{ event.title }} from favourites{% else %}Add {{ event.title }} to favourites{% endif %}" title="{% if is_favourite %}Remove from favourites{% else %}Add to favourites{% endif %}">
+                    <svg class="favourite-heart" viewBox="0 0 32 28" aria-hidden="true"><path d="M16 25.5 4.2 15.2C-2.1 9.7 1.8 1.8 8.3 2.1c3.2.1 5.7 1.8 7.7 4.2 2-2.4 4.5-4.1 7.7-4.2 6.5-.3 10.4 7.6 4.1 13.1L16 25.5Z"/></svg>
+                </button>
+            </form>
+        {% else %}
+            <a class="favourite-button" href="{{ url_for('auth.login', next=request.full_path.rstrip('?')) }}" aria-label="Log in to add {{ event.title }} to favourites" title="Log in to save this event">
+                <svg class="favourite-heart" viewBox="0 0 32 28" aria-hidden="true"><path d="M16 25.5 4.2 15.2C-2.1 9.7 1.8 1.8 8.3 2.1c3.2.1 5.7 1.8 7.7 4.2 2-2.4 4.5-4.1 7.7-4.2 6.5-.3 10.4 7.6 4.1 13.1L16 25.5Z"/></svg>
+            </a>
+        {% endif %}
+    {% endif %}
+
     {% if event.image_path %}
         <img
             class="event-card-image"
@@ -8,14 +25,17 @@
         >
     {% else %}
         <div
-            class="event-card-image event-image-fallback"
+            class="event-card-image event-image-fallback event-image-tone-{{ (event.categories[0].category_id if event.categories else event.event_id) % 4 }}"
             aria-hidden="true"
         >
-            EventID
+            <span>eventid</span>
+            {% if event.categories %}<small>#{{ event.categories[0].name }}</small>{% endif %}
         </div>
     {% endif %}
 
     <div class="event-information">
+
+        {% set card_attendee_count = attendee_count if attendee_count is defined else event.card_attendee_count if event.card_attendee_count is defined else event.attendees|selectattr('status', 'equalto', 'Going')|list|length %}
 
         <div class="badge-row">
             <span class="badge badge-status-{{ event.status|lower }}">
@@ -26,10 +46,10 @@
                 {{ event.privacy }}
             </span>
 
-            {% if event.capacity is not none and attendee_count is defined and attendee_count >= event.capacity %}
-                <span class="badge badge-warning">
-                    Full
-                </span>
+            {% if event.status == 'Published' and event.capacity is not none and card_attendee_count >= event.capacity %}
+                <span class="badge badge-warning">Full</span>
+            {% elif event.status == 'Published' and event.capacity and card_attendee_count / event.capacity >= 0.8 %}
+                <span class="badge badge-warning">Nearly full</span>
             {% endif %}
         </div>
 
@@ -39,35 +59,50 @@
             </a>
         </h3>
 
-        <p class="card-metadata">
-            <strong>Date:</strong>
-            {{ event.start_datetime.strftime("%d %B %Y") }}
+        <p class="event-card-description">
+            {{ event.description }}
         </p>
 
-        <p class="card-metadata">
-            <strong>Time:</strong>
-            {{ event.start_datetime.strftime("%H:%M") }}–{{ event.end_datetime.strftime("%H:%M") }}
-        </p>
+        <div class="event-card-facts">
+            <p class="card-metadata">
+                <strong>{{ event.start_datetime.strftime("%d %b") }}</strong>
+                <span>{{ event.start_datetime.strftime("%H:%M") }}–{{ event.end_datetime.strftime("%H:%M") }}</span>
+            </p>
+            <p class="card-metadata">
+                <strong>{{ event.city }}</strong>
+                <span>{{ event.venue_name }}</span>
+            </p>
+        </div>
 
-        <p class="card-metadata">
-            <strong>Venue:</strong>
-            {{ event.venue_name }}
-        </p>
+        {% if event.categories %}
+        <div class="event-category-tags" aria-label="Event categories">
+            {% for category in event.categories %}
+                <span class="event-category-tag">#{{ category.name|replace(' ', '')|replace('&', 'and') }}</span>
+            {% endfor %}
+        </div>
+        {% endif %}
 
-        <p class="card-metadata">
-            <strong>City:</strong>
-            {{ event.city }}
-        </p>
-
-        <p>
-            <strong>Categories:</strong>
-
-            {% if event.categories %}
-                {{ event.categories | map(attribute="name") | join(", ") }}
+        <p class="event-availability{% if event.capacity is not none and card_attendee_count >= event.capacity %} is-full{% elif event.capacity and card_attendee_count / event.capacity >= 0.8 %} is-limited{% endif %}">
+            {% if event.status == 'Cancelled' %}
+                Event cancelled · Registrations closed
+            {% elif event.status == 'Draft' %}
+                Draft · Not open for registration
+            {% elif not event.requests_open %}
+                Registration closed
+            {% elif event.capacity is none %}
+                {{ card_attendee_count }} attending · Unlimited places
+            {% elif card_attendee_count >= event.capacity %}
+                Event full · {{ card_attendee_count }} attending
             {% else %}
-                None
+                {{ event.capacity - card_attendee_count }} place{% if event.capacity - card_attendee_count != 1 %}s{% endif %} left
             {% endif %}
         </p>
+
+        {% if event.registration_deadline and event.status == 'Published' %}
+        <p class="event-registration-deadline">
+            Register by {{ event.registration_deadline.strftime("%d %b at %H:%M") }}
+        </p>
+        {% endif %}
 
         {% if show_organiser_details %}
 
@@ -75,13 +110,13 @@
                 <strong>Attending:</strong>
 
                 {% if event.capacity is none %}
-                    {{ attendee_count }} attending (unlimited capacity)
+                    {{ card_attendee_count }} attending (unlimited capacity)
                 {% else %}
-                    {{ attendee_count }} / {{ event.capacity }} attending
+                    {{ card_attendee_count }} / {{ event.capacity }} attending
                 {% endif %}
             </p>
 
-            {% if event.capacity and attendee_count < event.capacity and attendee_count / event.capacity >= 0.8 %}
+            {% if event.capacity and card_attendee_count < event.capacity and card_attendee_count / event.capacity >= 0.8 %}
                 <p class="warning-text">
                     Nearly full
                 </p>

@@ -1,10 +1,10 @@
 {% extends "base.html" %}
 
-{% block title %}My Events · EventID{% endblock %}
+{% block title %}My Events · eventid{% endblock %}
 
 {% block content %}
 
-<!-- Display the page heading -->
+<!-- Page heading -->
 
 <div class="page-heading page-heading-card">
 
@@ -19,23 +19,22 @@
         </h1>
 
         <p>
-            Events you are registered to attend.
+            Events you are attending and events you have saved.
         </p>
 
     </div>
 
-    <a
-        class="button button-primary"
-        href="{{ url_for('events.browse_events') }}"
-    >
-        Browse Events
-    </a>
+    <div class="page-heading-actions">
+        <a class="button button-primary" href="{{ url_for('events.browse_events') }}">
+            Browse Events
+        </a>
+    </div>
 
 </div>
 
 {% if events %}
 
-<!-- Display attended events -->
+<!-- Attended events -->
 
 <section class="content-section">
 
@@ -55,11 +54,24 @@
 
     </div>
 
+    <div class="ticket-list">
+        {% for event in events %}
+        <a class="ticket-list-item" href="{{ url_for('events.attendee_ticket', event_id=event.event_id) }}">
+            <span class="ticket-list-icon" aria-hidden="true">▦</span>
+            <span>
+                <strong>{{ event.title }}</strong>
+                <small>View confirmation and QR ticket</small>
+            </span>
+            <span aria-hidden="true">→</span>
+        </a>
+        {% endfor %}
+    </div>
+
 </section>
 
-{% else %}
+{% elif not favourite_events %}
 
-<!-- Display the empty attendance state -->
+<!-- Empty attendance state -->
 
 <div class="empty-state empty-state-stacked">
 
@@ -78,6 +90,28 @@
         Find an Event
     </a>
 
+</div>
+
+{% endif %}
+
+{% if favourite_events %}
+
+{% set carousel_id = "my-favourites" %}
+{% set carousel_eyebrow = "Saved for later" %}
+{% set carousel_title = "Favourites" %}
+{% set carousel_description = "Events you have saved and may want to attend." %}
+{% set carousel_events = favourite_events %}
+{% set carousel_link_url = url_for('events.favourites') %}
+{% set carousel_link_text = "See all favourites" %}
+{% set carousel_empty_message = "You have not saved any events yet." %}
+{% set carousel_class = "my-events-carousel" %}
+{% include "event_carousel.html" %}
+
+{% elif events %}
+
+<div class="empty-state empty-state-stacked my-events-saved-empty">
+    <h2>No favourites yet</h2>
+    <p>Use the heart on an event card to save it here.</p>
 </div>
 
 {% endif %}

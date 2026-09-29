@@ -1,50 +1,66 @@
 {% extends "base.html" %}
 
-{% block title %}Calendar · EventID{% endblock %}
+{% block title %}Calendar · eventid{% endblock %}
 
 {% block content %}
 
-<!-- Display the calendar page heading -->
-
-<div class="page-heading">
-
+<div class="calendar-page-heading">
     <div>
-
-        <span class="eyebrow">
-            Coming soon
-        </span>
-
-        <h1>
-            Calendar
-        </h1>
-
-        <p>
-            A clearer way to keep track of the events you organise and attend is on the way.
-        </p>
-
+        <span class="eyebrow">Your schedule</span>
+        <h1>Calendar</h1>
+        <p>Events you organise and events you are attending, all in one place.</p>
     </div>
 
+    <a class="button button-primary" href="{{ url_for('events.create_event') }}">Create Event</a>
 </div>
 
-<!-- Display the unavailable calendar state -->
+<p class="calendar-scroll-hint" id="calendar-scroll-hint">Scroll sideways to see the full week.</p>
+<section class="calendar-shell" aria-label="Event calendar" aria-describedby="calendar-scroll-hint" tabindex="0">
+    <header class="calendar-toolbar">
+        <a class="button button-secondary calendar-today-button"
+            href="{{ url_for('events.calendar', year=today.year, month=today.month) }}">Today</a>
 
-<div class="empty-state empty-state-stacked">
+        <div class="calendar-month-navigation">
+            <a class="calendar-arrow"
+                href="{{ url_for('events.calendar', year=previous_year, month=previous_month) }}"
+                aria-label="Previous month">‹</a>
+            <h2>{{ calendar_title }}</h2>
+            <a class="calendar-arrow"
+                href="{{ url_for('events.calendar', year=next_year, month=next_month) }}"
+                aria-label="Next month">›</a>
+        </div>
 
-    <h2>
-        Calendar is coming soon
-    </h2>
+        <div class="calendar-legend" aria-label="Calendar key">
+            <span><i class="calendar-key calendar-key-organising"></i>Organising</span>
+            <span><i class="calendar-key calendar-key-attending"></i>Attending</span>
+        </div>
+    </header>
 
-    <p>
-        This feature is still being developed and will be available in a future version of EventID.
-    </p>
+    <div class="calendar-grid" role="grid" aria-label="{{ calendar_title }}">
+        {% for weekday in ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"] %}
+        <div class="calendar-weekday" role="columnheader">{{ weekday }}</div>
+        {% endfor %}
 
-    <a
-        class="button button-primary"
-        href="{{ url_for('events.my_events') }}"
-    >
-        View My Events
-    </a>
+        {% for day in calendar_days %}
+        <div class="calendar-day{% if not day.in_month %} calendar-day-muted{% endif %}{% if day.is_today %} calendar-day-today{% endif %}"
+            role="gridcell" aria-label="{{ day.date.strftime('%A %d %B %Y') }}">
+            <time datetime="{{ day.date.isoformat() }}"{% if day.is_today %} aria-current="date"{% endif %}>
+                {{ day.date.day }}
+            </time>
 
-</div>
+            <div class="calendar-day-events">
+                {% for event in day.events %}
+                <a class="calendar-event{% if event.organiser_id == g.user.user_id %} calendar-event-organising{% else %} calendar-event-attending{% endif %}{% if event.status == 'Cancelled' %} calendar-event-cancelled{% endif %}"
+                    href="{{ url_for('events.event_details', event_id=event.event_id) }}"
+                    title="{{ event.start_datetime.strftime('%H:%M') }} · {{ event.title }}">
+                    <span>{{ event.start_datetime.strftime("%H:%M") }}</span>
+                    <strong>{{ event.title }}</strong>
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</section>
 
 {% endblock %}

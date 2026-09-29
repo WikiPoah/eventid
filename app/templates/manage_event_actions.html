@@ -3,8 +3,13 @@
     <div class="management-primary-actions">
         <a class="button button-secondary" href="{{ url_for('events.event_details', event_id=event.event_id) }}">View Details</a>
         <a class="button button-primary" href="{{ url_for('events.edit_event', event_id=event.event_id) }}">Edit Event</a>
-        <a class="button button-secondary" href="{{ url_for('events.event_details', event_id=event.event_id) }}#attendees">View Attendees</a>
+        <a class="button button-secondary" href="{{ url_for('events.event_details', event_id=event.event_id) }}#attendees">{% if event.privacy == "Private" %}Manage Invites{% else %}View Attendees{% endif %}</a>
+        <a class="button button-secondary" href="{{ url_for('events.preview_event', event_id=event.event_id) }}">Preview as Attendee</a>
         <a class="button button-secondary" href="{{ url_for('events.export_attendees', event_id=event.event_id) }}">Export CSV</a>
+        <form method="POST" action="{{ url_for('events.duplicate_event', event_id=event.event_id) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button class="button button-secondary" type="submit">Duplicate Event</button>
+        </form>
     </div>
 
     <!-- Show only lifecycle actions that apply to the current state -->

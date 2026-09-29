@@ -8,7 +8,7 @@
 
     <div class="auth-layout">
 
-        <!-- Display the eventid branding panel -->
+        <!-- EventID branding -->
 
         <aside class="auth-brand">
 
@@ -97,7 +97,7 @@
 
         </aside>
 
-        <!-- Display the login form -->
+        <!-- Login form -->
 
         <section class="auth-card">
 
@@ -135,7 +135,6 @@
 
                 {% endif %}
 
-                <!-- Display the username or email field -->
 
                 <div class="form-field">
 
@@ -147,6 +146,7 @@
                         type="text"
                         id="identifier"
                         name="identifier"
+                        value="{{ identifier }}"
                         placeholder="Enter your username or email"
                         autocomplete="username"
                         required
@@ -154,7 +154,6 @@
 
                 </div>
 
-                <!-- Display the password field -->
 
                 <div class="form-field">
 
@@ -172,7 +171,10 @@
 
                 </div>
 
-                <!-- Display the login button -->
+                <p class="auth-inline-link">
+                    <a href="{{ url_for('auth.forgot_password') }}">Forgot your password?</a>
+                </p>
+
 
                 <button
                     type="submit"
@@ -189,7 +191,7 @@
 
                     New to eventid?
 
-                    <a href="{{ url_for('auth.signup') }}">
+                    <a href="{{ url_for('auth.signup', next=next_url) if next_url else url_for('auth.signup') }}">
                         Create an account
                     </a>
 

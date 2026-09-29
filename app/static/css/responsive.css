@@ -58,6 +58,14 @@
         flex-basis: calc((100% - 20px) / 2);
     }
 
+    .favourites-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .event-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
 }
 
 
@@ -160,44 +168,83 @@
 
     .main-navigation {
         width: min(100% - 28px, 1500px);
-
-        gap: 14px;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 8px 16px;
+        padding: 12px 0;
     }
 
+    .nav-logo {
+        grid-column: 1;
+        grid-row: 1;
+    }
+
+
     .nav-logo img {
-        height: 34px;
+        height: 30px;
     }
 
     .nav-links {
-        order: 2;
-
-        gap: 22px;
+        grid-column: 1 / -1;
+        grid-row: 2;
+        flex-direction: row;
+        flex-wrap: nowrap;
+        gap: 20px;
+        padding: 4px 0;
+        overflow-x: auto;
     }
 
-    .nav-actions {
-        width: 100%;
-
-        order: 3;
-
-        display: flex;
+    .nav-links a {
+        flex-shrink: 0;
+        display: inline-flex;
         align-items: center;
+        min-height: 44px;
+        padding: 8px 0;
+        font-size: 0.85rem;
+    }
 
-        gap: 10px;
+    .nav-label-full {
+        display: none;
+    }
+
+    .nav-label-short {
+        display: inline;
+    }
+
+
+    .nav-actions {
+        display: contents;
     }
 
     .nav-search-wrapper {
         min-width: 0;
-
-        flex: 1;
+        grid-column: 1 / -1;
+        grid-row: 3;
     }
+
+    .site-header-browse .nav-search-wrapper,
+    .site-header-compact .nav-search-wrapper {
+        display: none;
+    }
+
 
     .nav-search {
         width: 100%;
     }
 
-    .account-menu {
+    .account-menu,
+    .account-links {
         flex-shrink: 0;
+        grid-column: 2;
+        grid-row: 1;
+        justify-self: end;
+        margin: 0;
     }
+
+    .account-links > a:not(.button) {
+        padding: 12px 0;
+    }
+
 
     .filters-panel {
         left: auto;
@@ -210,6 +257,11 @@
     .filter-grid,
     .details-grid {
         grid-template-columns: 1fr;
+    }
+
+    .event-about-panel,
+    .event-attendance-panel {
+        padding: 24px;
     }
 
     .form-field-wide {
@@ -278,23 +330,47 @@
 @media (max-width: 600px) {
 
     .main-navigation {
-        gap: 12px;
+        gap: 8px 12px;
     }
 
     .nav-logo img {
-        height: 32px;
+        height: 28px;
     }
 
     .nav-links {
         width: 100%;
 
-        flex-direction: column;
-        align-items: flex-start;
-
-        gap: 13px;
-
-        overflow: visible;
+        flex-direction: row;
+        align-items: center;
+        gap: 18px;
+        overflow-x: auto;
     }
+
+    .page-shell {
+        margin-top: 24px;
+        margin-bottom: 48px;
+    }
+
+    .page-heading {
+        margin-bottom: 24px;
+    }
+
+    .landing-hero {
+        padding: 28px 24px;
+    }
+
+    .landing-hero .form-actions {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+        padding-top: 20px;
+    }
+
+    .landing-hero .form-actions .button-primary {
+        grid-column: 1 / -1;
+    }
+
+
 
     .nav-actions {
         align-items: center;
@@ -323,6 +399,11 @@
 /* Display one carousel card on mobile screens */
 
 @media (max-width: 650px) {
+
+    .event-grid,
+    .favourites-grid {
+        grid-template-columns: 1fr;
+    }
 
     .carousel-slide {
         flex-basis: 100%;

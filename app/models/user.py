@@ -3,33 +3,32 @@ from datetime import UTC, datetime
 from app.database.db import db
 
 
-# Store account details and profile information for each user
 class User(db.Model):
+    """Account identity that owns events and records attendance separately."""
 
     __tablename__ = "users"
 
     user_id = db.Column(db.Integer, primary_key=True)
 
-    # Store the user's personal information
     first_name = db.Column(db.String(50), nullable=False)
     last_name = db.Column(db.String(50), nullable=False)
 
-    # Store the user's login credentials
     username = db.Column(db.String(20), unique=True, nullable=False)
     email = db.Column(db.String(255), unique=True, nullable=False)
     password_hash = db.Column(db.String(255), nullable=False)
+    # Bumping this version invalidates existing cookies and signed email links.
+    auth_version = db.Column(db.Integer, nullable=False, default=0, server_default="0")
+    username_changed_at = db.Column(db.DateTime)
+    email_changed_at = db.Column(db.DateTime)
+    email_verified_at = db.Column(db.DateTime)
 
-    # Store the path to the user's profile picture
     profile_picture_path = db.Column(db.String(255))
-
-    # Allow users to add a short biography to their profile
     bio = db.Column(db.Text)
 
-    # Store the user's location information
     country = db.Column(db.String(100))
     city = db.Column(db.String(100))
 
-    # Track organiser permissions and account creation date
+    # Organiser is a profile label, not a role gate: management checks ownership.
     is_organiser = db.Column(db.Boolean, default=False, nullable=False)
     created_at = db.Column(
         db.DateTime,
@@ -37,7 +36,6 @@ class User(db.Model):
         nullable=False,
     )
 
-    # Link each user to the events they organise and attend
     events = db.relationship("Event", back_populates="organiser")
 
     attendances = db.relationship(
@@ -47,7 +45,17 @@ class User(db.Model):
     # Provide read-only event access while retaining attendance records
     attending_events = db.relationship("Event", secondary="attendance", viewonly=True)
 
-    def __repr__(self):
+    favourites = db.relationship(
+        "Favourite", back_populates="user", cascade="all, delete-orphan"
+    )
+    favourite_events = db.relationship("Event", secondary="favourites", viewonly=True)
 
-        # Return a readable representation of the user object
+    sessions = db.relationship(
+        "UserSession", back_populates="user", cascade="all, delete-orphan"
+    )
+    security_events = db.relationship(
+        "SecurityEvent", back_populates="user", cascade="all, delete-orphan"
+    )
+
+    def __repr__(self):
         return f"<User {self.username}>"

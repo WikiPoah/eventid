@@ -1,5 +1,11 @@
-from datetime import UTC, datetime, timedelta
+"""Idempotent categories and explicitly permitted, fictional demo records."""
 
+import secrets
+from datetime import UTC, datetime, timedelta
+from pathlib import Path
+from shutil import copyfile
+
+from flask import current_app
 from sqlalchemy import or_, select
 from werkzeug.security import generate_password_hash
 
@@ -8,9 +14,9 @@ from app.models.attendance import Attendance
 from app.models.category import Category
 from app.models.event import Event
 from app.models.event_category import EventCategory
+from app.models.favourite import Favourite
 from app.models.user import User
 
-# Define the default event categories available in the application
 EVENT_CATEGORIES = [
     "Arts & Culture",
     "Community & Charity",
@@ -18,28 +24,31 @@ EVENT_CATEGORIES = [
     "Food & Drink",
     "Music",
     "Networking",
+    "Other",
     "Socialising",
     "Sports & Fitness",
-    "Technology",
+    "Technology & Gaming",
 ]
 
 
 def seed_categories():
+    """Add missing defaults without replacing linked category records."""
 
-    # Insert each predefined category if it doesn't already exist
+    # Preserve existing event links when upgrading the former category name.
+    technology = Category.query.filter_by(name="Technology").first()
+    technology_and_gaming = Category.query.filter_by(name="Technology & Gaming").first()
+    if technology is not None and technology_and_gaming is None:
+        technology.name = "Technology & Gaming"
+
     for category_name in EVENT_CATEGORIES:
-
         existing_category = Category.query.filter_by(name=category_name).first()
-
         if existing_category is None:
-
             db.session.add(Category(name=category_name))
 
-    # Save any newly added categories to the database
     db.session.commit()
 
 
-DEMO_PASSWORD = "EventID-demo-2026"
+DEMO_PASSWORD = "eventid-demo-2026"
 
 DEMO_USERS = [
     {
@@ -114,7 +123,11 @@ def _demo_user(user_data):
 
 
 def _demo_event(organiser, now, event_data, categories_by_name):
-    """Create one deterministic demo event without modifying an existing one."""
+    """Reuse demo identities, refreshing dates, invitation expiry and seed images.
+
+    Preserve tokens and attendance so re-seeding does not break existing demo
+    links or tickets; it refreshes selected fields rather than resetting all edits.
+    """
 
     existing = db.session.scalar(
         select(Event).where(
@@ -123,9 +136,14 @@ def _demo_event(organiser, now, event_data, categories_by_name):
         )
     )
     if existing is not None:
-        # Refresh only demo schedule fields so seeded timelines stay useful
+        # Refresh demo dates and private-link expiry without rotating invitations.
         existing.start_datetime = now + event_data["start_offset"]
         existing.end_datetime = now + event_data["end_offset"]
+        if existing.privacy == "Private":
+            existing.invite_token = existing.invite_token or secrets.token_urlsafe(32)
+            existing.invite_expires_at = existing.end_datetime
+        if event_data.get("image_path"):
+            existing.image_path = event_data["image_path"]
         return existing, False
 
     event = Event(
@@ -141,8 +159,17 @@ def _demo_event(organiser, now, event_data, categories_by_name):
         end_datetime=now + event_data["end_offset"],
         capacity=event_data["capacity"],
         privacy=event_data["privacy"],
+        invite_token=(
+            secrets.token_urlsafe(32) if event_data["privacy"] == "Private" else None
+        ),
+        invite_expires_at=(
+            now + event_data["end_offset"]
+            if event_data["privacy"] == "Private"
+            else None
+        ),
         status=event_data["status"],
         organiser_id=organiser.user_id,
+        image_path=event_data.get("image_path"),
     )
     db.session.add(event)
     db.session.flush()
@@ -159,7 +186,26 @@ def _demo_event(organiser, now, event_data, categories_by_name):
 def seed_demo_data():
     """Create safe, repeatable users, events, and attendance for development."""
 
+    # Publicly documented passwords must never be introduced into a real-user
+    # service by accident. Reject before category, account or file writes.
+    if not (
+        current_app.debug
+        or current_app.testing
+        or current_app.config.get("ALLOW_DEMO_SEED")
+    ):
+        raise RuntimeError(
+            "Demo seeding is disabled. Set ALLOW_DEMO_SEED=true only for a dedicated demo instance."
+        )
+
     seed_categories()
+
+    demo_image_directory = Path(current_app.static_folder) / "images" / "demo-events"
+    upload_directory = Path(current_app.config["EVENT_IMAGE_UPLOAD_FOLDER"])
+    upload_directory.mkdir(parents=True, exist_ok=True)
+    for source in demo_image_directory.glob("*.jpg"):
+        target = upload_directory / source.name
+        if not target.exists():
+            copyfile(source, target)
     now = datetime.now(UTC).replace(
         tzinfo=None,
         hour=18,
@@ -184,6 +230,70 @@ def seed_demo_data():
     # Generate dates relative to current UTC so demonstrations remain useful
     event_definitions = [
         {
+            "title": "Berlin Morning Yoga",
+            "description": "A welcoming outdoor yoga session for all experience levels.",
+            "venue_name": "Tiergarten Meeting Lawn",
+            "address": "1 Demo Park Path",
+            "postcode": "10785",
+            "city": "Berlin",
+            "country": "Germany",
+            "start_offset": timedelta(days=1),
+            "end_offset": timedelta(days=1, hours=2),
+            "capacity": 24,
+            "privacy": "Public",
+            "status": "Published",
+            "categories": ["Sports & Fitness", "Socialising"],
+            "image_path": "berlin-morning-yoga.jpg",
+        },
+        {
+            "title": "Hamburg Street Food Social",
+            "description": "An informal evening discovering local food stalls together.",
+            "venue_name": "Harbour Market Square",
+            "address": "12 Sample Promenade",
+            "postcode": "20457",
+            "city": "Hamburg",
+            "country": "Germany",
+            "start_offset": timedelta(days=2),
+            "end_offset": timedelta(days=2, hours=3),
+            "capacity": 40,
+            "privacy": "Public",
+            "status": "Published",
+            "categories": ["Food & Drink", "Socialising"],
+            "image_path": "hamburg-street-food-social.jpg",
+        },
+        {
+            "title": "Bremen Board Game Evening",
+            "description": "A relaxed evening of modern board games and new connections.",
+            "venue_name": "Weser Games Café",
+            "address": "6 Demo Arcade",
+            "postcode": "28195",
+            "city": "Bremen",
+            "country": "Germany",
+            "start_offset": timedelta(days=3),
+            "end_offset": timedelta(days=3, hours=3),
+            "capacity": 30,
+            "privacy": "Public",
+            "status": "Published",
+            "categories": ["Technology & Gaming", "Socialising"],
+            "image_path": "bremen-board-game-evening.jpg",
+        },
+        {
+            "title": "Berlin Local Art Walk",
+            "description": "A guided walk through fictional independent galleries and studios.",
+            "venue_name": "Museum Courtyard",
+            "address": "9 Example Platz",
+            "postcode": "10178",
+            "city": "Berlin",
+            "country": "Germany",
+            "start_offset": timedelta(days=4),
+            "end_offset": timedelta(days=4, hours=2),
+            "capacity": 20,
+            "privacy": "Public",
+            "status": "Published",
+            "categories": ["Arts & Culture", "Community & Charity"],
+            "image_path": "berlin-local-art-walk.jpg",
+        },
+        {
             "title": "Bremen Technology Meetup",
             "description": "A practical evening of fictional product demos and developer conversations.",
             "venue_name": "Weser Innovation Hall",
@@ -196,7 +306,7 @@ def seed_demo_data():
             "capacity": 50,
             "privacy": "Public",
             "status": "Published",
-            "categories": ["Technology", "Networking"],
+            "categories": ["Technology & Gaming", "Networking"],
         },
         {
             "title": "Hamburg Community Workshop",
@@ -241,7 +351,7 @@ def seed_demo_data():
             "capacity": None,
             "privacy": "Public",
             "status": "Published",
-            "categories": ["Technology", "Education & STEM"],
+            "categories": ["Technology & Gaming", "Education & STEM"],
         },
         {
             "title": "Warsaw Design Exchange",
@@ -316,7 +426,7 @@ def seed_demo_data():
             "capacity": 30,
             "privacy": "Public",
             "status": "Published",
-            "categories": ["Technology", "Education & STEM"],
+            "categories": ["Technology & Gaming", "Education & STEM"],
         },
         {
             "title": "Hamburg Networking Breakfast Archive",
@@ -375,6 +485,13 @@ def seed_demo_data():
                     )
                 )
                 attendances_created += 1
+
+    # Give the attendee's saved-events view a useful, repeatable starting state.
+    for title in ("Hamburg Street Food Social", "Berlin Local Art Walk"):
+        user_id = users["demo_attendee"].user_id
+        event_id = events[title].event_id
+        if db.session.get(Favourite, (user_id, event_id)) is None:
+            db.session.add(Favourite(user_id=user_id, event_id=event_id))
 
     db.session.commit()
     return {

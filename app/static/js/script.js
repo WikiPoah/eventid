@@ -1,15 +1,366 @@
 document.documentElement.classList.add("js");
 
 document.addEventListener("DOMContentLoaded", () => {
+    // Keep secondary discovery filters available without burying mobile results.
+    const browseFilters = document.querySelector("[data-browse-filters]");
+    if (browseFilters) {
+        const mobileFilters = window.matchMedia("(max-width: 768px)");
+        const updateBrowseFilters = () => {
+            browseFilters.open = !mobileFilters.matches;
+        };
+        updateBrowseFilters();
+        mobileFilters.addEventListener("change", updateBrowseFilters);
+    }
+
     const reduceMotion = window.matchMedia(
         "(prefers-reduced-motion: reduce)"
     ).matches;
+
+    const scrollStorageKey = `eventid-scroll:${window.location.pathname}`;
+    const savedScrollPosition = sessionStorage.getItem(scrollStorageKey);
+    if (savedScrollPosition !== null) {
+        sessionStorage.removeItem(scrollStorageKey);
+        window.requestAnimationFrame(() => {
+            window.scrollTo(0, Number(savedScrollPosition));
+        });
+    }
+
+    // Connect server-side validation messages to their form controls.
+
+    document.querySelectorAll(".field-error").forEach((message, index) => {
+        const field = message.closest(".form-field");
+        const control = field?.querySelector("input, select, textarea");
+        if (!control) {
+            return;
+        }
+
+        if (!message.id) {
+            message.id = `field-error-${index + 1}`;
+        }
+        control.setAttribute("aria-invalid", "true");
+        const describedBy = new Set(
+            (control.getAttribute("aria-describedby") || "")
+                .split(/\s+/)
+                .filter(Boolean)
+        );
+        describedBy.add(message.id);
+        control.setAttribute("aria-describedby", [...describedBy].join(" "));
+    });
+
+    const copyPrivateInviteButton = document.querySelector(
+        "[data-copy-private-invite]"
+    );
+    const privateInviteInput = document.querySelector("[data-private-invite-link]");
+    if (copyPrivateInviteButton && privateInviteInput) {
+        copyPrivateInviteButton.addEventListener("click", async () => {
+            try {
+                await navigator.clipboard.writeText(privateInviteInput.value);
+                copyPrivateInviteButton.textContent = "Copied";
+                window.setTimeout(() => {
+                    copyPrivateInviteButton.textContent = "Copy Link";
+                }, 1800);
+            } catch (_error) {
+                privateInviteInput.select();
+            }
+        });
+    }
+
+
+    // Update private attendance decisions without reloading the event page.
+
+    document.addEventListener("submit", async (event) => {
+        const form = event.target.closest("[data-private-attendance-action]");
+        if (!form) {
+            return;
+        }
+
+        event.preventDefault();
+        const row = form.closest("[data-private-attendee-row]");
+        const actionsContainer = row?.querySelector(
+            "[data-private-attendee-actions]"
+        );
+        const statusBadge = row?.querySelector("[data-private-attendee-status]");
+        const submitButton = form.querySelector("button[type='submit']");
+        const csrfToken = form.querySelector("[name='csrf_token']")?.value;
+        const liveStatus = document.querySelector("[data-private-action-status]");
+
+        if (!row || !actionsContainer || !statusBadge || !csrfToken) {
+            form.submit();
+            return;
+        }
+
+        if (submitButton) {
+            submitButton.disabled = true;
+        }
+
+        try {
+            const response = await fetch(form.action, {
+                method: "POST",
+                body: new FormData(form),
+                headers: { Accept: "application/json" },
+            });
+            const result = await response.json();
+            if (!response.ok) {
+                throw new Error(result.error || "The action could not be completed.");
+            }
+
+            statusBadge.textContent = result.status_label;
+            statusBadge.className =
+                `badge private-status private-status-${result.status.toLowerCase()}`;
+
+            actionsContainer.replaceChildren();
+            result.actions.forEach((action) => {
+                const nextForm = document.createElement("form");
+                nextForm.method = "POST";
+                nextForm.action = action.url;
+                nextForm.dataset.privateAttendanceAction = "";
+
+                const tokenInput = document.createElement("input");
+                tokenInput.type = "hidden";
+                tokenInput.name = "csrf_token";
+                tokenInput.value = csrfToken;
+
+                const button = document.createElement("button");
+                button.type = "submit";
+                button.className = `button ${action.class_name}`;
+                button.textContent = action.label;
+
+                nextForm.append(tokenInput, button);
+                actionsContainer.append(nextForm);
+            });
+
+            Object.entries(result.counts).forEach(([status, count]) => {
+                const counter = document.querySelector(
+                    `[data-private-status-count="${status}"]`
+                );
+                if (counter) {
+                    counter.textContent = count;
+                }
+            });
+
+            if (liveStatus) {
+                liveStatus.textContent = result.message;
+                liveStatus.classList.remove("is-error");
+            }
+        } catch (error) {
+            if (liveStatus) {
+                liveStatus.textContent = error.message;
+                liveStatus.classList.add("is-error");
+            } else {
+                form.submit();
+            }
+        } finally {
+            if (submitButton) {
+                submitButton.disabled = false;
+            }
+        }
+    });
+
+
+    // Save favourites without reloading the page or changing scroll position.
+
+    document.addEventListener("submit", async (event) => {
+        const form = event.target.closest("[data-favourite-form]");
+
+        if (!form) {
+            return;
+        }
+
+        event.preventDefault();
+
+        const button = form.querySelector(".favourite-button");
+        const eventId = form.dataset.eventId;
+        const eventTitle = form.dataset.eventTitle;
+
+        if (!button || !eventId) {
+            return;
+        }
+
+        button.disabled = true;
+
+        try {
+            const response = await fetch(form.action, {
+                method: "POST",
+                body: new FormData(form),
+                headers: { Accept: "application/json" },
+            });
+
+            if (!response.ok) {
+                throw new Error("Favourite request failed");
+            }
+
+            const result = await response.json();
+
+            document
+                .querySelectorAll(
+                    `[data-favourite-form][data-event-id="${eventId}"] .favourite-button`
+                )
+                .forEach((matchingButton) => {
+                    matchingButton.classList.toggle(
+                        "is-favourite",
+                        result.is_favourite
+                    );
+                    matchingButton.setAttribute(
+                        "aria-label",
+                        result.is_favourite
+                            ? `Remove ${eventTitle} from favourites`
+                            : `Add ${eventTitle} to favourites`
+                    );
+                    matchingButton.title = result.is_favourite
+                        ? "Remove from favourites"
+                        : "Add to favourites";
+                });
+        } catch (_error) {
+            form.submit();
+        } finally {
+            button.disabled = false;
+        }
+    });
+
+
+    // Restore position when a POST action redirects back to the same page.
+
+    document.addEventListener("submit", (event) => {
+        if (event.defaultPrevented) {
+            return;
+        }
+
+        const form = event.target;
+        if (!(form instanceof HTMLFormElement)) {
+            return;
+        }
+
+        if ((form.method || "get").toLowerCase() === "post") {
+            sessionStorage.setItem(scrollStorageKey, String(window.scrollY));
+        }
+    });
+
+
+    // Preview a newly selected event image before the form is submitted.
+
+    document.querySelectorAll("[data-image-input]").forEach((input) => {
+        const field = input.closest(".form-field");
+        const preview = field?.querySelector("[data-image-preview]");
+        const editor = field?.querySelector("[data-image-crop-editor]");
+        const horizontal = field?.querySelector("[data-image-position-x]");
+        const vertical = field?.querySelector("[data-image-position-y]");
+        const cropX = field?.querySelector("[name='image_crop_x']");
+        const cropY = field?.querySelector("[name='image_crop_y']");
+
+        if (!preview) {
+            return;
+        }
+
+        let previewUrl;
+
+        input.addEventListener("change", () => {
+            if (previewUrl) {
+                URL.revokeObjectURL(previewUrl);
+            }
+
+            const [file] = input.files;
+            if (!file) {
+                preview.hidden = true;
+                if (editor) {
+                    editor.hidden = true;
+                }
+                preview.removeAttribute("src");
+                return;
+            }
+
+            previewUrl = URL.createObjectURL(file);
+            preview.src = previewUrl;
+            preview.hidden = false;
+            if (editor) {
+                editor.hidden = false;
+            }
+        });
+
+        // Preview positioning and hidden percentages share the server crop
+        // convention; Pillow remains responsible for validation and final output.
+        const updatePosition = () => {
+            const x = Number(horizontal?.value || 50);
+            const y = Number(vertical?.value || 50);
+            preview.style.objectPosition = `${x}% ${y}%`;
+            if (cropX) {
+                cropX.value = String(x);
+            }
+            if (cropY) {
+                cropY.value = String(y);
+            }
+        };
+        horizontal?.addEventListener("input", updatePosition);
+        vertical?.addEventListener("input", updatePosition);
+        updatePosition();
+    });
+
+
+    // Share public event pages without navigating away from the current page.
+
+    const shareStatus = document.querySelector("[data-share-status]");
+
+    const copyEventUrl = async (url) => {
+        if (navigator.clipboard?.writeText) {
+            await navigator.clipboard.writeText(url);
+            return;
+        }
+
+        const temporaryInput = document.createElement("textarea");
+        temporaryInput.value = url;
+        temporaryInput.setAttribute("readonly", "");
+        temporaryInput.style.position = "fixed";
+        temporaryInput.style.opacity = "0";
+        document.body.appendChild(temporaryInput);
+        temporaryInput.select();
+        document.execCommand("copy");
+        temporaryInput.remove();
+    };
+
+    document.querySelectorAll("[data-copy-event-link]").forEach((button) => {
+        button.addEventListener("click", async () => {
+            try {
+                await copyEventUrl(button.dataset.shareUrl);
+                if (shareStatus) {
+                    shareStatus.textContent = "Event link copied.";
+                }
+            } catch (_error) {
+                if (shareStatus) {
+                    shareStatus.textContent = "The event link could not be copied.";
+                }
+            }
+        });
+    });
+
+    document.querySelectorAll("[data-share-event]").forEach((button) => {
+        button.addEventListener("click", async () => {
+            const shareData = {
+                title: button.dataset.shareTitle,
+                url: button.dataset.shareUrl,
+            };
+
+            try {
+                if (navigator.share) {
+                    await navigator.share(shareData);
+                } else {
+                    await copyEventUrl(shareData.url);
+                    if (shareStatus) {
+                        shareStatus.textContent = "Event link copied.";
+                    }
+                }
+            } catch (error) {
+                if (error.name !== "AbortError" && shareStatus) {
+                    shareStatus.textContent = "The event could not be shared.";
+                }
+            }
+        });
+    });
 
 
     // Animate staggered content when it enters the viewport
 
     document.querySelectorAll(".stagger-grid").forEach((grid) => {
         const items = grid.querySelectorAll(":scope > .stagger-item");
+        const revealGrid = () => grid.classList.add("is-visible");
 
         items.forEach((item, index) => {
             item.style.setProperty(
@@ -19,8 +370,19 @@ document.addEventListener("DOMContentLoaded", () => {
         });
 
         if (reduceMotion || !window.IntersectionObserver) {
-            grid.classList.add("is-visible");
+            revealGrid();
 
+            return;
+        }
+
+        // Reveal content already on screen immediately. Some browsers delay
+        // the first observer callback until a scroll or layout change.
+        const gridBounds = grid.getBoundingClientRect();
+        if (
+            gridBounds.top <= window.innerHeight + 160 &&
+            gridBounds.bottom >= -160
+        ) {
+            revealGrid();
             return;
         }
 
@@ -28,7 +390,7 @@ document.addEventListener("DOMContentLoaded", () => {
             (entries) => {
                 entries.forEach((entry) => {
                     if (entry.isIntersecting) {
-                        entry.target.classList.add("is-visible");
+                        revealGrid();
 
                         observer.unobserve(entry.target);
                     }
@@ -36,10 +398,21 @@ document.addEventListener("DOMContentLoaded", () => {
             },
             {
                 threshold: 0.08,
+                rootMargin: "0px 0px 160px 0px",
             }
         );
 
         observer.observe(grid);
+    });
+
+    // Pages restored from browser history can skip a fresh observer callback.
+    window.addEventListener("pageshow", () => {
+        document.querySelectorAll(".stagger-grid").forEach((grid) => {
+            const bounds = grid.getBoundingClientRect();
+            if (bounds.top <= window.innerHeight + 160 && bounds.bottom >= -160) {
+                grid.classList.add("is-visible");
+            }
+        });
     });
 
 
@@ -363,31 +736,68 @@ document.addEventListener("DOMContentLoaded", () => {
             previous.hidden = !canScroll;
             next.hidden = !canScroll;
 
-            previous.disabled =
-                !canScroll ||
-                viewport.scrollLeft <=
-                    edgeTolerance;
-
-            next.disabled =
-                !canScroll ||
-                viewport.scrollLeft >=
-                    maximumScroll -
-                        edgeTolerance;
+            previous.disabled = !canScroll;
+            next.disabled = !canScroll;
         };
 
 
-        // Move the carousel by exactly one card
+        // Reuse existing slides for wraparound rather than cloning forms/IDs.
+        // Scroll the viewport; transforms would conflict with reveal animations.
+
+        let isMoving = false;
+
+        const finishAfterMotion = (callback) => {
+            if (reduceMotion) {
+                callback();
+                return;
+            }
+
+            window.setTimeout(callback, 360);
+        };
+
+        const jumpWithoutAnimation = (left) => {
+            const previousScrollBehavior =
+                viewport.style.scrollBehavior;
+
+            viewport.style.scrollBehavior = "auto";
+            viewport.scrollLeft = left;
+            viewport.style.scrollBehavior = previousScrollBehavior;
+        };
 
         const moveCarousel = (direction) => {
-            viewport.scrollBy({
-                left:
-                    direction *
-                    getStepSize(),
+            if (isMoving || slides.length < 2) {
+                return;
+            }
 
-                behavior:
-                    reduceMotion
-                        ? "auto"
-                        : "smooth",
+            isMoving = true;
+            const stepSize = getStepSize();
+
+            if (direction < 0) {
+                track.prepend(track.lastElementChild);
+                jumpWithoutAnimation(stepSize);
+
+                window.requestAnimationFrame(() => {
+                    viewport.scrollTo({
+                        left: 0,
+                        behavior: reduceMotion ? "auto" : "smooth",
+                    });
+                });
+
+                finishAfterMotion(() => {
+                    isMoving = false;
+                });
+                return;
+            }
+
+            viewport.scrollTo({
+                left: stepSize,
+                behavior: reduceMotion ? "auto" : "smooth",
+            });
+
+            finishAfterMotion(() => {
+                track.append(track.firstElementChild);
+                jumpWithoutAnimation(0);
+                isMoving = false;
             });
         };
 

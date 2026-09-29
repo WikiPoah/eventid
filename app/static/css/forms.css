@@ -534,6 +534,11 @@ legend {
     object-fit: cover;
 }
 
+.image-preview-new {
+    margin-top: 8px;
+    margin-bottom: 0;
+}
+
 
 /* Style form action groups */
 
@@ -561,25 +566,273 @@ legend {
 
 /* Style browse event filters */
 
+.browse-page-heading {
+    padding-inline: 0;
+}
+
 .filter-grid {
     margin-bottom: 30px;
 
     display: grid;
 
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: minmax(0, 2fr) minmax(220px, 1fr);
 
     gap: 18px;
 }
 
 .filter-actions {
+    grid-column: 1 / -1;
+
     align-items: stretch;
     justify-content: flex-end;
+
+    width: 100%;
+}
+
+/* Keep the search primary and group the optional discovery controls. */
+.browse-filter-form {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 20px;
+}
+
+.browse-filter-form > .form-field {
+    grid-column: 1;
+}
+
+.browse-filter-form > .filter-actions {
+    grid-column: 2;
+    grid-row: 1;
+    width: auto;
+    align-self: end;
+    flex-direction: row;
+    padding-top: 0;
+    border-top: 0;
+}
+
+.browse-filter-options {
+    grid-column: 1 / -1;
+    min-width: 0;
+}
+
+.browse-filter-options > summary {
+    display: none;
+}
+
+.browse-filter-fields {
+    display: grid;
+    grid-template-columns: minmax(180px, 0.6fr) minmax(0, 2fr);
+    gap: 24px;
+}
+
+.browse-filter-fields .category-filter-field {
+    grid-column: auto;
+    min-width: 0;
+    padding: 0;
+    border: 0;
+}
+
+.browse-filter-fields .category-filter-field legend {
+    margin-bottom: 10px;
+}
+
+
+@media (max-width: 768px) {
+    .browse-filter-form {
+        grid-template-columns: 1fr;
+        gap: 14px;
+        padding: 18px;
+    }
+
+    .browse-filter-form > .form-field,
+    .browse-filter-form > .filter-actions {
+        grid-column: 1;
+        grid-row: auto;
+    }
+
+    .browse-filter-form > .filter-actions {
+        width: 100%;
+    }
+
+    .browse-filter-form .filter-actions .button {
+        flex: 1;
+        width: auto;
+    }
+
+    .browse-filter-options > summary {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        min-height: 44px;
+        cursor: pointer;
+        color: var(--navy);
+    }
+
+    .browse-filter-options > summary span {
+        margin-left: auto;
+        color: var(--muted);
+        font-size: 0.85rem;
+    }
+
+    .browse-filter-options > summary::after {
+        content: "+";
+        font-size: 1.25rem;
+    }
+
+    .browse-filter-options[open] > summary::after {
+        content: "−";
+    }
+
+    .browse-filter-fields {
+        grid-template-columns: 1fr;
+        gap: 20px;
+        padding: 12px 0;
+    }
+
+}
+
+.category-filter-field {
+    grid-column: 1 / -1;
+
+    margin: 0;
+    padding: 18px 0 2px;
+
+    border: 0;
+    border-top: 1px solid #e3e9f2;
+}
+
+.category-filter-field legend {
+    padding: 0 12px 0 0;
+
+    color: var(--navy);
+
+    font-size: 0.95rem;
+    font-weight: 600;
+}
+
+.category-filter-chips {
+    display: flex;
+    flex-wrap: wrap;
+
+    gap: 10px;
+}
+
+.category-filter-chip {
+    cursor: pointer;
+}
+
+.category-filter-chip input {
+    position: absolute;
+
+    width: 1px;
+    height: 1px;
+
+    overflow: hidden;
+    opacity: 0;
+}
+
+.category-filter-chip span {
+    min-height: 40px;
+
+    padding: 9px 14px;
+
+    display: inline-flex;
+    align-items: center;
+
+    border: 1px solid #cbd5e5;
+    border-radius: 999px;
+
+    background: white;
+    color: #52617a;
+
+    font-size: 0.9rem;
+    font-weight: 600;
+
+    transition: background-color 0.18s ease, border-color 0.18s ease, color 0.18s ease;
+}
+
+.category-filter-chip input:checked + span {
+    border-color: var(--navy);
+
+    background: var(--navy);
+    color: white;
+}
+
+.category-filter-chip input:focus-visible + span {
+    outline: 3px solid rgba(38, 103, 255, 0.24);
+    outline-offset: 2px;
 }
 
 .search-submit {
     min-width: 112px;
 
     white-space: nowrap;
+}
+
+.browse-empty-state {
+    margin-top: 26px;
+}
+
+.browse-results-summary {
+    min-height: 42px;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+
+    gap: 12px 18px;
+}
+
+.browse-results-summary p {
+    margin: 0;
+
+    color: #5d6b83;
+
+    font-size: 0.94rem;
+}
+
+.browse-results-summary strong {
+    color: var(--navy);
+}
+
+.active-filter-tags {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+
+    gap: 8px;
+}
+
+.active-filter-tag {
+    padding: 7px 10px;
+
+    border: 1px solid #ccd7e8;
+    border-radius: 999px;
+
+    background: white;
+    color: var(--navy);
+
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.active-filter-tag span {
+    margin-left: 4px;
+
+    font-size: 1rem;
+}
+
+.active-filter-tag:hover {
+    border-color: var(--navy);
+
+    background: #f1f5fb;
+}
+
+.clear-all-filters {
+    color: var(--navy-light);
+
+    font-size: 0.82rem;
+    font-weight: 600;
 }
 
 
@@ -811,6 +1064,10 @@ legend {
 
 @media (max-width: 520px) {
 
+    .browse-page-heading {
+        padding-inline: 0;
+    }
+
     .form-layout {
         gap: 34px;
     }
@@ -885,4 +1142,71 @@ legend {
         text-align: center;
     }
 
+}
+.image-crop-editor {
+    display: grid;
+    gap: 18px;
+    margin-top: 8px;
+    padding: 18px;
+    border: 1px solid #d9e1ee;
+    border-radius: 14px;
+    background: #f7f9fd;
+}
+
+.image-crop-editor[hidden] {
+    display: none;
+}
+
+.image-crop-frame {
+    position: relative;
+    overflow: hidden;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    border-radius: 12px;
+    background: #dfe6f2;
+    box-shadow: inset 0 0 0 1px rgba(22, 47, 103, 0.12);
+}
+
+.image-crop-frame .image-preview-new {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    border: 0;
+    border-radius: 0;
+    object-fit: cover;
+}
+
+.image-crop-guide {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.72);
+}
+
+.image-position-controls {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px;
+}
+
+.image-position-controls > div {
+    display: grid;
+    gap: 8px;
+}
+
+.image-position-controls label {
+    color: var(--navy);
+    font-size: 0.86rem;
+    font-weight: 700;
+}
+
+.image-position-controls input[type="range"] {
+    min-height: 28px;
+    padding: 0;
+}
+
+@media (max-width: 620px) {
+    .image-position-controls {
+        grid-template-columns: 1fr;
+    }
 }

@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block title %}Ticket · {{ attendance.event.title }} · eventid{% endblock %}
+
+{% block content %}
+
+<div class="page-heading ticket-page-heading">
+    <div>
+        <span class="eyebrow">Registration confirmed</span>
+        <h1>Your Event Ticket</h1>
+        <p>Your place is confirmed. Keep this ticket handy for check-in.</p>
+    </div>
+    <a class="button button-secondary" href="{{ url_for('events.my_events') }}">Back to My Events</a>
+</div>
+
+<article class="event-ticket">
+    <div class="event-ticket-details">
+        <span class="badge">Confirmed</span>
+        <h2>{{ attendance.event.title }}</h2>
+        <p class="event-ticket-holder">
+            Ticket for <strong>{{ attendance.user.first_name }} {{ attendance.user.last_name }}</strong>
+        </p>
+
+        <dl class="details-list">
+            <dt>Date</dt>
+            <dd>{{ attendance.event.start_datetime.strftime("%d %B %Y") }}</dd>
+            <dt>Time</dt>
+            <dd>{{ attendance.event.start_datetime.strftime("%H:%M") }}–{{ attendance.event.end_datetime.strftime("%H:%M") }}</dd>
+            <dt>Venue</dt>
+            <dd>{{ attendance.event.venue_name }}<br>{{ attendance.event.address }}, {{ attendance.event.city }}</dd>
+        </dl>
+
+        <a class="event-ticket-details-link"
+            href="{{ url_for('events.event_details', event_id=attendance.event.event_id) }}">View event details →</a>
+    </div>
+
+    <div class="event-ticket-code">
+        <img src="{{ url_for('events.attendee_ticket_qr', event_id=attendance.event.event_id) }}"
+            alt="QR ticket for {{ attendance.event.title }}" width="220" height="220">
+        <strong>{{ attendance.ticket_token }}</strong>
+        <p>Show this QR code to the organiser when you arrive.</p>
+        {% if attendance.checked_in_at %}
+        <span class="ticket-checked-in">Checked in</span>
+        {% endif %}
+    </div>
+</article>
+
+{% endblock %}

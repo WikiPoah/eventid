@@ -1,505 +1,147 @@
 # EventID
 
-EventID is a full-stack event discovery and management web application built with Flask.
+EventID is a full-stack event discovery and management application. Attendees can find events, register, organise their calendar and show a QR ticket; organisers can manage events, approve private invitations and check attendees in.
 
-It allows users to discover events, create an account, attend events, save favourites, and manage events they organise through a dedicated organiser dashboard.
+I built EventID with Flask and a relational database. Working on it gave me hands-on experience with server-side authorization, handling concurrent registrations, account security and responsive UI—all without a frontend framework.
 
-The project was originally developed as a database-focused application and has since grown into a broader full-stack portfolio project covering authentication, relational data modelling, validation, concurrency, event management, responsive UI design, testing, and secure application structure.
+## Screenshots / Demo
 
-> **Current release:** `v0.9.1 – Recruiter Preview`
-> EventID is actively being polished ahead of its first stable `v1.0.0` release.
+Screenshots below show the current application with disposable, fictional demo data. Run the local demo using the instructions below; no hosted demo URL is currently advertised.
 
----
+![Event discovery with search, filters and populated event cards](docs/screenshots/browse-events.png)
 
-## Overview
+<details>
+<summary>Event details, ticket and organiser tools</summary>
 
-EventID supports two main use cases:
+![Event details and registration](docs/screenshots/event-details.png)
+![Confirmed attendee ticket with QR code](docs/screenshots/ticket.png)
+![Organiser dashboard with upcoming and archived events](docs/screenshots/manage-events.png)
+![Organiser check-in with attendee status and progress](docs/screenshots/check-in.png)
 
-### Attendees
+</details>
 
-Users can:
+<details>
+<summary>Mobile discovery</summary>
 
-- create an account and log in using either username or email
-- browse public events
-- search and filter events
-- view detailed event information
-- register attendance
-- save favourite events
-- view events they are attending
+<img src="docs/screenshots/mobile.png" width="390" alt="Mobile event discovery with compact navigation and expandable filters">
 
-### Organisers
+</details>
 
-Organisers can:
+## Features
 
-- create events
-- edit existing events
-- manage event status and visibility
-- upload event images
-- set event capacity
-- manage venue and location information
-- view attendee information
-- export attendee data as CSV
-- manage their events from a dedicated dashboard
+- Browse and search events by text, location and category; save favourites.
+- Create an account, sign in, edit your profile and manage active sessions. Email verification and password recovery are available when a mail provider is configured.
+- Register for public events or request approval for private events through expiring invitations and optional email allowlists.
+- View My Events, a monthly calendar, downloadable ICS files and Google/Outlook calendar links.
+- Open confirmed QR tickets; organisers can verify tickets, check attendees in, undo check-in and export attendee CSVs.
+- Create, edit, duplicate, publish and cancel events, with capacity limits, image uploads and owner-only management.
+- Responsive desktop/mobile layouts, progressive form feedback and usable discovery without JavaScript.
 
----
+## Tech Stack
 
-## Key Features
+**Backend:** Python 3.12, Flask, Jinja2, Flask-WTF/WTForms, Flask-SQLAlchemy, Flask-Migrate/Alembic and Flask-Limiter.
 
-### Authentication
+**Data/runtime:** SQLite locally, PostgreSQL with psycopg 3 in production, Waitress WSGI server, Pillow for validated images, QRCode for tickets and Resend for optional account emails.
 
-- user registration
-- secure password hashing
-- login with username or email
-- automatic login after registration
-- protected authentication routes for already logged-in users
-- session-based authentication
+**Frontend/tooling:** HTML, CSS and vanilla JavaScript; pytest, coverage, Ruff, Black and GitHub Actions. Direct runtime and development dependencies are pinned in `requirements.txt` and `requirements-dev.txt`.
 
-### Event Management
+## Engineering Highlights
 
-- create, edit, publish, cancel and delete events
-- organiser-only management controls
-- public/private event visibility
-- draft, published and cancelled event states
-- event capacity limits
-- event image uploads
-- event categories
-- detailed venue and location information
+- **Database:** users, events, categories, favourites, registrations and sessions are linked with database constraints. Alembic migrations track schema changes.
+- **Concurrent registrations:** registration and private-event approval lock the event before checking capacity. SQLite uses `BEGIN IMMEDIATE`; PostgreSQL uses `SELECT FOR UPDATE`, so registrations for other events can proceed at the same time.
+- **Access and account security:** the server checks event ownership, invitation access and ticket permissions. CSRF protection, password hashing, safe login redirects, rate limits, secure production cookies and revocable sessions protect account actions.
+- **Private-event flow:** guests request a place through an expiring invitation; the organiser can approve or decline. Approval confirms the registration and unlocks its ticket.
+- **Recommendations and images:** the home page ranks a bounded set of public events using category, city and attendance signals. Uploaded images are checked, cropped and converted to WebP under generated filenames.
+- **Tests and CI:** tests cover user flows, access checks, capacity races, email, demo seeding and migration drift. GitHub Actions checks formatting, lint, coverage, routes, migrations and tracked-file hygiene.
+- **Production setup:** PostgreSQL URLs are normalized for psycopg 3. Production requires explicit secrets and a database URL, and `/health` checks the database.
 
-### Attendance
+## Architecture
 
-- users can register for events
-- duplicate registrations are prevented
-- organisers cannot attend their own events
-- event capacity is enforced
-- last-place registration is protected against concurrent requests
+Flask’s `create_app()` function loads settings, sets up the extensions and registers the account and event routes. Routes validate requests, check access and update the database through SQLAlchemy. Jinja renders the pages; vanilla JavaScript handles small in-page interactions. Uploaded images live outside the source tree and are served only after event-access checks.
 
-### Discovery
+The main flow is discovery → event details → registration → My Events/calendar → ticket. For private events, invitation access → pending request → owner approval precedes ticket issuance; only the event owner can verify or check in that ticket.
 
-- browse events
-- search and filtering
-- category-based discovery
-- homepage event carousels
-- event detail pages
-- personalised application areas for attendees and organisers
+See [architecture](docs/architecture.md), [security controls](docs/security.md) and [deployment/recovery](docs/deployment.md) for implementation details.
 
-### Organiser Dashboard
+## Local Setup
 
-- overview of organised events
-- event statistics
-- upcoming event management
-- attendee CSV export
-- clear empty states and management actions
-
-### User Interface
-
-The current frontend includes redesigned:
-
-- navigation
-- authentication pages
-- event creation and editing forms
-- organiser dashboard
-- My Events page
-- homepage
-- footer
-- responsive layouts
-
-The interface is intentionally designed to be clean and restrained, inspired by modern developer and SaaS products rather than highly decorative UI patterns.
-
----
-
-## Technology Stack
-
-### Backend
-
-- Python
-- Flask
-- Flask-WTF
-- SQLAlchemy
-- Flask-Migrate
-- WTForms
-- Jinja2
-
-### Database
-
-- SQLite for local development
-- relational SQLAlchemy models
-- Alembic migrations through Flask-Migrate
-
-### Frontend
-
-- HTML
-- CSS
-- Jinja templates
-- JavaScript
-
-### Development
-
-- Git
-- GitHub
-- pytest
-- environment-based configuration
-
----
-
-## Project Structure
-
-A simplified view of the project is shown below:
-
-```text
-eventid/
-├── app/
-│   ├── database/
-│   │   ├── db.py
-│   │   └── seed.py
-│   ├── forms/
-│   ├── models/
-│   ├── routes/
-│   │   ├── auth.py
-│   │   └── events.py
-│   ├── static/
-│   │   ├── css/
-│   │   ├── js/
-│   │   └── uploads/
-│   └── templates/
-├── migrations/
-├── tests/
-├── .env.example
-├── .gitignore
-├── main.py
-├── requirements.txt
-└── README.md
-```
-
-The exact contents may evolve while the project approaches `v1.0.0`.
-
----
-
-# Running EventID Locally
-
-## 1. Prerequisites
-
-Install:
-
-- Python 3.11 or newer
-- Git
-- pip
-
-You can confirm Python is available with:
-
-```bash
-python --version
-```
-
-On some systems the command may be:
-
-```bash
-python3 --version
-```
-
----
-
-## 2. Clone the Repository
+Use Python 3.12 and run commands from the repository root:
 
 ```bash
 git clone https://github.com/WikiPoah/eventid.git
 cd eventid
-```
-
----
-
-## 3. Create a Virtual Environment
-
-### Windows PowerShell
-
-```powershell
-python -m venv .venv
-.\.venv\Scripts\Activate.ps1
-```
-
-### macOS / Linux
-
-```bash
 python3 -m venv .venv
 source .venv/bin/activate
-```
-
-Once activated, your terminal should normally show `(.venv)`.
-
----
-
-## 4. Install Dependencies
-
-```bash
-python -m pip install --upgrade pip
-pip install -r requirements.txt
-```
-
----
-
-## 5. Configure Environment Variables
-
-Copy the example environment file.
-
-### Windows PowerShell
-
-```powershell
-Copy-Item .env.example .env
-```
-
-### macOS / Linux
-
-```bash
+python -m pip install -r requirements-dev.txt
 cp .env.example .env
+python -c "import secrets; print(secrets.token_hex(32))"
 ```
 
-Open `.env` and replace any placeholder values with local development values.
-
-At minimum, the application requires a Flask secret key.
-
-Example:
-
-```env
-SECRET_KEY=replace-this-with-a-random-development-secret
-```
-
-Never commit the real `.env` file to Git.
-
----
-
-## 6. Prepare the Database
-
-Apply the existing database migrations:
+Paste the generated value into `.env` as `SECRET_KEY`. Keep `FLASK_ENV=development`; leave `DATABASE_URL` unset for SQLite. Never commit `.env`. On Windows PowerShell, use `python` instead of `python3`, `.\.venv\Scripts\Activate.ps1` and `Copy-Item .env.example .env`.
 
 ```bash
-flask --app main db upgrade
+flask --app main:app db upgrade
+flask --app main:app seed-categories
+flask --app main:app run
 ```
 
-If Flask cannot find the application automatically, make sure the virtual environment is active and that you are running the command from the project root.
+Open **http://127.0.0.1:5000**. SQLite and uploaded images live in the ignored `instance/` directory. No external database or email provider is needed for the main demo.
 
-The development database uses SQLite.
+## Demo
 
----
-
-## 7. Run the Application
-
-Start EventID with:
+In a fresh development database:
 
 ```bash
-python main.py
+flask --app main:app seed-demo-data
+flask --app main:app run
 ```
 
-If you prefer Flask's development runner, you can also use:
+The seed provides five fictional users, fourteen events, categories, confirmed registrations, favourites, demo images and relative event dates. Re-running it preserves record identities rather than creating duplicates.
+
+| Account | Username | Password |
+| --- | --- | --- |
+| Attendee — Alex Rivera | `demo_attendee` | `eventid-demo-2026` |
+| Organiser — Maya Morgan | `demo_organiser` | `eventid-demo-2026` |
+
+These are **public development/demo credentials**, never real account credentials. Use only a disposable database or a dedicated demo instance without real user data. Production seeding requires explicit `ALLOW_DEMO_SEED=true`; disable it again after seeding.
+
+Suggested five-minute walkthrough:
+
+1. Search for **Berlin Morning Yoga**, open details, then sign up or sign in as the attendee and register.
+2. Open **My Events**, the calendar and your ticket. Save a favourite from Browse.
+3. In a separate browser/private window, sign in as the organiser. Explore Manage Events and edit or duplicate an event.
+4. Open **Leipzig Organiser Planning Session**, copy its invitation link and open it in the attendee window. Request attendance; approve it from the organiser window.
+5. Open the newly available attendee ticket. In the organiser window, use Check-in to verify/check in the attendee; repeat to see the already-checked-in state.
+
+The organiser check-in search/manual controls demonstrate the same lifecycle as opening the QR link in an authenticated organiser browser; there is no in-app camera scanner.
+
+## Testing
 
 ```bash
-flask --app main run
+python -m pytest -q
+python -m pytest --cov=app --cov-report=term-missing --cov-fail-under=85
+python -m ruff check .
+python -m black --check .
+git diff --check
+node --check app/static/js/script.js
 ```
 
-Then open the local address shown in the terminal, normally:
+Tests use disposable SQLite databases and upload directories. Migration tests upgrade a fresh database, repeat the upgrade and compare the schema to the models. PostgreSQL startup/schema and concurrency checks have also been exercised locally against a disposable PostgreSQL 16 instance; PostgreSQL is not part of the current CI job.
 
-```text
-http://127.0.0.1:5000
-```
+GitHub Actions runs Python 3.12 checks on pushes/PRs to `main` and `develop`, including an 85% coverage floor, application import/routes and migration drift checks. Node is optional for the JavaScript syntax command. See [testing notes](docs/testing.md).
 
----
+## Deployment
 
-## 8. Run the Test Suite
+[`render.yaml`](render.yaml) defines a single Waitress web service, PostgreSQL database and persistent upload disk. Its pre-deploy step upgrades migrations and seeds categories; startup serves `main:app`, and `/health` queries the database.
 
-From the project root:
+Production requires `FLASK_ENV=production`, a unique `SECRET_KEY`, `DATABASE_URL` and HTTPS. `postgres://` and `postgresql://` connection URLs are normalized for psycopg 3. Use a persistent `UPLOAD_DIRECTORY`; the Blueprint mounts `/var/data/eventid/event_images`. Configure `RESEND_API_KEY` and a verified `MAIL_FROM` to enable actual email delivery.
 
-```bash
-python -m pytest
-```
+For a dedicated hosted demo, seed through Render's **runtime Shell** after deployment, when the upload disk is mounted. Review paid service/database/disk plans before provisioning. Local production-like verification is complete; an actual hosted Render deployment and delivery from a real mail provider still require verification. Follow [deployment instructions](docs/deployment.md).
 
-The project includes automated tests covering core application behaviour including authentication, event management, attendance and related business rules.
+## Limitations
 
----
-
-# Database Design
-
-EventID uses a relational data model.
-
-Core entities include:
-
-### User
-
-Stores account and profile information.
-
-Examples include:
-
-- username
-- email
-- password hash
-- profile details
-- organiser status
-
-### Event
-
-Stores event information including:
-
-- title
-- description
-- start and end date/time
-- venue
-- street address
-- postcode
-- city
-- country
-- optional latitude and longitude
-- event status
-- privacy
-- capacity
-- organiser
-
-### Category
-
-Represents event categories.
-
-Events and categories use a many-to-many relationship.
-
-### Attendance
-
-Connects users to events they are attending.
-
-A composite key prevents duplicate attendance records.
-
----
-
-# Selected Engineering Decisions
-
-## Concurrency-Safe Capacity Handling
-
-Capacity-limited events require more than a simple count followed by an insert.
-
-EventID includes protection against two users simultaneously claiming the final available place.
-
-The local SQLite implementation uses transaction locking appropriate to SQLite, while the design also considers row-level locking for databases such as PostgreSQL.
-
----
-
-## Secure Event Ownership
-
-Editing, deletion and attendee exports are restricted to the organiser who owns the event.
-
-Server-side checks are used rather than relying only on hidden interface controls.
-
----
-
-## Application Configuration
-
-Sensitive configuration such as the Flask secret key is stored outside the source code using environment variables.
-
-The real `.env` file is excluded from version control and `.env.example` documents the expected configuration.
-
----
-
-## Validation
-
-Forms are validated server-side using Flask-WTF and WTForms.
-
-Registration and event forms preserve user input when validation fails so users do not have to re-enter valid information.
-
----
-
-# Current Development Status
-
-EventID is currently at:
-
-## `v0.9.1 – Recruiter Preview`
-
-This version is intended to be presentable for portfolio and recruiter review while final frontend work continues.
-
-The core application and backend functionality are already in place.
-
-Remaining work before `v1.0.0` is primarily refinement rather than a fundamental application rewrite.
-
-### Planned before v1.0.0
-
-- final homepage carousel refinement
-- Event Details visual polish
-- Browse Events consistency pass
-- full responsive QA
-- accessibility review
-- final UI consistency pass
-- Calendar completion
-
-The Calendar feature is currently intentionally marked as **Coming soon** instead of exposing an unfinished experience.
-
----
-
-# Release Approach
-
-EventID uses semantic versioning.
-
-Recent milestones have included:
-
-- authentication
-- event models and relationships
-- event creation
-- browsing and details
-- search and categories
-- attendance and favourites
-- organiser functionality
-- event management
-- frontend and portfolio polish
-
-The first stable release will be tagged:
-
-```text
-v1.0.0
-```
-
-only after the remaining visual, responsive and accessibility work has been completed.
-
----
-
-# What I Learned
-
-Building EventID has involved working across more than just basic CRUD functionality.
-
-Key areas include:
-
-- relational database modelling
-- authentication and authorisation
-- secure server-side validation
-- Flask application organisation
-- database migrations
-- transaction handling
-- concurrency concerns
-- file uploads
-- CSV exports
-- responsive interface design
-- automated testing
-- Git branching and semantic versioning
-- iterative frontend refinement
-
----
-
-# Roadmap
-
-### v0.9.1 – Recruiter Preview
-
-Current recruiter-ready preview release.
-
-### v1.0.0 – First Stable Release
-
-Planned focus:
-
-- final UI consistency
-- accessibility
-- responsive QA
-- Event Details redesign
-- Browse Events polish
-- carousel refinement
-- Calendar completion or stable release treatment
-
-Future versions may expand discovery, recommendations, organiser tooling and deployment capabilities.
-
----
-
-## Notes for Reviewers
-
-EventID is under active development.
-
-The `v0.9.1` release represents a deliberately stable recruiter preview of the application before the remaining frontend and accessibility work is completed for `v1.0.0`.
-
-Feedback is welcome.
+- The reference deployment is one process/instance with local persistent uploads. Its in-memory rate limits reset on restart; shared limiter storage and object storage are needed before scaling out.
+- Email flows require a configured provider; ordinary signup/login/registration work without one.
+- Demo accounts are public, and seeded events are fictional. Keep the demo separate from real users and re-seed when refreshing event dates.
+- Browser verification used Chromium on desktop/mobile viewports. Wider cross-browser/accessibility review remains useful; the mobile month grid scrolls horizontally.
+- This is a portfolio application, with no payments, live operations guarantee or production-scale claim.

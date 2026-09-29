@@ -1,11 +1,28 @@
 from io import BytesIO
 from pathlib import Path
 
+from PIL import Image
+
 from app.database.db import db
 from app.models.event import Event
 from tests.conftest import login
 
-PNG_IMAGE = b"\x89PNG\r\n\x1a\n" + b"\x00" * 24
+
+def make_png(width=1200, height=800):
+    output = BytesIO()
+    Image.new("RGB", (width, height), "#2854a3").save(output, format="PNG")
+    return output.getvalue()
+
+
+def make_vertical_test_image():
+    image = Image.new("RGB", (800, 800), "#d9273e")
+    image.paste("#2057b5", (0, 400, 800, 800))
+    output = BytesIO()
+    image.save(output, format="PNG")
+    return output.getvalue()
+
+
+PNG_IMAGE = make_png()
 
 
 def event_data(**overrides):
@@ -48,13 +65,16 @@ def test_valid_image_upload_uses_safe_generated_filename(app, client, users):
     with app.app_context():
         event = Event.query.filter_by(title="Image Event").one()
 
-        assert event.image_path.endswith(".png")
+        assert event.image_path.endswith(".webp")
         assert "unsafe" not in event.image_path
         assert "/" not in event.image_path
 
         saved_path = Path(app.config["EVENT_IMAGE_UPLOAD_FOLDER"]) / event.image_path
 
-        assert saved_path.read_bytes() == PNG_IMAGE
+        with Image.open(saved_path) as saved_image:
+            assert saved_image.size == (1600, 900)
+            assert saved_image.format == "WEBP"
+            assert not saved_image.getexif()
 
 
 def test_invalid_image_extension_and_signature_are_rejected(
@@ -121,6 +141,41 @@ def test_oversized_image_is_rejected(
     )
 
     assert b"4 MB or smaller" in response.data
+
+
+def test_extreme_image_dimensions_are_rejected(app, client, users):
+    app.config["EVENT_IMAGE_MAX_PIXELS"] = 100
+    login(client, users[0])
+
+    response = client.post(
+        "/events/create",
+        data=event_data(image=(BytesIO(PNG_IMAGE), "wide.png")),
+        content_type="multipart/form-data",
+    )
+
+    assert b"image dimensions are too large" in response.data
+
+
+def test_crop_position_controls_normalized_output(app, client, users):
+    login(client, users[0])
+    response = client.post(
+        "/events/create",
+        data=event_data(
+            image=(BytesIO(make_vertical_test_image()), "position.png"),
+            image_crop_x="50",
+            image_crop_y="100",
+        ),
+        content_type="multipart/form-data",
+    )
+    assert response.status_code == 302
+
+    with app.app_context():
+        event = Event.query.filter_by(title="Image Event").one()
+        saved_path = Path(app.config["EVENT_IMAGE_UPLOAD_FOLDER"]) / event.image_path
+        with Image.open(saved_path) as saved_image:
+            red, green, blue = saved_image.getpixel((800, 450))
+            assert blue > red
+            assert blue > green
 
 
 def test_organiser_can_replace_image_and_old_file_is_removed(
@@ -214,7 +269,7 @@ def test_image_fallback_and_image_access_rules(
 ):
     public_id = event_factory(image_path=None)
 
-    event_factory(
+    private_id = event_factory(
         status="Draft",
         image_path="private.png",
     )
@@ -244,5 +299,11 @@ def test_image_fallback_and_image_access_rules(
     assert image_response.status_code == 200
 
     assert image_response.headers["X-Content-Type-Options"] == "nosniff"
+
+    assert image_response.headers["Cache-Control"] == "private, no-store"
+
+    details_response = client.get(f"/events/{private_id}")
+
+    assert details_response.headers["Cache-Control"] == "private, no-store"
 
     assert client.get("/event-images/../private.png").status_code == 404

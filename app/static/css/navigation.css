@@ -46,6 +46,11 @@
 
 /* Style the navigation links */
 
+.nav-label-short {
+    display: none;
+}
+
+
 .nav-links {
     min-width: 0;
 

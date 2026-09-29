@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block title %}Favourites · eventid{% endblock %}
+
+{% block content %}
+<div class="page-heading">
+    <div>
+        <span class="eyebrow">Saved for later</span>
+        <h1>Favourites</h1>
+        <p>All the events you have saved in one place.</p>
+    </div>
+    <a class="button button-primary" href="{{ url_for('events.browse_events') }}">Browse Events</a>
+</div>
+
+{% if events %}
+<div class="event-grid favourites-grid stagger-grid">
+    {% for event in events %}
+        {% set show_organiser_details = false %}
+        {% include "event_card.html" %}
+    {% endfor %}
+</div>
+{% else %}
+<div class="empty-state empty-state-stacked">
+    <h2>No favourites yet</h2>
+    <p>Use the heart on an event card to save it here.</p>
+    <a class="button button-primary" href="{{ url_for('events.browse_events') }}">Find an Event</a>
+</div>
+{% endif %}
+{% endblock %}

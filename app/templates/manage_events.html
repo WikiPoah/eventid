@@ -1,10 +1,10 @@
 {% extends "base.html" %}
 
-{% block title %}Manage Events · EventID{% endblock %}
+{% block title %}Manage Events · eventid{% endblock %}
 
 {% block content %}
 
-<!-- Display the organiser dashboard heading -->
+<!-- Organiser dashboard heading -->
 
 <div class="page-heading">
 
@@ -29,10 +29,10 @@
 
 </div>
 
-<!-- Display organiser statistics -->
+<!-- Organiser statistics -->
 
 <section
-    class="stats-grid stagger-grid"
+    class="stats-grid organiser-summary stagger-grid"
     aria-label="Organiser summary"
 >
 
@@ -84,6 +84,11 @@
 
     </div>
 
+</section>
+
+<details class="organiser-metrics">
+    <summary><strong>Registration &amp; capacity</strong><span>{{ summary.total_registrations }} registrations · {{ summary.upcoming_events }} upcoming events</span></summary>
+    <div class="stats-grid organiser-metrics-grid">
     <div class="stat-card stagger-item">
 
         <span class="stat-label">
@@ -148,9 +153,11 @@
 
     </div>
 
-</section>
+    </div>
+</details>
 
-<!-- Display upcoming and past organiser events -->
+
+<!-- Upcoming and past organiser events -->
 
 {% for heading, event_list, empty_message in [
     ('Upcoming Events', upcoming_events, 'You have no upcoming events to manage.'),

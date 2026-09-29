@@ -6,7 +6,7 @@ services:
     branch: main
     autoDeployTrigger: checksPass
     buildCommand: pip install -r requirements.txt
-    preDeployCommand: flask --app main:app db upgrade
+    preDeployCommand: flask --app main:app db upgrade && flask --app main:app seed-categories
     startCommand: waitress-serve --host=0.0.0.0 --port=$PORT main:app
     healthCheckPath: /health
     disk:

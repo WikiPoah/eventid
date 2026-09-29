@@ -7,11 +7,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <meta name="description"
-        content="{% block description %}Discover, attend, and organise events with EventID.{% endblock %}">
+        content="{% block description %}Discover, attend, and organise events with eventid.{% endblock %}">
 
     <meta name="theme-color" content="#162f67">
 
-    <meta property="og:title" content="EventID">
+    <meta property="og:title" content="eventid">
 
     <meta property="og:description" content="Discover, attend, and organise memorable events.">
 
@@ -20,12 +20,12 @@
     <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/logo.png') }}">
 
     <title>
-        {% block title %}EventID{% endblock %}
+        {% block title %}eventid{% endblock %}
     </title>
 
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css', v='5') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css', v='32') }}">
 
-    <script src="{{ url_for('static', filename='js/script.js', v='5') }}" defer></script>
+    <script src="{{ url_for('static', filename='js/script.js', v='16') }}" defer></script>
 </head>
 
 <body>
@@ -34,30 +34,30 @@
         Skip to main content
     </a>
 
-    <header class="site-header">
+    <header class="site-header{% if request.endpoint == 'events.browse_events' %} site-header-browse{% endif %}{% if request.endpoint == 'home' or request.endpoint in ['auth.login', 'auth.signup', 'auth.profile', 'auth.settings'] %} site-header-compact{% endif %}">
 
         <nav class="main-navigation" aria-label="Main navigation">
 
-            <a class="nav-logo" href="{{ url_for('home') }}" aria-label="EventID home">
-                <img src="{{ url_for('static', filename='images/logo.png') }}" alt="EventID">
+            <a class="nav-logo" href="{{ url_for('home') }}" aria-label="eventid home">
+                <img src="{{ url_for('static', filename='images/logo.png') }}" alt="eventid">
             </a>
 
             <div class="nav-links">
 
-                <a href="{{ url_for('events.browse_events') }}">
-                    Browse Events
+                <a href="{{ url_for('events.browse_events') }}"{% if request.endpoint == 'events.browse_events' %} aria-current="page"{% endif %}>
+                    <span class="nav-label-full">Browse Events</span><span class="nav-label-short">Browse</span>
                 </a>
 
-                <a href="{{ url_for('events.my_events') }}">
+                <a href="{{ url_for('events.my_events') }}"{% if request.endpoint == 'events.my_events' %} aria-current="page"{% endif %}>
                     My Events
                 </a>
 
-                <a href="{{ url_for('events.manage_events') }}">
-                    Manage Events
+                <a href="{{ url_for('events.manage_events') }}"{% if request.endpoint == 'events.manage_events' %} aria-current="page"{% endif %}>
+                    <span class="nav-label-full">Manage Events</span><span class="nav-label-short">Manage</span>
                 </a>
 
-                <a href="{{ url_for('events.create_event') }}">
-                    Create Event
+                <a href="{{ url_for('events.create_event') }}"{% if request.endpoint == 'events.create_event' %} aria-current="page"{% endif %}>
+                    <span class="nav-label-full">Create Event</span><span class="nav-label-short">Create</span>
                 </a>
 
             </div>
@@ -182,37 +182,17 @@
 
                         <div class="account-menu-links">
 
-                            <button class="account-menu-link account-menu-link-disabled" type="button" disabled>
+                            <a class="account-menu-link" href="{{ url_for('auth.profile') }}">
                                 My Profile
+                            </a>
 
-                                <span>
-                                    Coming soon
-                                </span>
-                            </button>
-
-                            <button class="account-menu-link account-menu-link-disabled" type="button" disabled>
+                            <a class="account-menu-link" href="{{ url_for('events.calendar') }}">
                                 Calendar
+                            </a>
 
-                                <span>
-                                    Coming soon
-                                </span>
-                            </button>
-
-                            <button class="account-menu-link account-menu-link-disabled" type="button" disabled>
+                            <a class="account-menu-link" href="{{ url_for('auth.settings') }}">
                                 Settings
-
-                                <span>
-                                    Coming soon
-                                </span>
-                            </button>
-
-                            <button class="account-menu-link account-menu-link-disabled" type="button" disabled>
-                                Help
-
-                                <span>
-                                    Coming soon
-                                </span>
-                            </button>
+                            </a>
 
                         </div>
 
@@ -258,11 +238,11 @@
 
         {% if messages %}
 
-        <section aria-label="Messages">
+        <section aria-label="Messages" aria-live="polite" aria-atomic="true">
 
             {% for category, message in messages %}
 
-            <p class="flash flash-{{ category }}" role="status">
+            <p class="flash flash-{{ category }}" role="{% if category == 'error' %}alert{% else %}status{% endif %}">
                 {{ message }}
             </p>
 
@@ -280,7 +260,7 @@
 
     <footer class="site-footer">
 
-        <!-- Encourage users to continue exploring the platform -->
+        <!-- Discovery prompt -->
 
         <section class="footer-cta">
 
@@ -298,7 +278,7 @@
 
         </section>
 
-        <!-- Display the website footer -->
+        <!-- Site footer -->
 
         <div class="footer-content">
 
@@ -320,16 +300,14 @@
                     Browse Events
                 </a>
 
-                <span class="muted-copy" aria-disabled="true">
-                    Calendar · Coming soon
-                </span>
+                {% if g.user %}
+                <a href="{{ url_for('events.calendar') }}">Calendar</a>
+                {% else %}
+                <a href="{{ url_for('auth.login', next=url_for('events.calendar')) }}">Calendar</a>
+                {% endif %}
 
                 <a href="{{ url_for('events.create_event') }}">
                     Create Event
-                </a>
-
-                <a href="mailto:your@email.com">
-                    Contact
                 </a>
 
             </nav>

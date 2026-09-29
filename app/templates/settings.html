@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+
+{% block title %}Settings · eventid{% endblock %}
+
+{% block content %}
+
+<div class="page-heading page-heading-card account-page-heading">
+    <div>
+        <span class="eyebrow">Account security</span>
+        <h1>Settings</h1>
+        <p>Manage your password and review how your account is protected.</p>
+    </div>
+    <a class="button button-secondary" href="{{ url_for('auth.profile') }}">Edit Profile</a>
+</div>
+
+<div class="account-settings-layout">
+    <aside class="panel security-summary-card">
+        <span class="security-shield" aria-hidden="true">✓</span>
+        <h2>Security overview</h2>
+        <ul>
+            <li>Passwords are securely hashed</li>
+            <li>Sessions expire after 12 hours</li>
+            <li>Login attempts are rate-limited</li>
+            <li>Password changes log out other sessions</li>
+        </ul>
+    </aside>
+
+    <section class="panel account-form-panel">
+        <h2>Email verification</h2>
+        {% if g.user.email_verified_at %}
+        <p class="account-verification-status account-verification-complete">✓ {{ g.user.email }} is verified.</p>
+        {% else %}
+        <p class="account-verification-status">Verify {{ g.user.email }} to confirm that you control this address.</p>
+        <form method="POST" action="{{ url_for('auth.resend_verification') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button class="button button-secondary" type="submit">Send Verification Email</button>
+        </form>
+        {% endif %}
+
+        <hr class="account-section-divider">
+        <h2>Change password</h2>
+        <p class="help-text">Use 12–128 characters and avoid your username or email name.</p>
+
+        <form method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+            <div class="form-field">
+                <label for="current_password">Current password</label>
+                <input type="password" id="current_password" name="current_password" autocomplete="current-password" required>
+            </div>
+            <div class="form-field">
+                <label for="new_password">New password</label>
+                <input type="password" id="new_password" name="new_password" minlength="12" maxlength="128" autocomplete="new-password" required>
+            </div>
+            <div class="form-field">
+                <label for="confirm_password">Confirm new password</label>
+                <input type="password" id="confirm_password" name="confirm_password" minlength="12" maxlength="128" autocomplete="new-password" required>
+            </div>
+
+            <button class="button button-primary" type="submit">Change Password</button>
+        </form>
+    </section>
+</div>
+
+<div class="security-detail-grid">
+    <section class="panel security-detail-panel">
+        <div class="security-section-heading">
+            <div>
+                <span class="eyebrow">Signed-in devices</span>
+                <h2>Active Sessions</h2>
+                <p>Review browsers currently allowed to use your account.</p>
+            </div>
+            {% if active_sessions|length > 1 %}
+            <form method="POST" action="{{ url_for('auth.revoke_other_sessions') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button class="button button-secondary" type="submit">Log Out Other Devices</button>
+            </form>
+            {% endif %}
+        </div>
+        <ul class="security-session-list">
+            {% for tracked_session in active_sessions %}
+            <li>
+                <span class="session-device-icon" aria-hidden="true">▣</span>
+                <span class="session-details">
+                    <strong>{{ tracked_session.user_agent.split(' · ')[0] }}</strong>
+                    <small>{{ tracked_session.ip_address or "Unknown address" }} · Started {{ tracked_session.created_at.strftime("%d %b %Y at %H:%M") }}</small>
+                </span>
+                {% if tracked_session.token_hash == current_session_hash %}
+                <span class="badge badge-status-published">Current</span>
+                {% else %}
+                <form method="POST" action="{{ url_for('auth.revoke_session', session_id=tracked_session.session_id) }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button class="button button-secondary" type="submit">Log Out</button>
+                </form>
+                {% endif %}
+            </li>
+            {% endfor %}
+        </ul>
+    </section>
+
+    <section class="panel security-detail-panel">
+        <div class="security-section-heading">
+            <div>
+                <span class="eyebrow">Recent history</span>
+                <h2>Security Activity</h2>
+                <p>Your twelve most recent account-security actions.</p>
+            </div>
+        </div>
+        {% if security_events %}
+        <ol class="security-activity-list">
+            {% for security_event in security_events %}
+            <li>
+                <span class="security-activity-dot" aria-hidden="true"></span>
+                <span>
+                    <strong>{{ security_event.description }}</strong>
+                    <small>{{ security_event.created_at.strftime("%d %b %Y at %H:%M") }}{% if security_event.ip_address %} · {{ security_event.ip_address }}{% endif %}</small>
+                </span>
+            </li>
+            {% endfor %}
+        </ol>
+        {% else %}
+        <p class="help-text">Security activity will appear here as you use your account.</p>
+        {% endif %}
+    </section>
+</div>
+
+{% endblock %}

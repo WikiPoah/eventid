@@ -8,7 +8,7 @@
 
     <div class="auth-layout">
 
-        <!-- Display the eventid branding panel -->
+        <!-- EventID branding -->
 
         <aside class="auth-brand">
 
@@ -97,7 +97,7 @@
 
         </aside>
 
-        <!-- Display the account creation form -->
+        <!-- Account creation form -->
 
         <section class="auth-card">
 
@@ -124,7 +124,10 @@
                     value="{{ csrf_token() }}"
                 >
 
-                <!-- Display the first name field -->
+
+                {% if next_url %}
+                <input type="hidden" name="next" value="{{ next_url }}">
+                {% endif %}
 
                 <div class="form-field">
 
@@ -143,7 +146,6 @@
 
                 </div>
 
-                <!-- Display the last name field -->
 
                 <div class="form-field">
 
@@ -162,7 +164,6 @@
 
                 </div>
 
-                <!-- Display the username field -->
 
                 <div class="form-field">
 
@@ -183,7 +184,6 @@
 
                 </div>
 
-                <!-- Display the email field -->
 
                 <div class="form-field">
 
@@ -202,7 +202,6 @@
 
                 </div>
 
-                <!-- Display the password field -->
 
                 <div class="form-field">
 
@@ -215,12 +214,15 @@
                         id="password"
                         name="password"
                         autocomplete="new-password"
+                        minlength="12"
+                        maxlength="128"
                         required
                     >
 
+                    <span class="help-text">Use at least 12 characters and avoid your username or email name.</span>
+
                 </div>
 
-                <!-- Display the password confirmation field -->
 
                 <div class="form-field">
 
@@ -233,12 +235,13 @@
                         id="confirm_password"
                         name="confirm_password"
                         autocomplete="new-password"
+                        minlength="12"
+                        maxlength="128"
                         required
                     >
 
                 </div>
 
-                <!-- Display the account creation button -->
 
                 <button
                     type="submit"
@@ -255,7 +258,7 @@
 
                     Already have an account?
 
-                    <a href="{{ url_for('auth.login') }}">
+                    <a href="{{ url_for('auth.login', next=next_url) if next_url else url_for('auth.login') }}">
                         Log in
                     </a>
 

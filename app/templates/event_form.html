@@ -4,7 +4,7 @@
 
 {% block content %}
 
-<!-- Display the page heading -->
+<!-- Page heading -->
 
 <div class="page-heading">
 
@@ -28,13 +28,13 @@
 
 </div>
 
-<!-- Display the event form -->
+<!-- Event form -->
 
 <form class="panel form-layout" method="POST" enctype="multipart/form-data">
 
     {{ form.hidden_tag() }}
 
-    <!-- Display the event details section -->
+    <!-- Event details -->
 
     <section>
 
@@ -145,7 +145,7 @@
 
     </section>
 
-    <!-- Display the location section -->
+    <!-- Location -->
 
     <section>
 
@@ -371,7 +371,7 @@
 
     </section>
 
-    <!-- Display the schedule and availability section -->
+    <!-- Schedule and availability -->
 
     <section>
 
@@ -467,6 +467,16 @@
             </div>
 
             <div class="form-field">
+                <div class="form-label-row">
+                    {{ form.registration_deadline.label }}
+                    <span class="optional-indicator">optional</span>
+                </div>
+                {{ form.registration_deadline() }}
+                <span class="help-text">After this time, nobody can register or request attendance.</span>
+                {% for error in form.registration_deadline.errors %}<span class="field-error">{{ error }}</span>{% endfor %}
+            </div>
+
+            <div class="form-field">
 
                 <div class="form-label-row">
 
@@ -489,6 +499,31 @@
                 {% endfor %}
 
             </div>
+
+            <div class="form-field">
+                <div class="form-label-row">
+                    {{ form.invite_expires_at.label }}
+                    <span class="optional-indicator">required for private events</span>
+                </div>
+                {{ form.invite_expires_at() }}
+                <span class="help-text">The private link stops working after this date and time.</span>
+                {% for error in form.invite_expires_at.errors %}<span class="field-error">{{ error }}</span>{% endfor %}
+            </div>
+
+            <div class="form-field form-field-wide">
+                <div class="form-label-row">
+                    {{ form.invited_emails.label }}
+                    <span class="optional-indicator">optional</span>
+                </div>
+                {{ form.invited_emails(rows=4, placeholder="alex@example.com\nsamira@example.com") }}
+                <span class="help-text">One email per line or separated by commas. Leave empty to allow any logged-in user with the link to request approval.</span>
+                {% for error in form.invited_emails.errors %}<span class="field-error">{{ error }}</span>{% endfor %}
+            </div>
+
+            <label class="checkbox-row form-field-wide">
+                {{ form.requests_open() }}
+                {{ form.requests_open.label.text }}
+            </label>
 
             <div class="form-field">
 
@@ -523,7 +558,7 @@
 
     </section>
 
-    <!-- Display the event image section -->
+    <!-- Event image -->
 
     <section>
 
@@ -562,12 +597,34 @@
             </div>
 
             {{ form.image(
-                accept="image/jpeg,image/png,image/webp"
+                accept="image/jpeg,image/png,image/webp",
+                data_image_input=""
             ) }}
 
             <span class="help-text">
-                JPEG, PNG or WebP • Maximum 4 MB • Recommended landscape image.
+                JPEG, PNG or WebP • Maximum 4 MB. Images are safely resized to 16:9 and location metadata is removed.
             </span>
+
+            {{ form.image_crop_x() }}
+            {{ form.image_crop_y() }}
+
+            <div class="image-crop-editor" data-image-crop-editor hidden>
+                <div class="image-crop-frame">
+                    <img class="image-preview image-preview-new" data-image-preview alt="Preview of the cropped event image" hidden>
+                    <span class="image-crop-guide" aria-hidden="true"></span>
+                </div>
+                <div class="image-position-controls">
+                    <div>
+                        <label for="image-position-x">Move image left or right</label>
+                        <input id="image-position-x" type="range" min="0" max="100" value="50" data-image-position-x>
+                    </div>
+                    <div>
+                        <label for="image-position-y">Move image up or down</label>
+                        <input id="image-position-y" type="range" min="0" max="100" value="50" data-image-position-y>
+                    </div>
+                </div>
+                <p class="help-text">Move the image until its important subject sits comfortably inside the frame.</p>
+            </div>
 
             {% for error in form.image.errors %}
 
@@ -593,7 +650,7 @@
 
     </section>
 
-    <!-- Display the form actions -->
+    <!-- Form actions -->
 
     <div class="form-actions">
 
