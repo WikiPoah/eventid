@@ -2,7 +2,7 @@
 
 EventID is a full-stack event discovery and management application. Attendees can find events, register, organise their calendar and show a QR ticket; organisers can manage events, approve private invitations and check attendees in.
 
-Built with Flask and a relational database, it demonstrates server-side authorization, transactional capacity handling, account security and a responsive interface without a frontend framework.
+I built EventID with Flask and a relational database. Working on it gave me hands-on experience with server-side authorization, handling concurrent registrations, account security and responsive UI—all without a frontend framework.
 
 ## Screenshots / Demo
 
@@ -47,16 +47,17 @@ Screenshots below show the current application with disposable, fictional demo d
 
 ## Engineering Highlights
 
-- **Relational lifecycle:** users, owned events, categories, favourites, attendance and tracked sessions are backed by constraints and a versioned migration chain.
-- **Capacity correctness:** registrations and private approvals lock the event before counting confirmed attendees. SQLite uses `BEGIN IMMEDIATE`; PostgreSQL uses `SELECT FOR UPDATE` so unrelated events can proceed independently.
-- **Authorization:** event ownership, invitation access, attendee decisions and ticket/check-in access are enforced on the server. Approval changes a pending request into a confirmed registration with a usable ticket.
-- **Security controls:** CSRF protection, restrictive CSP, password hashing, safe login destinations, rate limits, secure production cookies, session revocation and validated image uploads.
-- **Verification:** tests exercise user/state transitions, authorization failures, capacity races, email behavior, seeding and schema drift. CI checks formatting, lint, coverage, routes, migrations and tracked-file hygiene.
-- **Deployment:** provider PostgreSQL URLs are normalized at configuration time; production requires explicit secrets/database settings and exposes a database-backed health check.
+- **Database:** users, events, categories, favourites, registrations and sessions are linked with database constraints. Alembic migrations track schema changes.
+- **Concurrent registrations:** registration and private-event approval lock the event before checking capacity. SQLite uses `BEGIN IMMEDIATE`; PostgreSQL uses `SELECT FOR UPDATE`, so registrations for other events can proceed at the same time.
+- **Access and account security:** the server checks event ownership, invitation access and ticket permissions. CSRF protection, password hashing, safe login redirects, rate limits, secure production cookies and revocable sessions protect account actions.
+- **Private-event flow:** guests request a place through an expiring invitation; the organiser can approve or decline. Approval confirms the registration and unlocks its ticket.
+- **Recommendations and images:** the home page ranks a bounded set of public events using category, city and attendance signals. Uploaded images are checked, cropped and converted to WebP under generated filenames.
+- **Tests and CI:** tests cover user flows, access checks, capacity races, email, demo seeding and migration drift. GitHub Actions checks formatting, lint, coverage, routes, migrations and tracked-file hygiene.
+- **Production setup:** PostgreSQL URLs are normalized for psycopg 3. Production requires explicit secrets and a database URL, and `/health` checks the database.
 
 ## Architecture
 
-`main.create_app()` loads environment configuration, initializes extensions and registers authentication and event blueprints. Routes validate forms and authorization, use SQLAlchemy transactions to change state, then render Jinja templates or return feedback for vanilla-JavaScript interactions. Images are stored outside the source tree and served through event access checks.
+Flask’s `create_app()` function loads settings, sets up the extensions and registers the account and event routes. Routes validate requests, check access and update the database through SQLAlchemy. Jinja renders the pages; vanilla JavaScript handles small in-page interactions. Uploaded images live outside the source tree and are served only after event-access checks.
 
 The main flow is discovery → event details → registration → My Events/calendar → ticket. For private events, invitation access → pending request → owner approval precedes ticket issuance; only the event owner can verify or check in that ticket.
 
